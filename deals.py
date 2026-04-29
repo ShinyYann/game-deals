@@ -1163,15 +1163,15 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .top-disc {{ color: #ff6b6b; font-weight: 700; }}
 .top-rating {{ color: #aaa; font-size: 12px; }}
 /* P9 */
-.p9-list {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }}
+.p9-list {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }}
 .p9-item {{ background: #1a1a2e; border-radius: 12px; padding: 8px; text-decoration: none; color: inherit; transition: background 0.2s; display: flex; flex-direction: column; }}
 .p9-item:active {{ background: #2a2a3e; }}
 .p9-item-inner {{ display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }}
 .p9-thumb {{ width: 100%; aspect-ratio: 2/1; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }}
 .p9-thumb-img {{ width: 100%; height: 100%; object-fit: cover; display: block; }}
-.p9-thumb-game {{ background: linear-gradient(135deg,#2a5a3e,#1a3a2e); font-size: 28px; }}
-.p9-thumb-low {{ background: linear-gradient(135deg,#5a4a1e,#3a2e1a); font-size: 28px; }}
-.p9-thumb-guide {{ background: linear-gradient(135deg,#3a2a5e,#2a1a3e); font-size: 28px; }}
+.p9-thumb-game {{ background: linear-gradient(135deg,#2a5a3e,#1a3a2e); font-size: 32px; }}
+.p9-thumb-low {{ background: linear-gradient(135deg,#5a4a1e,#3a2e1a); font-size: 32px; }}
+.p9-thumb-guide {{ background: linear-gradient(135deg,#3a2a5e,#2a1a3e); font-size: 32px; }}
 .p9-item-texts {{ width: 100%; }}
 .p9-title {{ font-size: 13px; font-weight: 600; color: #e8e8f0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }}
 .p9-meta {{ font-size: 11px; color: #888; margin-top: 2px; }}
@@ -1195,9 +1195,10 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .trophy-btn-toggle {{ display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; color: #888; cursor: pointer; font-size: 18px; border: none; flex-shrink: 0; }}
 .trophy-btn-toggle:hover {{ color: #e8e8f0; }}
 /* Game detail modal */
-.modal-overlay {{ display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; box-sizing: border-box; }}
-.modal-overlay.show {{ display: flex; opacity: 1; background: rgba(0,0,0,0.75); }}
-.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 3px solid #5dade2; animation: borderGlow 3s linear infinite; }}
+.modal-overlay {{ display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; }}
+.modal-overlay.show {{ display: flex !important; opacity: 1; background: rgba(0,0,0,0.75); }}
+.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 3px solid #5dade2; animation: borderGlow 3s linear infinite; }}
+.modal-overlay.show .modal {{ transform: translateY(0) scale(1); opacity: 1; }}
 @keyframes borderGlow {{
   15% {{ border-color: #a855f7; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(168, 85, 247, 0.25); }}
   30% {{ border-color: #fb7299; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(251, 114, 153, 0.25); }}

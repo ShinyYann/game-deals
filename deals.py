@@ -1197,7 +1197,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 /* Game detail modal */
 .modal-overlay {{ display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; }}
 .modal-overlay.show {{ display: flex; opacity: 1; background: rgba(0,0,0,0.75); }}
-.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 3px solid #5dade2; animation: borderGlow 3s linear infinite; }}
+.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 3px solid #5dade2; animation: borderGlow 3s linear infinite; box-sizing: border-box; margin: auto; }}
 @keyframes borderGlow {{
   15% {{ border-color: #a855f7; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(168, 85, 247, 0.25); }}
   30% {{ border-color: #fb7299; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(251, 114, 153, 0.25); }}

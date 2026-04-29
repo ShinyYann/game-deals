@@ -232,7 +232,7 @@ if ('serviceWorker' in navigator) {
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 港服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-30 03:06</p>
+<p class="last-update">🔄 上次更新: 2026-04-30 03:28</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -1353,7 +1353,32 @@ function switchTrophySubTab(id, btn) {
 window.onload = function() {
     loadSavedTrophy();
     spawnParticles();
+    checkUpdate();
 };
+
+function checkUpdate() {
+    var xhr = new XMLHttpRequest();
+    var now = new Date().getTime();
+    xhr.open('GET', 'version.json?_=' + now, true);
+    xhr.onload = function() {
+        if (xhr.status !== 200) return;
+        try {
+            var ver = JSON.parse(xhr.responseText);
+            var saved = localStorage.getItem('app_version');
+            if (saved && saved !== ver.version) {
+                var d = document.createElement('div');
+                d.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;background:#1a1a2e;border:1px solid #34d399;border-radius:12px;padding:14px 16px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+                d.innerHTML = '<div style="font-size:14px;font-weight:700;color:#34d399;margin-bottom:4px;">📦 有新版本</div>' +
+                    '<div style="font-size:12px;color:#aaa;margin-bottom:8px;">' + ver.date + '</div>' +
+                    '<a href="' + ver.apk_url + '" style="display:inline-block;padding:6px 14px;background:#34d399;color:#0f0f1a;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;" target="_blank">⬇ 下载更新</a>' +
+                    '<button onclick="this.parentElement.remove()" style="float:right;background:none;border:none;color:#666;font-size:12px;cursor:pointer;padding:6px;">稍后</button>';
+                document.body.appendChild(d);
+            }
+            localStorage.setItem('app_version', ver.version);
+        } catch(e) {}
+    };
+    xhr.send();
+}
 
 function spawnParticles() {
     var container = document.getElementById('particles');

@@ -3,6 +3,11 @@ name: Build APK
 on:
   push:
     branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *'  # 每天UTC 0点自动跑一次
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -30,7 +35,6 @@ jobs:
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Yann小站" "com.yann.gamedeals" --web-dir docs
           npx cap add android
-          echo "SERVER_URL=https://shinyyann.github.io/game-deals/" >> .env
 
       - name: Build APK
         run: |
@@ -38,8 +42,30 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Get version
+        id: version
+        run: |
+          echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+          echo "time=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Yann小站-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: v${{ steps.version.outputs.date }}
+          name: "Yann小站 v${{ steps.version.outputs.date }}"
+          body: |
+            ## Yann 的小站
+            
+            📅 更新日期: ${{ steps.version.outputs.time }}
+            
+            ### 内容
+            - PSN 港服折扣
+            - Steam 国服折扣  
+            - Switch 港服折扣
+            - IGN中国 + GameApps 游戏快讯
+            - Steam 成就展示
+            
+            💡 启动时会自动检查新版本
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true

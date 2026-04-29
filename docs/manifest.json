@@ -1,0 +1,23 @@
+{
+  "name": "Yann 的小站",
+  "short_name": "Yann小站",
+  "description": "PSN港服 · Steam国服 · Switch港服 — 每日自动更新游戏折扣",
+  "start_url": "https://shinyyann.github.io/game-deals/",
+  "scope": "https://shinyyann.github.io/game-deals/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f1a",
+  "theme_color": "#161630",
+  "icons": [
+    {
+      "src": "https://shinyyann.github.io/game-deals/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://shinyyann.github.io/game-deals/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

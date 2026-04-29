@@ -1351,6 +1351,10 @@ def generate_html():
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Yann小站">
 <title>Yann 的小站</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
@@ -1557,6 +1561,11 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .modal-bilibili {{ display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: linear-gradient(135deg, #fb7299, #fc8fa7); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.25s ease; }}
 .modal-bilibili:hover {{ background: linear-gradient(135deg, #fc8fab, #ff9db8); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(251, 114, 153, 0.3); }}
 </style>
+<script>
+if ('serviceWorker' in navigator) {{
+  navigator.serviceWorker.register('sw.js');
+}}
+</script>
 </head>
 <body class="tab-trophy">
 <div class="particles" id="particles"></div>

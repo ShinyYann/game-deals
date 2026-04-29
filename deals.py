@@ -31,6 +31,7 @@ def fetch_json(url, timeout=15):
 
 # ─── Ratings ────────────────────────────────────────────────────────
 RATINGS = {
+    # ─── From parsed data (actual deals) ───
     'elden ring': '⭐⭐⭐⭐ MC96 开放世界RPG标杆',
     'ghost of tsushima': '⭐⭐⭐⭐ MC87 武士开放世界，必玩',
     'resident evil 4': '⭐⭐⭐⭐⭐ MC93 恐怖动作巅峰',
@@ -69,6 +70,318 @@ RATINGS = {
     'sekiro': '⭐⭐⭐⭐⭐ MC90 动作巅峰',
     'bloodborne': '⭐⭐⭐⭐⭐ MC92 哥特魂系',
     'nier': '⭐⭐⭐⭐ MC88 横尾风格RPG',
+    # ─── More popular titles ───
+    'horizon': '⭐⭐⭐⭐ MC89 机械兽开放世界',
+    'gow ragnarok': '⭐⭐⭐⭐⭐ MC94 北欧神话终章',
+    'ratchet & clank': '⭐⭐⭐⭐ MC88 画面天花板',
+    'returnal': '⭐⭐⭐⭐ MC86 循环射击创新',
+    'demons souls': '⭐⭐⭐⭐⭐ MC92 重制画面标杆',
+    'sackboy': '⭐⭐⭐⭐ MC79 可爱平台跳跃',
+    'uncharted': '⭐⭐⭐⭐⭐ MC87 动作冒险大片',
+    'dreams': '⭐⭐⭐⭐ MC89 创作游戏神作',
+    'astros playroom': '⭐⭐⭐⭐ MC83 PS5手柄展示',
+    'ghwire: tokyo': '⭐⭐⭐⭐ MC75 东京风水和风',
+    'death stranding': '⭐⭐⭐⭐ MC82 小岛步行模拟',
+    'deathloop': '⭐⭐⭐⭐ MC88 循环刺杀创新',
+    'evil west': '⭐⭐⭐⭐ MC73 西部吸血鬼爽游',
+    'callisto protocol': '⭐⭐⭐ MC70 太空恐怖不足',
+    'hogwarts legacy': '⭐⭐⭐⭐ MC84 哈利波特开放世界',
+    'dead space': '⭐⭐⭐⭐⭐ MC89 恐怖重制标杆',
+    'resident evil 2': '⭐⭐⭐⭐⭐ MC91 生化重制巅峰',
+    'resident evil 3': '⭐⭐⭐⭐ MC79 重制不够诚意',
+    'resident evil village': '⭐⭐⭐⭐ MC84 第一人称恐怖',
+    'resident evil revelations': '⭐⭐⭐⭐ MC75 外传佳作',
+    'stranger of paradise': '⭐⭐⭐⭐ MC72 最终幻想外传',
+    'wo long': '⭐⭐⭐⭐ MC80 三国仁王',
+    'lies of p': '⭐⭐⭐⭐ MC80 匹诺曹魂系',
+    'armored core': '⭐⭐⭐⭐ MC86 机甲动作回归',
+    'like a dragon': '⭐⭐⭐⭐ MC86 如龙RPG转型',
+    'judgment': '⭐⭐⭐⭐ MC82 如龙侦探版',
+    'lost judgment': '⭐⭐⭐⭐ MC83 侦探续作',
+    'yakuza': '⭐⭐⭐⭐ MC80 日本黑道RPG',
+    'fifa': '⭐⭐⭐ MC75 年货足球',
+    'ea sports fc': '⭐⭐⭐ MC75 足球年货',
+    'madden': '⭐⭐⭐ MC73 橄榄球年货',
+    'nba 2k': '⭐⭐⭐ MC70 篮球年货',
+    'call of duty': '⭐⭐⭐⭐ MC78 年货FPS',
+    'battlefield': '⭐⭐⭐⭐ MC80 大型战场FPS',
+    'battlefield 2042': '⭐⭐⭐ MC68 翻车战场',
+    'doom': '⭐⭐⭐⭐⭐ MC87 暴力FPS之王',
+    'doom eternal': '⭐⭐⭐⭐⭐ MC88 高速FPS巅峰',
+    'wolfenstein': '⭐⭐⭐⭐ MC79 纳粹射击',
+    'far cry': '⭐⭐⭐ MC75 育碧开放世界',
+    'assassins creed': '⭐⭐⭐⭐ MC75 历史开放世界',
+    'watch dogs': '⭐⭐⭐ MC73 黑客开放世界',
+    'ghost recon': '⭐⭐⭐ MC70 战术射击',
+    'the division': '⭐⭐⭐ MC70 刷宝射击',
+    'rainbow six': '⭐⭐⭐ MC78 战术爆破',
+    'immortals fenyx': '⭐⭐⭐⭐ MC79 希腊风格原神',
+    'tomb raider': '⭐⭐⭐⭐ MC85 考古动作冒险',
+    'rise of the tomb raider': '⭐⭐⭐⭐ MC88 考古续作',
+    'shadow of the tomb raider': '⭐⭐⭐⭐ MC82 考古终章',
+    'control': '⭐⭐⭐⭐ MC82 超能力射击',
+    'alan wake': '⭐⭐⭐⭐ MC80 心理恐怖',
+    'alan wake 2': '⭐⭐⭐⭐⭐ MC89 心理恐怖巅峰',
+    'quantum break': '⭐⭐⭐⭐ MC77 时间控制射击',
+    'mass effect': '⭐⭐⭐⭐⭐ MC90 科幻RPG经典',
+    'dragon age': '⭐⭐⭐⭐ MC85 奇幻RPG',
+    'anthem': '⭐⭐⭐ MC65 翻车刷宝',
+    'fallout': '⭐⭐⭐⭐ MC84 废土RPG',
+    'skyrim': '⭐⭐⭐⭐⭐ MC96 开放世界RPG丰碑',
+    'starfield': '⭐⭐⭐ MC78 太空RPG失望',
+    'outer worlds': '⭐⭐⭐⭐ MC82 太空RPG小品',
+    'disco elysium': '⭐⭐⭐⭐⭐ MC91 叙事RPG神作',
+    'divinity': '⭐⭐⭐⭐⭐ MC93 策略RPG巅峰',
+    'baldurs gate': '⭐⭐⭐⭐⭐ MC96 CRPG王者回归',
+    'pathfinder': '⭐⭐⭐⭐ MC80 硬核CRPG',
+    'pillars of eternity': '⭐⭐⭐⭐ MC89 复古CRPG',
+    'kingdom come': '⭐⭐⭐⭐ MC71 硬核中世纪RPG',
+    'mount & blade': '⭐⭐⭐⭐ MC78 骑砍沙盒RPG',
+    'rimworld': '⭐⭐⭐⭐ MC90 殖民模拟',
+    'factorio': '⭐⭐⭐⭐⭐ MC90 工厂自动化',
+    'satisfactory': '⭐⭐⭐⭐ MC87 3D工厂',
+    'terraria': '⭐⭐⭐⭐⭐ MC82 2D沙盒冒险',
+    'stardew valley': '⭐⭐⭐⭐⭐ MC89 农场经营治愈',
+    'minecraft': '⭐⭐⭐⭐⭐ MC92 沙盒创造之王',
+    'no mans sky': '⭐⭐⭐⭐ MC71 逆袭典范',
+    'subnautica': '⭐⭐⭐⭐ MC87 深海生存探索',
+    'the forest': '⭐⭐⭐⭐ MC83 恐怖生存',
+    'valheim': '⭐⭐⭐⭐ MC89 北欧生存沙盒',
+    'project zomboid': '⭐⭐⭐⭐ MC70 僵尸生存模拟',
+    'dont starve': '⭐⭐⭐⭐ MC79 荒野生存',
+    'oxygen not included': '⭐⭐⭐⭐ MC87 太空殖民地',
+    'slay the spire': '⭐⭐⭐⭐⭐ MC89 卡牌Roguelike始祖',
+    'monster train': '⭐⭐⭐⭐ MC83 卡牌防御',
+    'dead cells': '⭐⭐⭐⭐⭐ MC87 动作肉鸽',
+    'hollow knight': '⭐⭐⭐⭐⭐ MC87 银河城神作',
+    'celeste': '⭐⭐⭐⭐⭐ MC92 平台跳跃神作',
+    'cuphead': '⭐⭐⭐⭐⭐ MC86 手绘BOSS战',
+    'shovel knight': '⭐⭐⭐⭐ MC86 复古平台',
+    'blasphemous': '⭐⭐⭐⭐ MC80 宗教画风银河城',
+    'ori': '⭐⭐⭐⭐⭐ MC88 唯美银河城',
+    'guacamelee': '⭐⭐⭐⭐ MC83 墨西哥风格银河城',
+    'astral chain': '⭐⭐⭐⭐ MC83 未来警探动作',
+    'bayonetta': '⭐⭐⭐⭐ MC86 华丽ACT',
+    'devil may cry': '⭐⭐⭐⭐ MC86 华丽动作',
+    'metal gear': '⭐⭐⭐⭐⭐ MC94 潜行战术经典',
+    'ace combat': '⭐⭐⭐⭐ MC80 空战模拟',
+    'soulcalibur': '⭐⭐⭐⭐ MC76 刀剑格斗',
+    'guilty gear': '⭐⭐⭐⭐ MC84 动漫格斗',
+    'dragon ball': '⭐⭐⭐⭐ MC76 龙珠格斗',
+    'naruto': '⭐⭐⭐ MC70 火影格斗',
+    'one piece': '⭐⭐⭐ MC75 海贼动作',
+    'borderlands': '⭐⭐⭐⭐ MC79 卡通刷宝射击',
+    'diablo': '⭐⭐⭐⭐ MC87 暗黑刷宝始祖',
+    'diablo iv': '⭐⭐⭐⭐ MC77 暗黑续作有起色',
+    'path of exile': '⭐⭐⭐⭐ MC84 免费暗黑',
+    'greedfall': '⭐⭐⭐ MC72 殖民RPG',
+    'vampyr': '⭐⭐⭐⭐ MC72 吸血鬼RPG',
+    'plague tale': '⭐⭐⭐⭐ MC85 老鼠末日剧情',
+    'it takes two': '⭐⭐⭐⭐⭐ MC88 双人合作神作',
+    'mortal kombat': '⭐⭐⭐⭐ MC82 暴力格斗',
+    'snk': '⭐⭐⭐ MC73 老牌格斗',
+    'king of fighters': '⭐⭐⭐⭐ MC79 拳皇格斗',
+    'crash bandicoot': '⭐⭐⭐⭐ MC78 经典平台',
+    'spyro': '⭐⭐⭐⭐ MC79 可爱平台',
+    'medievil': '⭐⭐⭐⭐ MC70 经典重制',
+    'tony hawk': '⭐⭐⭐⭐ MC80 滑板运动',
+    'hell let loose': '⭐⭐⭐⭐ MC79 硬核二战',
+    'squad': '⭐⭐⭐ MC78 硬核战术',
+    'post scriptum': '⭐⭐⭐ MC75 二战拟真',
+    'insurgency': '⭐⭐⭐⭐ MC81 硬核CQB',
+    'escape from tarkov': '⭐⭐⭐⭐ MC77 硬核撤离',
+    'dayz': '⭐⭐⭐ MC71 丧尸生存',
+    'rust': '⭐⭐⭐⭐ MC69 生存沙盒残酷',
+    'ark': '⭐⭐⭐⭐ MC70 恐龙生存',
+    'conan exiles': '⭐⭐⭐ MC69 野蛮生存',
+    'darksiders': '⭐⭐⭐⭐ MC80 上帝之战动作',
+    'mad max': '⭐⭐⭐⭐ MC73 废土动作',
+    'middle earth': '⭐⭐⭐⭐ MC82 魔多暗影动作',
+    'batman': '⭐⭐⭐⭐⭐ MC87 蝙蝠侠动作经典',
+    'shadow of mordor': '⭐⭐⭐⭐ MC85 中土世界复仇',
+    'lego': '⭐⭐⭐ MC72 乐高合家欢',
+    'overcooked': '⭐⭐⭐⭐ MC80 分手厨房',
+    'moving out': '⭐⭐⭐ MC71 搬家合作',
+    'human fall flat': '⭐⭐⭐⭐ MC76 物理搞笑',
+    'gang beasts': '⭐⭐⭐⭐ MC70 物理对打',
+    'fall guys': '⭐⭐⭐⭐ MC77 糖豆人大逃杀',
+    'among us': '⭐⭐⭐⭐ MC77 太空狼人杀',
+    'phasmophobia': '⭐⭐⭐⭐ MC79 恐怖捉鬼',
+    'lethal company': '⭐⭐⭐⭐ MC78 恐怖公司合作',
+    'content warning': '⭐⭐⭐ MC70 恐怖拍摄',
+    'deep rock galactic': '⭐⭐⭐⭐ MC82 矮人挖矿合作',
+    'helldivers': '⭐⭐⭐⭐ MC80 民主第一人称',
+    'helldivers 2': '⭐⭐⭐⭐⭐ MC81 民主第三人称',
+    'back 4 blood': '⭐⭐⭐ MC72 丧尸射击不够好',
+    'left 4 dead': '⭐⭐⭐⭐⭐ MC85 丧尸射击经典',
+    'payday': '⭐⭐⭐ MC78 抢劫射击',
+    'killing floor': '⭐⭐⭐⭐ MC76 丧尸波次',
+    'warhammer': '⭐⭐⭐⭐ MC80 战锤射击',
+    'darktide': '⭐⭐⭐⭐ MC73 战锤丧尸',
+    'vermentide': '⭐⭐⭐⭐ MC77 战锤鼠疫',
+    'metro': '⭐⭐⭐⭐ MC82 地铁生存射击',
+    'stalker': '⭐⭐⭐⭐ MC80 切尔诺贝利射击',
+    'dysmantle': '⭐⭐⭐ MC73 拆解世界生存',
+    'grounded': '⭐⭐⭐⭐ MC81 缩小求生',
+    'smalland': '⭐⭐⭐ MC70 缩小生存',
+    'green hell': '⭐⭐⭐⭐ MC82 亚马逊丛林生存',
+    'the long dark': '⭐⭐⭐⭐ MC80 冰雪生存',
+    'frostpunk': '⭐⭐⭐⭐ MC85 冰雪城市建造',
+    'this war of mine': '⭐⭐⭐⭐ MC84 战争平民生存',
+    'banished': '⭐⭐⭐⭐ MC81 中世纪城镇建设',
+    'cliff empire': '⭐⭐⭐ MC70 城市建造',
+    'the last campfire': '⭐⭐⭐⭐ MC70 治愈解谜',
+    'joy of creation': '⭐⭐⭐ MC60 同人',
+    'little nightmares': '⭐⭐⭐⭐ MC80 黑暗童话解谜',
+    'inside': '⭐⭐⭐⭐⭐ MC93 横版解谜神作',
+    'limbo': '⭐⭐⭐⭐⭐ MC88 黑白解谜经典',
+    'braid': '⭐⭐⭐⭐⭐ MC92 时间解谜始祖',
+    'fez': '⭐⭐⭐⭐ MC91 维度解谜',
+    'witness': '⭐⭐⭐⭐⭐ MC87 解谜岛',
+    'outer wilds': '⭐⭐⭐⭐⭐ MC85 太空探索解谜',
+    'superliminal': '⭐⭐⭐⭐ MC73 视角解谜',
+    'portal': '⭐⭐⭐⭐⭐ MC90 传送门解谜',
+    'talos principle': '⭐⭐⭐⭐ MC82 哲学解谜',
+    'obduction': '⭐⭐⭐ MC72 神秘岛续作',
+    'myst': '⭐⭐⭐⭐ MC81 经典解谜重制',
+    'return of obra dinn': '⭐⭐⭐⭐⭐ MC89 推理解谜神作',
+    'her story': '⭐⭐⭐⭐ MC87 新颖推理',
+    'what remains of edith finch': '⭐⭐⭐⭐⭐ MC88 步行模拟巅峰',
+    'firewatch': '⭐⭐⭐⭐ MC81 森林步行模拟',
+    'journey': '⭐⭐⭐⭐⭐ MC92 艺术游戏巅峰',
+    'flower': '⭐⭐⭐⭐ MC76 治愈花之旅',
+    'abzu': '⭐⭐⭐⭐ MC76 深海治愈之旅',
+    'gris': '⭐⭐⭐⭐ MC76 水彩治愈平台',
+    'neva': '⭐⭐⭐⭐ MC77 色彩治愈续作',
+    'dredge': '⭐⭐⭐⭐ MC80 钓鱼恐怖',
+    'chants of senaar': '⭐⭐⭐⭐ MC82 语言解谜',
+    'tt isle': '⭐⭐⭐ MC68',
+    'peppa pig': '⭐⭐⭐ MC58 小猪佩奇',
+    'bluey': '⭐⭐⭐ MC68 布鲁伊',
+    'paw patrol': '⭐⭐⭐ MC57 汪汪队',
+    'hot wheels': '⭐⭐⭐ MC68 风火轮赛车',
+    'my little pony': '⭐⭐⭐ MC60 小马宝莉',
+    'doraemon': '⭐⭐⭐⭐ MC68 哆啦A梦合家欢',
+    'demon slayer': '⭐⭐⭐⭐ MC70 鬼灭之刃',
+    'jujutsu kaisen': '⭐⭐⭐ MC70 咒术回战',
+    'my hero academia': '⭐⭐⭐ MC70 我英',
+    'spongebob': '⭐⭐⭐⭐ MC68 海绵宝宝',
+    'teenage mutant': '⭐⭐⭐⭐ MC72 忍者神龟',
+    'tmnt': '⭐⭐⭐⭐ MC72 忍者神龟',
+    'power rangers': '⭐⭐⭐ MC60 恐龙战队',
+    'avengers': '⭐⭐⭐ MC68 漫威复联拉胯',
+    'guardians of the galaxy': '⭐⭐⭐⭐ MC80 漫威银护黑马',
+    'marvel vs capcom': '⭐⭐⭐⭐ MC80 漫威格斗',
+    'marvels midnight suns': '⭐⭐⭐⭐ MC78 漫威策略卡牌',
+    'marvel rivals': '⭐⭐⭐⭐ MC79 漫威OW',
+    'lego star wars': '⭐⭐⭐⭐ MC80 乐高星战',
+    'star wars jedi': '⭐⭐⭐⭐ MC80 星战绝地动作',
+    'star wars fallen order': '⭐⭐⭐⭐ MC82 星战绝地',
+    'star wars survivor': '⭐⭐⭐⭐ MC84 星战绝地续作',
+    'star wars battlefront': '⭐⭐⭐ MC70 星战战场',
+    'star wars squadrons': '⭐⭐⭐⭐ MC79 星战飞行',
+    'star wars old republic': '⭐⭐⭐ MC70 星战MMO',
+    'star wars outlaws': '⭐⭐⭐⭐ MC76 星战开放世界',
+    'total war': '⭐⭐⭐⭐ MC82 历史策略',
+    'civilization': '⭐⭐⭐⭐⭐ MC82 文明策略',
+    'civ vi': '⭐⭐⭐⭐⭐ MC82 文明6策略',
+    'cities skylines': '⭐⭐⭐⭐ MC82 城市建造',
+    'cities skylines 2': '⭐⭐⭐ MC70 城市建造翻车',
+    'planet coaster': '⭐⭐⭐⭐ MC75 过山车建造',
+    'planet zoo': '⭐⭐⭐⭐ MC78 动物园建造',
+    'surviving mars': '⭐⭐⭐⭐ MC76 火星建造',
+    'tropico': '⭐⭐⭐⭐ MC72 香蕉共和国建造',
+    'anno': '⭐⭐⭐⭐ MC80 纪元城市建造',
+    'age of empires': '⭐⭐⭐⭐ MC82 帝国时代RTS',
+    'age of mythology': '⭐⭐⭐⭐ MC76 神话RTS',
+    'supreme commander': '⭐⭐⭐⭐ MC77 大型RTS',
+    'company of heroes': '⭐⭐⭐⭐ MC82 二战RTS',
+    'men of war': '⭐⭐⭐⭐ MC77 硬核二战RTS',
+    'steel division': '⭐⭐⭐⭐ MC76 二战军团',
+    'hearts of iron': '⭐⭐⭐⭐ MC80 二战大战略',
+    'europa universalis': '⭐⭐⭐⭐ MC82 大战略经典',
+    'crusader kings': '⭐⭐⭐⭐ MC82 中世纪大战略',
+    'stellaris': '⭐⭐⭐⭐ MC78 太空大战略',
+    'victoria': '⭐⭐⭐⭐ MC80 维多利亚大战略',
+    'imperator rome': '⭐⭐⭐ MC70 罗马大战略',
+    'sins of a solar empire': '⭐⭐⭐⭐ MC78 太空RTS',
+    'homeworld': '⭐⭐⭐⭐ MC82 太空RTS经典',
+    'endless space': '⭐⭐⭐⭐ MC76 太空4X',
+    'endless legend': '⭐⭐⭐⭐ MC76 奇幻4X',
+    'dungeons': '⭐⭐⭐ MC70 地下城模拟',
+    'dungeon keeper': '⭐⭐⭐⭐ MC80 地下城模拟经典',
+    'two point hospital': '⭐⭐⭐⭐ MC80 幽默医院模拟',
+    'two point campus': '⭐⭐⭐⭐ MC78 幽默大学模拟',
+    'house flipper': '⭐⭐⭐⭐ MC72 装修模拟',
+    'powerwash simulator': '⭐⭐⭐⭐ MC73 清洗解压模拟',
+    'car mechanic simulator': '⭐⭐⭐⭐ MC75 修车模拟',
+    'farming simulator': '⭐⭐⭐⭐ MC73 种田模拟',
+    'bus simulator': '⭐⭐⭐ MC68 公交模拟',
+    'train simulator': '⭐⭐⭐ MC65 火车模拟',
+    'euro truck simulator': '⭐⭐⭐⭐ MC75 卡车模拟',
+    'american truck simulator': '⭐⭐⭐⭐ MC74 美卡模拟',
+    'flight simulator': '⭐⭐⭐⭐ MC79 飞行模拟',
+    'dirt rally': '⭐⭐⭐⭐ MC83 拉力赛车',
+    'dirt': '⭐⭐⭐⭐ MC80 越野赛车',
+    'f1': '⭐⭐⭐⭐ MC80 F1赛车',
+    'grid': '⭐⭐⭐⭐ MC77 街机赛车',
+    'project cars': '⭐⭐⭐⭐ MC78 模拟赛车',
+    'assetto corsa': '⭐⭐⭐⭐ MC81 硬核赛车模拟',
+    'forza': '⭐⭐⭐⭐⭐ MC91 地平线赛车之王',
+    'need for speed': '⭐⭐⭐ MC72 街头赛车',
+    'nfs heat': '⭐⭐⭐⭐ MC72 街头赛车',
+    'burnout': '⭐⭐⭐⭐ MC80 火爆飙车',
+    'trackmania': '⭐⭐⭐⭐ MC81 跑道赛车',
+    'rocket league': '⭐⭐⭐⭐ MC85 汽车足球',
+    'fallout shelter': '⭐⭐⭐⭐ MC71 末日经营',
+    'sheltered': '⭐⭐⭐ MC68 末日避难所',
+    'this war of mine': '⭐⭐⭐⭐ MC84 战争生存',
+    'frostrunner': '⭐⭐⭐⭐ MC80 冰店模拟',
+    'cocoon': '⭐⭐⭐⭐ MC88 创新解谜',
+    'stray': '⭐⭐⭐⭐ MC83 猫猫冒险',
+    'cult of the lamb': '⭐⭐⭐⭐ MC80 邪教经营动作',
+    'vampire survivors': '⭐⭐⭐⭐⭐ MC86 幸存者类始祖',
+    'broforce': '⭐⭐⭐⭐ MC76 像素动作爽游',
+    'hotline miami': '⭐⭐⭐⭐⭐ MC87 暴力像素动作',
+    'katana zero': '⭐⭐⭐⭐ MC82 赛博武士',
+    'ghostrunner': '⭐⭐⭐⭐ MC77 高速跑酷斩杀',
+    'ultrakill': '⭐⭐⭐⭐ MC88 高速复古FPS',
+    'cruelty squad': '⭐⭐⭐⭐ MC75 怪异FPS',
+    'neon white': '⭐⭐⭐⭐ MC78 卡牌跑酷',
+    'inscryption': '⭐⭐⭐⭐⭐ MC84 黑暗卡牌解谜',
+    'slay the princess': '⭐⭐⭐⭐ MC79 互动对话',
+    'signalis': '⭐⭐⭐⭐ MC82 复古生存恐怖',
+    'paranormasight': '⭐⭐⭐⭐ MC74 恐怖解谜ADV',
+    'fatal frame': '⭐⭐⭐⭐ MC72 恐怖摄影',
+    'sifu': '⭐⭐⭐⭐ MC81 功夫动作',
+    'hi-fi rush': '⭐⭐⭐⭐ MC87 节奏动作',
+    'chicory': '⭐⭐⭐⭐ MC87 治愈涂鸦解谜',
+    'wandersong': '⭐⭐⭐⭐ MC82 歌谣冒险',
+    'everhood': '⭐⭐⭐⭐ MC76 节奏RPG',
+    'pizza tower': '⭐⭐⭐⭐ MC86 高速平台',
+    'dave the diver': '⭐⭐⭐⭐ MC85 潜水钓鱼经营',
+    'graveyard keeper': '⭐⭐⭐⭐ MC69 墓地经营',
+    'core keeper': '⭐⭐⭐⭐ MC73 地牢探索',
+    'starbound': '⭐⭐⭐⭐ MC80 太空版泰拉瑞亚',
+    'spore': '⭐⭐⭐⭐ MC84 进化模拟经典',
+    'sims': '⭐⭐⭐⭐ MC79 模拟人生',
+    'rollercoaster tycoon': '⭐⭐⭐⭐ MC88 过山车经典',
+    'harvestella': '⭐⭐⭐⭐ MC72 种田RPG',
+    'story of seasons': '⭐⭐⭐⭐ MC75 种田经典',
+    'rune factory': '⭐⭐⭐⭐ MC76 种田战斗RPG',
+    'atelier': '⭐⭐⭐⭐ MC72 炼金工房RPG',
+    'ys': '⭐⭐⭐⭐ MC78 伊苏动作RPG',
+    'trails': '⭐⭐⭐⭐ MC78 轨迹RPG',
+    'tales of': '⭐⭐⭐⭐ MC77 传说RPG',
+    'star ocean': '⭐⭐⭐⭐ MC74 星海RPG',
+    'valkyrie': '⭐⭐⭐⭐ MC73 北欧女神',
+    'nier': '⭐⭐⭐⭐ MC88 横尾风格RPG',
+    'bravely default': '⭐⭐⭐⭐ MC79 勇气默示录RPG',
+    'octopath traveler': '⭐⭐⭐⭐ MC80 八方旅人RPG',
+    'triangle strategy': '⭐⭐⭐⭐ MC79 三角战略RPG',
+    'live a live': '⭐⭐⭐⭐ MC76 时空冒险RPG',
+    'dragon quest': '⭐⭐⭐⭐ MC87 勇者斗恶龙',
+    'pokémon': '⭐⭐⭐⭐ MC80 宝可梦RPG',
 }
 
 def rating_text(name):
@@ -152,6 +465,24 @@ P9_CATEGORIES = {
     '白金': '攻略',
 }
 
+def fetch_p9_topic_thumbnail(url):
+    """Fetch the first relevant game image from a P9 topic page."""
+    html = fetch(url)
+    if not html: return ''
+    soup = BeautifulSoup(html, 'lxml')
+    candidates = []
+    for img in soup.find_all('img'):
+        src = (img.get('src', '') or '').strip()
+        if not src or '.gif' in src.lower():
+            continue
+        # Skip avatars, icons, emoji
+        if any(k in src.lower() for k in ['avatar', 'face/', 'emotion', 'icon', 'upload/face', 'playstation.net/avatar']):
+            continue
+        # Prefer PlayStation trophy/game images and external image hosts
+        if any(k in src for k in ['psnobj.prod.dl.playstation', 'image.api.playstation', 'psn-rsc.', 'ax1x.com', 's2.loli.net', 'imgur.com']):
+            candidates.append(src)
+    return candidates[0] if candidates else ''
+
 def extract_p9_items(soup):
     """Extract post items from PSNine homepage."""
     items = []
@@ -212,8 +543,19 @@ def extract_p9_items(soup):
             'link': link,
             'author': author,
             'time': time_text,
-            'tags': tags
+            'tags': tags,
+            'img': ''
         })
+    
+    # Fetch thumbnails for topic posts
+    topic_links = [it['link'] for it in items[:14] if it['link'] and re.match(r'https://www\.psnine\.com/topic/\d+', it['link'])]
+    for tl in topic_links:
+        img = fetch_p9_topic_thumbnail(tl)
+        if img:
+            for it in items:
+                if it['link'] == tl:
+                    it['img'] = img
+                    break
     
     return items
 
@@ -341,12 +683,66 @@ def parse_switch():
     return games
 
 # ─── HTML generation ───────────────────────────────────────────────
+def pre_search_mods():
+    """Pre-cache mod search results using DuckDuckGo."""
+    # Pairs of (keyword, game_slug) to search
+    kw_pairs = [
+        ("画质", "cyberpunk2077"),
+        ("武器", "eldenring"),
+        ("人物外观", "skyrimspecialedition"),
+        ("UI", "baldursgate3"),
+        ("地图", "skyrimspecialedition"),
+        ("战斗", "eldenring"),
+        ("联机", "stardewvalley"),
+    ]
+    results_cache = {}
+    for kw, game in kw_pairs:
+        q = f"+mod+\"{kw}\"+site:nexusmods.com/\"{game}\""
+        url = f"https://lite.duckduckgo.com/lite/?q={urllib.parse.quote(q)}"
+        html = fetch(url, timeout=10)
+        if not html:
+            results_cache[f"{kw}_{game}"] = []
+            continue
+        soup = BeautifulSoup(html, 'lxml')
+        items = []
+        for a in soup.find_all('a', class_='result-link'):
+            href = a.get('href', '')
+            text = a.get_text(strip=True)
+            if not text or not href: continue
+            real_url = href
+            if 'uddg=' in href:
+                try:
+                    real_url = urllib.parse.unquote(href.split('uddg=')[1].split('&')[0])
+                except:
+                    pass
+            if 'nexusmods.com' not in real_url:
+                continue
+            row = a.find_parent('tr')
+            snippet = ''
+            if row:
+                tds = row.find_all('td')
+                if len(tds) >= 3:
+                    snippet = tds[2].get_text(strip=True)[:100]
+            items.append({'title': text, 'url': real_url, 'snippet': snippet})
+            if len(items) >= 6:
+                break
+        results_cache[f"{kw}_{game}"] = items
+    return results_cache
+
 def generate_html():
     ts = time.strftime('%Y-%m-%d %H:%M', time.localtime())
     psn = parse_psn()
     steam = parse_steam()
     switch = parse_switch()
     psnine = parse_psnine()
+
+    # Build image lookup from all game data
+    game_images = {}
+    for game_list in [psn, steam, switch]:
+        for g in game_list:
+            if g.get('img') and g.get('name'):
+                key = clean_name(g['name']).lower()
+                game_images[key] = g['img']
 
     def score_items(games, cn_bonus=False):
         seen, result = set(), []
@@ -377,7 +773,150 @@ def generate_html():
     def platform_icon(plat):
         return {'PSN': '🔵', 'Steam': '🟢', 'Switch': '🟡'}.get(plat, '🎮')
 
+    # Build more flexible image lookup from all platform data
+    img_lookup = {}
+    for g in psn + steam + switch:
+        if g.get('img'):
+            name = clean_name(g.get('name', '')).lower()
+            img_lookup[name] = g['img']
+            # Also map Chinese translated names
+            cn = translate_name(g['name'])
+            if cn:
+                img_lookup[cn.lower().replace('《','').replace('》','')] = g['img']
+
+    def find_p9_cover(title):
+        """Extract game name from P9 post title and find cover image."""
+        title_lower = title.lower()
+        # Direct match in lookup
+        for key, img in img_lookup.items():
+            if key in title_lower or title_lower in key:
+                return img
+        # Try to extract game name from common patterns
+        # "怪物猎人：世界冰原大小金..." → check 怪物猎人
+        for key in sorted(img_lookup.keys(), key=len, reverse=True):
+            if key in title_lower:
+                return img_lookup[key]
+        return ''
+
     cards = ""
+
+    # ---- Pre-cached Mod search results ----
+    mod_cache = pre_search_mods()
+    cached_mod_results = '<div id="mod-cache-results" style="display:block">'
+    for key, items in mod_cache.items():
+        parts = key.rsplit('_', 1)
+        kw, game = parts[0], parts[1] if len(parts) > 1 else ''
+        slug = f'rc-{kw}-{game}'
+        display_kw = {"画质": "🎨 画质 Mod", "武器": "⚔️ 武器 Mod", "人物外观": "👤 外观 Mod", "UI": "🖥️ UI Mod", "地图": "🗺️ 地图 Mod", "战斗": "⚡ 战斗 Mod", "联机": "👥 联机 Mod"}.get(kw, f"🔍 {kw}")
+        game_name = {"cyberpunk2077": "Cyberpunk 2077", "skyrimspecialedition": "Skyrim SE", "baldursgate3": "Baldur's Gate 3", "eldenring": "Elden Ring", "stardewvalley": "Stardew Valley", "blackmythwukong": "黑神话:悟空"}.get(game, game)
+        cached_mod_results += f'<div id="{slug}" class="mod-cache-group" style="display:none"><section class="platform"><h2>{display_kw} — {game_name}</h2><div class="game-list">'
+        if items:
+            for it in items:
+                title = it['title'][:50]
+                snippet = it.get('snippet', '')[:100]
+                snippet_html = f'<div class="card-rating" style="margin-top:2px;font-size:11px;color:#666">{snippet}</div>' if snippet else ''
+                cached_mod_results += f'''
+            <a href="{it["url"]}" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+                <div class="game-card-inner">
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name" style="font-size:13px">{title}</span>
+                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
+                        </div>
+                        {snippet_html}
+                    </div>
+                </div>
+            </a>'''
+        else:
+            cached_mod_results += '<div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div>'
+        cached_mod_results += '</div></section></div>'
+    cached_mod_results += '</div>'
+    
+    # ---- Mod 精选列表 ----
+    hot_mods = [
+        {"name": "Skyrim UE / 天际重制", "game": "The Elder Scrolls V: Skyrim SE", "desc": "最新 Mod 整合包，包含材质、光照、战斗大修", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/489830/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/skyrimspecialedition"},
+        {"name": "Cyberpunk 2077 画质大修", "game": "Cyberpunk 2077", "desc": "光线追踪增强、城市细节重制、天气系统", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/cyberpunk2077"},
+        {"name": "Baldur's Gate 3 Mod 合集", "game": "Baldur's Gate 3", "desc": "新增职业、法术、外观、UI增强等热门Mod", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/baldursgate3"},
+        {"name": "Elden Ring 无缝联机", "game": "Elden Ring", "desc": "Seamless Co-op Mod — 联机不再被入侵限制", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/eldenring"},
+        {"name": "Stardew Valley 扩展", "game": "Stardew Valley", "desc": "Stardew Valley Expanded — 新地图/角色/事件", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/stardewvalley"},
+        {"name": "Minecraft 模组精选", "game": "Minecraft", "desc": "OptiFine + Create + JEI + 光影包", "img": "https://media.forgecdn.net/avatars/thumbnails/0/102/64/64/636420395584242713.png", "site": "curseforge", "link": "https://www.curseforge.com/minecraft"},
+        {"name": "GTA V LSPDFR", "game": "Grand Theft Auto V", "desc": "警察模组 — 扮演警探执法", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/gta5"},
+        {"name": "塞尔达 旷野之息 Mod", "game": "The Legend of Zelda: Breath of the Wild", "desc": "60帧解锁+画质增强+性能优化 (Cemu)", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1677280/header_chinese.jpg", "site": "other", "link": "https://gamebanana.com/mods/cats/1"},
+        {"name": "七日杀 Mod 整合", "game": "7 Days to Die", "desc": "Undead Legacy / Darkness Falls 大改版", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/251570/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/7daystodie"},
+        {"name": "黑神话·悟空 Mod", "game": "Black Myth: Wukong", "desc": "画质提升+视角Mod+性能优化", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/blackmythwukong"},
+        {"name": "Cities: Skylines 资产包", "game": "Cities: Skylines", "desc": "真实建筑+道路模组+交通管理", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/255710/header.jpg", "site": "steam", "link": "https://steamcommunity.com/workshop/browse/?appid=255710"},
+        {"name": "Factorio 大型Mod", "game": "Factorio", "desc": "Space Exploration / Krastorio 2 / AngelBob", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427520/header.jpg", "site": "other", "link": "https://mods.factorio.com/"},
+    ]
+
+    search_games = [
+        {"name": "Skyrim SE 天际重制", "appid": "489830", "steam": "1", "nexus_game": "skyrimspecialedition"},
+        {"name": "Cyberpunk 2077", "appid": "1091500", "steam": "1", "nexus_game": "cyberpunk2077"},
+        {"name": "Baldur's Gate 3", "appid": "1086940", "steam": "1", "nexus_game": "baldursgate3"},
+        {"name": "Elden Ring 老头环", "appid": "1245620", "steam": "1", "nexus_game": "eldenring"},
+        {"name": "GTA V", "appid": "271590", "steam": "1", "nexus_game": "gta5"},
+        {"name": "Stardew Valley", "appid": "413150", "steam": "1", "nexus_game": "stardewvalley"},
+        {"name": "黑神话·悟空", "appid": "2358720", "steam": "1", "nexus_game": "blackmythwukong"},
+        {"name": "Minecraft", "appid": "", "steam": "0", "nexus_game": ""},
+        {"name": "7 Days to Die", "appid": "251570", "steam": "1", "nexus_game": "7daystodie"},
+        {"name": "Borderlands 3", "appid": "397540", "steam": "1", "nexus_game": "borderlands3"},
+        {"name": "Factorio", "appid": "427520", "steam": "1", "nexus_game": "factorio"},
+    ]
+
+    mods_html = '<div id="tab-mods" class="tab-content" style="display:none">'
+    mods_html += '<div class="sub-tab-bar p9-section-bar">'
+    mods_html += '<button class="sub-tab-btn active" onclick="switchModSubTab(\'mod-hot\', this)">🔥 热门 Mod</button>'
+    mods_html += '<button class="sub-tab-btn" onclick="switchModSubTab(\'mod-search\', this)">🔍 搜 Mod</button>'
+    mods_html += '</div>'
+
+    # Hot mods section
+    mods_html += '<div id="mod-hot" class="mod-section" style="display:block">'
+    mods_html += '<section class="platform"><h2>🔥 精选热门 Mod</h2><div class="game-list">'
+    for m in hot_mods:
+        site_icon = {"nexus": "Nexus", "curseforge": "CurseForge", "steam": "Steam工坊", "other": "M站"}.get(m["site"], "Mod站")
+        mods_html += f'''
+        <a href="{m["link"]}" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="{m["img"]}" class="game-thumb" onerror="this.style.display=\'none\'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">{m["name"]}</span>
+                        <span class="discount-badge disc-low">{site_icon}</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">{m["game"]}</div>
+                    <div class="card-rating">{m["desc"]}</div>
+                </div>
+            </div>
+        </a>'''
+    mods_html += '</div></section></div>'
+
+    # Search section - 后端预缓存搜索
+    mods_html += '<div id="mod-search" class="mod-section" style="display:none">'
+    mods_html += '<section class="platform"><h2>🔍 搜索 PC Mod（点击跳转原站）</h2>'
+    mods_html += '<div style="margin-bottom:12px">'
+    mods_html += '''<div class="p9-search-box">
+        <input type="text" id="mod-search-input" class="p9-search-input" placeholder="中文/英文搜 Mod…" onkeydown="if(event.key==='Enter') modSearchRedirect()">
+        <button class="p9-search-btn" onclick="modSearchRedirect()">🔍 搜</button>
+    </div>
+    <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('画质增强', 'cyberpunk2077')">🎨 画质</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('武器', 'cyberpunk2077')">⚔️ 武器</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('人物外观', 'skyrimspecialedition')">👤 外观</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('UI', 'skyrimspecialedition')">🖥️ UI</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('地图', 'eldenring')">🗺️ 地图</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('战斗', 'eldenring')">⚡ 战斗</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('联机', 'eldenring')">👥 联机</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('cyberpunk2077')">🌆 Cyberpunk</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('skyrimspecialedition')">🏔️ Skyrim</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('baldursgate3')">🎲 BG3</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('eldenring')">⚫ 老头环</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('stardewvalley')">🌾 星露谷</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('blackmythwukong')">🐵 黑神话</button>
+    </div>'''
+    # Pre-cached mod search results
+    mods_html += cached_mod_results
+    mods_html += '</div></section></div></div>'
     for label, items, icon, raw_label, section_id in [
         ("PSN 港服特惠", psn_items[:8], "🔵", "PSN", "disc-psn"),
         ("Steam 国服特惠", steam_items[:8], "🟢", "Steam", "disc-steam"),
@@ -453,44 +992,62 @@ def generate_html():
     p9_sections = ""
 
     if psnine.get('gamelist'):
-        p9_sections += '<section class="platform"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">'
+        p9_sections += '<section id="p9-game" class="platform p9-section"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">'
         for item in psnine['gamelist'][:4]:
             link = item['link']
             if link and not link.startswith('http'):
                 link = 'https://www.psnine.com' + link
             title = item['title'][:48]
+            img_src = item.get("img", "") or find_p9_cover(item["title"])
+            p9_img_html = f'<div class="p9-thumb"><img src="{img_src}" class="p9-thumb-img" onerror="this.parentElement.style.display=\'none\'"></div>' if img_src else ''
+            fallback = '<div class="p9-thumb p9-thumb-game">📦</div>' if not img_src else ''
             p9_sections += f'''
             <a href="{link}" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner">{p9_img_html or fallback}
+                <div class="p9-item-texts">
                 <span class="p9-title">{title}</span>
                 <span class="p9-meta">✎ {item['author']} · {item['time']}</span>
+                </div></div>
             </a>'''
         p9_sections += '</div></section>'
 
     if psnine.get('new_lows'):
-        p9_sections += '<section class="platform"><h2>💸 P9 新史低汇总</h2><div class="p9-list">'
+        p9_sections += '<section id="p9-low" class="platform p9-section"><h2>💸 P9 新史低汇总</h2><div class="p9-list">'
         for item in psnine['new_lows'][:4]:
             link = item['link']
             if link and not link.startswith('http'):
                 link = 'https://www.psnine.com' + link
             title = item['title'][:48]
+            img_src = item.get("img", "") or find_p9_cover(item["title"])
+            p9_img_html = f'<div class="p9-thumb"><img src="{img_src}" class="p9-thumb-img" onerror="this.parentElement.style.display=\'none\'"></div>' if img_src else ''
+            fallback = '<div class="p9-thumb p9-thumb-low">💸</div>' if not img_src else ''
             p9_sections += f'''
             <a href="{link}" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner">{p9_img_html or fallback}
+                <div class="p9-item-texts">
                 <span class="p9-title">{title}</span>
                 <span class="p9-meta">✎ {item['author']} · {item['time']}</span>
+                </div></div>
             </a>'''
         p9_sections += '</div></section>'
 
     if psnine.get('guides'):
-        p9_sections += '<section class="platform"><h2>🏆 P9 热门白金攻略</h2><div class="p9-list">'
+        p9_sections += '<section id="p9-guide" class="platform p9-section"><h2>🏆 P9 热门白金攻略</h2><div class="p9-list">'
         for item in psnine['guides'][:6]:
             link = item['link']
             if link and not link.startswith('http'):
                 link = 'https://www.psnine.com' + link
             title = item['title'][:48]
+            img_src = item.get("img", "") or find_p9_cover(item["title"])
+            p9_img_html = f'<div class="p9-thumb"><img src="{img_src}" class="p9-thumb-img" onerror="this.parentElement.style.display=\'none\'"></div>' if img_src else ''
+            fallback = '<div class="p9-thumb p9-thumb-guide">🏆</div>' if not img_src else ''
             p9_sections += f'''
             <a href="{link}" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner">{p9_img_html or fallback}
+                <div class="p9-item-texts">
                 <span class="p9-title">{title}</span>
                 <span class="p9-meta">✎ {item['author']} · {item['time']}</span>
+                </div></div>
             </a>'''
         p9_sections += '</div></section>'
 
@@ -544,8 +1101,15 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .top-rating {{ color: #aaa; font-size: 12px; }}
 /* P9 */
 .p9-list {{ display: flex; flex-direction: column; gap: 6px; }}
-.p9-item {{ background: #1a1a2e; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; transition: background 0.2s; }}
+.p9-item {{ background: #1a1a2e; border-radius: 10px; padding: 8px 10px; text-decoration: none; color: inherit; transition: background 0.2s; }}
 .p9-item:active {{ background: #2a2a3e; }}
+.p9-item-inner {{ display: flex; gap: 10px; align-items: center; }}
+.p9-thumb {{ flex-shrink: 0; width: 60px; height: 34px; border-radius: 4px; overflow: hidden; }}
+.p9-thumb-img {{ width: 60px; height: 34px; object-fit: cover; display: block; }}
+.p9-thumb-game {{ background: linear-gradient(135deg,#2a5a3e,#1a3a2e); display: flex; align-items: center; justify-content: center; font-size: 18px; }}
+.p9-thumb-low {{ background: linear-gradient(135deg,#5a4a1e,#3a2e1a); display: flex; align-items: center; justify-content: center; font-size: 18px; }}
+.p9-thumb-guide {{ background: linear-gradient(135deg,#3a2a5e,#2a1a3e); display: flex; align-items: center; justify-content: center; font-size: 18px; }}
+.p9-item-texts {{ flex: 1; min-width: 0; }}
 .p9-title {{ font-size: 14px; font-weight: 600; color: #e8e8f0; line-height: 1.4; }}
 .p9-meta {{ font-size: 11px; color: #888; }}
 .footer {{ text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }}
@@ -555,6 +1119,8 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .p9-search-input:focus {{ border-color: #5dade2; }}
 .p9-search-btn {{ padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; background: #2a2a4e; color: #e8e8f0; cursor: pointer; white-space: nowrap; }}
 .p9-search-btn:active {{ background: #3a3a5e; }}
+/* Mods */
+select {{ appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23888' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 12px; padding-right: 30px; }}
 /* Trophy search */
 .trophy-bar {{ display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 4px; }}
 .trophy-input {{ width: 140px; padding: 6px 10px; border: 1px solid #2a2a3e; border-radius: 8px; font-size: 13px; background: #1a1a2e; color: #e8e8f0; outline: none; }}
@@ -568,6 +1134,7 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
+<button class="tab-btn" onclick="switchTab('mods')">🎮 Mod</button>
 </div>
 
 <h1>🎮 Yann 的小站</h1>
@@ -590,12 +1157,19 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 <input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名直达P9游戏区…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
 <button class="p9-search-btn" onclick="p9Search()">🔍 直达游戏</button>
 </div>
+<div class="sub-tab-bar p9-section-bar">
+<button class="sub-tab-btn active" onclick="switchP9SubTab('p9-game', this)">📦 入库/会免</button>
+<button class="sub-tab-btn" onclick="switchP9SubTab('p9-low', this)">💸 新史低</button>
+<button class="sub-tab-btn" onclick="switchP9SubTab('p9-guide', this)">🏆 白金攻略</button>
+</div>
 <div id="p9-results">
 <div id="p9-default-content">
 {p9_sections}
 </div>
 </div>
 </div>
+
+{mods_html}
 
 <div id="tab-trophy" class="tab-content">
 <div class="trophy-bar">
@@ -642,6 +1216,15 @@ function switchSubTab(id, btn) {{
     btn.classList.add('active');
 }}
 
+function switchP9SubTab(id, btn) {{
+    var sections = document.querySelectorAll('#tab-psnine .p9-section');
+    var btns = document.querySelectorAll('#tab-psnine .p9-section-bar .sub-tab-btn');
+    for (var i = 0; i < sections.length; i++) sections[i].style.display = 'none';
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
+}}
+
 window.onload = function() {{
     loadSavedTrophy();
 }};
@@ -653,8 +1236,65 @@ function switchTab(name) {{
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
-    if (name === 'psnine') setTimeout(function(){{ document.getElementById('p9-search-input').focus(); }}, 300);
+    if (name === 'psnine') {{
+        setTimeout(function(){{ document.getElementById('p9-search-input').focus(); }}, 300);
+        // Show first P9 sub-tab by default
+        var sections = document.querySelectorAll('#tab-psnine .p9-section');
+        var sbtns = document.querySelectorAll('#tab-psnine .p9-section-bar .sub-tab-btn');
+        for (var i = 0; i < sections.length; i++) sections[i].style.display = i === 0 ? 'block' : 'none';
+        for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
+    }}
     if (name === 'trophy') setTimeout(function(){{ document.getElementById('trophy-input').focus(); loadSavedTrophy(); }}, 100);
+    if (name === 'mods') {{
+        var sections = document.querySelectorAll('#tab-mods .mod-section');
+        var sbtns = document.querySelectorAll('#tab-mods .p9-section-bar .sub-tab-btn');
+        for (var i = 0; i < sections.length; i++) sections[i].style.display = i === 0 ? 'block' : 'none';
+        for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
+    }}
+}}
+
+function switchModSubTab(id, btn) {{
+    var sections = document.querySelectorAll('#tab-mods .mod-section');
+    var btns = document.querySelectorAll('#tab-mods .p9-section-bar .sub-tab-btn');
+    for (var i = 0; i < sections.length; i++) sections[i].style.display = 'none';
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
+}}
+
+function setModSearch(keyword) {{
+    document.getElementById('mod-search-input').value = keyword;
+    modSearchRedirect();
+}}
+
+function setModSearchGame(game) {{
+    document.getElementById('mod-search-input').value = game;
+    modSearchRedirect();
+}}
+
+function modSearchRedirect() {{
+    var q = document.getElementById('mod-search-input').value.trim();
+    if (!q) return;
+    window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(q), '_blank');
+}}
+
+function modSearchRedirectKW(kw, game) {{
+    // Show cached group if available
+    var slug = 'rc-' + kw + '-' + game;
+    var el = document.getElementById(slug);
+    if (el) {{
+        // Hide all groups, show this one
+        var groups = document.querySelectorAll('.mod-cache-group');
+        for (var i = 0; i < groups.length; i++) groups[i].style.display = 'none';
+        el.style.display = 'block';
+        document.getElementById('mod-cache-results').style.display = 'block';
+    }} else {{
+        window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(kw + ' ' + game), '_blank');
+    }}
+}}
+
+function modSearchRedirectGame(game) {{
+    window.open('https://www.nexusmods.com/' + game + '/mods/', '_blank');
 }}
 </script>
 </body>

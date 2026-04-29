@@ -46,8 +46,15 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 .top-rating { color: #aaa; font-size: 12px; }
 /* P9 */
 .p9-list { display: flex; flex-direction: column; gap: 6px; }
-.p9-item { background: #1a1a2e; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; transition: background 0.2s; }
+.p9-item { background: #1a1a2e; border-radius: 10px; padding: 8px 10px; text-decoration: none; color: inherit; transition: background 0.2s; }
 .p9-item:active { background: #2a2a3e; }
+.p9-item-inner { display: flex; gap: 10px; align-items: center; }
+.p9-thumb { flex-shrink: 0; width: 60px; height: 34px; border-radius: 4px; overflow: hidden; }
+.p9-thumb-img { width: 60px; height: 34px; object-fit: cover; display: block; }
+.p9-thumb-game { background: linear-gradient(135deg,#2a5a3e,#1a3a2e); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.p9-thumb-low { background: linear-gradient(135deg,#5a4a1e,#3a2e1a); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.p9-thumb-guide { background: linear-gradient(135deg,#3a2a5e,#2a1a3e); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.p9-item-texts { flex: 1; min-width: 0; }
 .p9-title { font-size: 14px; font-weight: 600; color: #e8e8f0; line-height: 1.4; }
 .p9-meta { font-size: 11px; color: #888; }
 .footer { text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }
@@ -57,6 +64,8 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 .p9-search-input:focus { border-color: #5dade2; }
 .p9-search-btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; background: #2a2a4e; color: #e8e8f0; cursor: pointer; white-space: nowrap; }
 .p9-search-btn:active { background: #3a3a5e; }
+/* Mods */
+select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23888' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 12px; padding-right: 30px; }
 /* Trophy search */
 .trophy-bar { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 4px; }
 .trophy-input { width: 140px; padding: 6px 10px; border: 1px solid #2a2a3e; border-radius: 8px; font-size: 13px; background: #1a1a2e; color: #e8e8f0; outline: none; }
@@ -70,11 +79,12 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
+<button class="tab-btn" onclick="switchTab('mods')">🎮 Mod</button>
 </div>
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 13:14</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 14:22</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -176,21 +186,6 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
             </div>
             <div class="game-card">
                 <div class="game-card-inner">
-                    <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202410/3101/0f411dcdec81501788dd9a7dd05efee496db057c3d346e74.png?w=240" class="game-thumb" onerror="this.style.display='none'"></div>
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name">《真・三國無雙 起源》</span>
-                            <span class="discount-badge disc-mid">-30%</span>
-                        </div>
-                        <div class="card-price">
-                            <span class="current-price">HK$370.30</span>
-                        </div>
-                        <div class="card-rating"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="game-card">
-                <div class="game-card-inner">
                     <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202509/0506/8dc3c5e53567237684e2b32c616a4d5011640409c2df3aa1.png?w=240" class="game-thumb" onerror="this.style.display='none'"></div>
                     <div class="card-right">
                         <div class="card-header">
@@ -199,6 +194,21 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
                         </div>
                         <div class="card-price">
                             <span class="current-price">HK$306.60</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐ MC70 恐龙生存</div>
+                    </div>
+                </div>
+            </div>
+            <div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202410/3101/0f411dcdec81501788dd9a7dd05efee496db057c3d346e74.png?w=240" class="game-thumb" onerror="this.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">《真・三國無雙 起源》</span>
+                            <span class="discount-badge disc-mid">-30%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">HK$370.30</span>
                         </div>
                         <div class="card-rating"></div>
                     </div>
@@ -260,7 +270,7 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
                         <div class="card-price">
                             <span class="current-price">¥99</span>
                         </div>
-                        <div class="card-rating"></div>
+                        <div class="card-rating">⭐⭐⭐⭐ MC89 机械兽开放世界</div>
                     </div>
                 </div>
             </div>
@@ -522,64 +532,286 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 <input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名直达P9游戏区…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
 <button class="p9-search-btn" onclick="p9Search()">🔍 直达游戏</button>
 </div>
+<div class="sub-tab-bar p9-section-bar">
+<button class="sub-tab-btn active" onclick="switchP9SubTab('p9-game', this)">📦 入库/会免</button>
+<button class="sub-tab-btn" onclick="switchP9SubTab('p9-low', this)">💸 新史低</button>
+<button class="sub-tab-btn" onclick="switchP9SubTab('p9-guide', this)">🏆 白金攻略</button>
+</div>
 <div id="p9-results">
 <div id="p9-default-content">
-<section class="platform"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">
+<section id="p9-game" class="platform p9-section"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">
             <a href="https://www.psnine.com/topic/39091" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR24321_00/96674236-573c-422c-9754-0357cfde931d.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
+                <div class="p9-item-texts">
                 <span class="p9-title">2026年4月港服PLUS二三档新增及退库游戏目录(4月21日提供)暨抽奖活动开奖</span>
-                <span class="p9-meta">✎ kuusoumenreiki · 4小</span>
+                <span class="p9-meta">✎ kuusoumenreiki · 5小</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39098" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR24321_00/96674236-573c-422c-9754-0357cfde931d.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
+                <div class="p9-item-texts">
                 <span class="p9-title">【26年4月入库】PS+会员二三档游戏白金难度</span>
                 <span class="p9-meta">✎ skyfantasyhong · 前天 17:28</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39095" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR24321_00/96674236-573c-422c-9754-0357cfde931d.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
+                <div class="p9-item-texts">
                 <span class="p9-title">2026年4月港服 PS PLUS 二/三档入库游戏指南 白金时间/难度/DLC/自动跳杯</span>
                 <span class="p9-meta">✎ dikefeisi · 8天前 13:19</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39024" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb p9-thumb-game">📦</div>
+                <div class="p9-item-texts">
                 <span class="p9-title">2026年3月港服PLUS二三档新增及退库游戏目录(3月17日提供)暨抽奖活动提醒</span>
                 <span class="p9-meta">✎ kuusoumenreiki · 03-25 15:05</span>
-            </a></div></section><section class="platform"><h2>💸 P9 新史低汇总</h2><div class="p9-list">
+                </div></div>
+            </a></div></section><section id="p9-low" class="platform p9-section"><h2>💸 P9 新史低汇总</h2><div class="p9-list">
             <a href="https://www.psnine.com/topic/39102" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb"><img src="https://image.api.playstation.com/trophy/np/NPWR25088_00_006841AC0C54A402B362ABB17C77C0881412A9FC69/2B31B69F4A987A544969399583A67C4A144290B0.PNG" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
+                <div class="p9-item-texts">
                 <span class="p9-title">2026.4.22-2026.5.6 PSN港服商店 新史低游戏</span>
-                <span class="p9-meta">✎ wanshuai · 121385小</span>
+                <span class="p9-meta">✎ wanshuai · 121386小</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39083" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb p9-thumb-low">💸</div>
+                <div class="p9-item-texts">
                 <span class="p9-title">2026.4.8-2026.4.22 PSN港服商店 新史低游戏</span>
                 <span class="p9-meta">✎ wanshuai · 1213814天前 23:13</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39061" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb p9-thumb-low">💸</div>
+                <div class="p9-item-texts">
                 <span class="p9-title">2026.3.25-2026.4.8 PSN港服商店 新史低游戏</span>
                 <span class="p9-meta">✎ wanshuai12138 · 04-08 12:09</span>
-            </a></div></section><section class="platform"><h2>🏆 P9 热门白金攻略</h2><div class="p9-list">
+                </div></div>
+            </a></div></section><section id="p9-guide" class="platform p9-section"><h2>🏆 P9 热门白金攻略</h2><div class="p9-list">
             <a href="https://www.psnine.com/topic/39108" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb p9-thumb-guide">🏆</div>
+                <div class="p9-item-texts">
                 <span class="p9-title">PS5《红色沙漠》游玩指南</span>
                 <span class="p9-meta">✎ peneltykill · 昨天 17:02</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39084" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR55253_00/8500524e-f303-41a3-909c-a6bd0ce178c9.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
+                <div class="p9-item-texts">
                 <span class="p9-title">《咒》全收集文字攻略+全收集列表</span>
                 <span class="p9-meta">✎ aimeraya · 8天前 10:45</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39088" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR58500_00/57b1f7b6-d28f-4547-bb98-1e4e0ed189dd.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
+                <div class="p9-item-texts">
                 <span class="p9-title">PS4/PS5《告别回忆 双想～Break out of my shell～》（秋之回忆9 双想</span>
                 <span class="p9-meta">✎ mikukukukuku · 10天前 00:19</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39092" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb p9-thumb-guide">🏆</div>
+                <div class="p9-item-texts">
                 <span class="p9-title">PS4｜PS5《连咒》简易白金攻略</span>
                 <span class="p9-meta">✎ xbcded · 12天前 16:33</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39089" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb p9-thumb-guide">🏆</div>
+                <div class="p9-item-texts">
                 <span class="p9-title">PS5《超级肉肉男孩3D》全A+以及一命通关视频攻略</span>
                 <span class="p9-meta">✎ lazifox · 200214天前 16:57</span>
+                </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39064" class="p9-item" target="_blank" rel="noopener">
+                <div class="p9-item-inner"><div class="p9-thumb p9-thumb-guide">🏆</div>
+                <div class="p9-item-texts">
                 <span class="p9-title">《无双大蛇Z / 無双OROCHI Z》白金攻略</span>
                 <span class="p9-meta">✎ hjuy65tghmmmx3 · 04-08 06:32</span>
+                </div></div>
             </a></div></section>
 </div>
 </div>
 </div>
+
+<div id="tab-mods" class="tab-content" style="display:none"><div class="sub-tab-bar p9-section-bar"><button class="sub-tab-btn active" onclick="switchModSubTab('mod-hot', this)">🔥 热门 Mod</button><button class="sub-tab-btn" onclick="switchModSubTab('mod-search', this)">🔍 搜 Mod</button></div><div id="mod-hot" class="mod-section" style="display:block"><section class="platform"><h2>🔥 精选热门 Mod</h2><div class="game-list">
+        <a href="https://www.nexusmods.com/skyrimspecialedition" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/489830/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Skyrim UE / 天际重制</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">The Elder Scrolls V: Skyrim SE</div>
+                    <div class="card-rating">最新 Mod 整合包，包含材质、光照、战斗大修</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.nexusmods.com/cyberpunk2077" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Cyberpunk 2077 画质大修</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Cyberpunk 2077</div>
+                    <div class="card-rating">光线追踪增强、城市细节重制、天气系统</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.nexusmods.com/baldursgate3" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Baldur's Gate 3 Mod 合集</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Baldur's Gate 3</div>
+                    <div class="card-rating">新增职业、法术、外观、UI增强等热门Mod</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.nexusmods.com/eldenring" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Elden Ring 无缝联机</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Elden Ring</div>
+                    <div class="card-rating">Seamless Co-op Mod — 联机不再被入侵限制</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.nexusmods.com/stardewvalley" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Stardew Valley 扩展</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Stardew Valley</div>
+                    <div class="card-rating">Stardew Valley Expanded — 新地图/角色/事件</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.curseforge.com/minecraft" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://media.forgecdn.net/avatars/thumbnails/0/102/64/64/636420395584242713.png" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Minecraft 模组精选</span>
+                        <span class="discount-badge disc-low">CurseForge</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Minecraft</div>
+                    <div class="card-rating">OptiFine + Create + JEI + 光影包</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.nexusmods.com/gta5" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">GTA V LSPDFR</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Grand Theft Auto V</div>
+                    <div class="card-rating">警察模组 — 扮演警探执法</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://gamebanana.com/mods/cats/1" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1677280/header_chinese.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">塞尔达 旷野之息 Mod</span>
+                        <span class="discount-badge disc-low">M站</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">The Legend of Zelda: Breath of the Wild</div>
+                    <div class="card-rating">60帧解锁+画质增强+性能优化 (Cemu)</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.nexusmods.com/7daystodie" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/251570/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">七日杀 Mod 整合</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">7 Days to Die</div>
+                    <div class="card-rating">Undead Legacy / Darkness Falls 大改版</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://www.nexusmods.com/blackmythwukong" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">黑神话·悟空 Mod</span>
+                        <span class="discount-badge disc-low">Nexus</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Black Myth: Wukong</div>
+                    <div class="card-rating">画质提升+视角Mod+性能优化</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://steamcommunity.com/workshop/browse/?appid=255710" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/255710/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Cities: Skylines 资产包</span>
+                        <span class="discount-badge disc-low">Steam工坊</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Cities: Skylines</div>
+                    <div class="card-rating">真实建筑+道路模组+交通管理</div>
+                </div>
+            </div>
+        </a>
+        <a href="https://mods.factorio.com/" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+            <div class="game-card-inner">
+                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427520/header.jpg" class="game-thumb" onerror="this.style.display='none'"></div>
+                <div class="card-right">
+                    <div class="card-header">
+                        <span class="game-name">Factorio 大型Mod</span>
+                        <span class="discount-badge disc-low">M站</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:4px">Factorio</div>
+                    <div class="card-rating">Space Exploration / Krastorio 2 / AngelBob</div>
+                </div>
+            </div>
+        </a></div></section></div><div id="mod-search" class="mod-section" style="display:none"><section class="platform"><h2>🔍 搜索 PC Mod（点击跳转原站）</h2><div style="margin-bottom:12px"><div class="p9-search-box">
+        <input type="text" id="mod-search-input" class="p9-search-input" placeholder="中文/英文搜 Mod…" onkeydown="if(event.key==='Enter') modSearchRedirect()">
+        <button class="p9-search-btn" onclick="modSearchRedirect()">🔍 搜</button>
+    </div>
+    <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('画质增强', 'cyberpunk2077')">🎨 画质</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('武器', 'cyberpunk2077')">⚔️ 武器</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('人物外观', 'skyrimspecialedition')">👤 外观</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('UI', 'skyrimspecialedition')">🖥️ UI</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('地图', 'eldenring')">🗺️ 地图</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('战斗', 'eldenring')">⚡ 战斗</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('联机', 'eldenring')">👥 联机</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('cyberpunk2077')">🌆 Cyberpunk</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('skyrimspecialedition')">🏔️ Skyrim</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('baldursgate3')">🎲 BG3</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('eldenring')">⚫ 老头环</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('stardewvalley')">🌾 星露谷</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('blackmythwukong')">🐵 黑神话</button>
+    </div><div id="mod-cache-results" style="display:block"><div id="rc-画质-cyberpunk2077" class="mod-cache-group" style="display:none"><section class="platform"><h2>🎨 画质 Mod — Cyberpunk 2077</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-武器-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚔️ 武器 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-人物外观-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>👤 外观 Mod — Skyrim SE</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-UI-baldursgate3" class="mod-cache-group" style="display:none"><section class="platform"><h2>🖥️ UI Mod — Baldur's Gate 3</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-地图-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>🗺️ 地图 Mod — Skyrim SE</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-战斗-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚡ 战斗 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-联机-stardewvalley" class="mod-cache-group" style="display:none"><section class="platform"><h2>👥 联机 Mod — Stardew Valley</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div></div></div></section></div></div>
 
 <div id="tab-trophy" class="tab-content">
 <div class="trophy-bar">
@@ -626,6 +858,15 @@ function switchSubTab(id, btn) {
     btn.classList.add('active');
 }
 
+function switchP9SubTab(id, btn) {
+    var sections = document.querySelectorAll('#tab-psnine .p9-section');
+    var btns = document.querySelectorAll('#tab-psnine .p9-section-bar .sub-tab-btn');
+    for (var i = 0; i < sections.length; i++) sections[i].style.display = 'none';
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
+}
+
 window.onload = function() {
     loadSavedTrophy();
 };
@@ -637,8 +878,65 @@ function switchTab(name) {
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
-    if (name === 'psnine') setTimeout(function(){ document.getElementById('p9-search-input').focus(); }, 300);
+    if (name === 'psnine') {
+        setTimeout(function(){ document.getElementById('p9-search-input').focus(); }, 300);
+        // Show first P9 sub-tab by default
+        var sections = document.querySelectorAll('#tab-psnine .p9-section');
+        var sbtns = document.querySelectorAll('#tab-psnine .p9-section-bar .sub-tab-btn');
+        for (var i = 0; i < sections.length; i++) sections[i].style.display = i === 0 ? 'block' : 'none';
+        for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
+    }
     if (name === 'trophy') setTimeout(function(){ document.getElementById('trophy-input').focus(); loadSavedTrophy(); }, 100);
+    if (name === 'mods') {
+        var sections = document.querySelectorAll('#tab-mods .mod-section');
+        var sbtns = document.querySelectorAll('#tab-mods .p9-section-bar .sub-tab-btn');
+        for (var i = 0; i < sections.length; i++) sections[i].style.display = i === 0 ? 'block' : 'none';
+        for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
+    }
+}
+
+function switchModSubTab(id, btn) {
+    var sections = document.querySelectorAll('#tab-mods .mod-section');
+    var btns = document.querySelectorAll('#tab-mods .p9-section-bar .sub-tab-btn');
+    for (var i = 0; i < sections.length; i++) sections[i].style.display = 'none';
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
+}
+
+function setModSearch(keyword) {
+    document.getElementById('mod-search-input').value = keyword;
+    modSearchRedirect();
+}
+
+function setModSearchGame(game) {
+    document.getElementById('mod-search-input').value = game;
+    modSearchRedirect();
+}
+
+function modSearchRedirect() {
+    var q = document.getElementById('mod-search-input').value.trim();
+    if (!q) return;
+    window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(q), '_blank');
+}
+
+function modSearchRedirectKW(kw, game) {
+    // Show cached group if available
+    var slug = 'rc-' + kw + '-' + game;
+    var el = document.getElementById(slug);
+    if (el) {
+        // Hide all groups, show this one
+        var groups = document.querySelectorAll('.mod-cache-group');
+        for (var i = 0; i < groups.length; i++) groups[i].style.display = 'none';
+        el.style.display = 'block';
+        document.getElementById('mod-cache-results').style.display = 'block';
+    } else {
+        window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(kw + ' ' + game), '_blank');
+    }
+}
+
+function modSearchRedirectGame(game) {
+    window.open('https://www.nexusmods.com/' + game + '/mods/', '_blank');
 }
 </script>
 </body>

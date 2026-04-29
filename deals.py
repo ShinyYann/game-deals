@@ -1230,16 +1230,16 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 {mods_html}
 
 <div id="tab-trophy" class="tab-content">
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+<div style="flex:1;"></div>
+<button class="trophy-btn-toggle" id="trophy-toggle" onclick="toggleTrophyBar()">🔍</button>
+</div>
 <div class="trophy-bar" id="trophy-bar">
 <input type="text" id="trophy-input" class="trophy-input" placeholder="填PSN ID" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
 <button class="trophy-btn" onclick="trophySearch()">🔍</button>
 </div>
 <div id="trophy-frame" style="display:none; margin-top:12px;">
 <iframe id="trophy-iframe" style="width:100%;height:800px;border:none;border-radius:12px;background:#1a1a2e;"></iframe>
-</div>
-</div>
-<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; justify-content:flex-end;">
-<button class="trophy-btn-toggle" id="trophy-toggle" onclick="toggleTrophyBar()">🔍</button>
 </div>
 </div>
 

@@ -387,35 +387,36 @@ RATINGS = {
 # ─── Game Details (descriptions, B站 BV IDs) ──────────────────────
 # Format: '游戏名': ('简介', 'BV号或空')
 GAME_DETAILS = {
-    'elden ring': ('《艾尔登法环》是一款以黑暗奇幻世界为舞台的动作RPG。玩家将穿越辽阔的「狭间之地」，探索神秘的地下城，挑战强大的半神。由宫崎英高与乔治·R·R·马丁联手打造。', 'BV1q5411c7aP'),
-    'ghost of tsushima': ('《对马岛之魂》以1274年元日战争为背景，玩家扮演武士境井仁，在蒙古大军入侵下为保护对马岛而战。独特的「武士」与「战鬼」双玩法，配合绝美的日式开放世界。', 'BV1d4411f7Q6'),
-    'resident evil 4': ('《生化危机4》是经典生存恐怖系列的巅峰之作。玩家将操控特工里昂，前往欧洲偏远村庄营救总统女儿。融合动作射击与恐怖氛围，被誉为系列最杰出的作品。', 'BV1Xk4y1q7Qp'),
-    'persona 5 royal': ('《女神异闻录5 皇家版》是一款日式角色扮演游戏。玩家扮演高中生怪盗，白天过着校园生活，夜晚潜入他人心灵迷宫偷走「宝物」。风格前卫，剧情深刻。', 'BV1JZ4y1X7YW'),
-    'persona 5': ('《女神异闻录5 皇家版》是一款日式角色扮演游戏。玩家扮演高中生怪盗，白天过着校园生活，夜晚潜入他人心灵迷宫偷走「宝物」。风格前卫，剧情深刻。', 'BV1JZ4y1X7YW'),
-    'cyberpunk 2077': ('《赛博朋克2077》是一款开放世界动作冒险游戏。玩家在夜之城中扮演雇佣兵V，追寻永生的秘密。经过多年更新修复，现已是一款内容丰富、体验出色的科幻大作。', 'BV1M3411C7mD'),
-    'split fiction': ('《双影奇境》是「双人成行」团队最新力作，支持双人合作的科幻冒险游戏。两位女主角穿梭于不同世界，兼具创新玩法与感人剧情。被誉为2025年度游戏有力竞争者。', 'BV1Jw411d7vB'),
-    'it takes two': ('《双人成行》是一款专门为双人合作设计的动作冒险游戏，讲述一对即将离婚的夫妻意外变成玩偶，在奇幻世界中修复感情的故事。荣获2021年TGA年度游戏大奖。', 'BV1rX4y1w7Td'),
-    'stellar blade': ('《剑星》是一款动作角色扮演游戏。玩家操控战士夏娃，在末世地球上与神秘生物奈提巴战斗，夺回失落的家园。以华丽的动作设计和引人入胜的剧情著称。', 'BV1wZ421e7zh'),
-    'balatro': ('《Balatro》是一款融合了扑克牌与Roguelike元素的独立游戏。玩家需要构建强力牌组，挑战各种关卡。以其上瘾的玩法和高重玩性获得了广泛好评。', 'BV1rN4y1j7P1'),
-    'black myth wukong': ('《黑神话：悟空》是一款以中国神话为背景的动作角色扮演游戏。玩家扮演「天命人」，在充满妖怪的奇幻世界中探索，体验西游故事的全新演绎。国产游戏里程碑之作。', 'BV14M4m1y7Gd'),
-    'wukong': ('《黑神话：悟空》是一款以中国神话为背景的动作角色扮演游戏。玩家扮演「天命人」，在充满妖怪的奇幻世界中探索，体验西游故事的全新演绎。国产游戏里程碑之作。', 'BV14M4m1y7Gd'),
-    'the witcher': ('《巫师3：狂猎》是一款开放世界角色扮演游戏。玩家扮演猎魔人杰洛特，在战争肆虐的大陆上寻找养女希里。以深刻剧情、丰富选择和栩栩如生的世界著称。', 'BV1is411i7WX'),
-    'witcher': ('《巫师3：狂猎》是一款开放世界角色扮演游戏。玩家扮演猎魔人杰洛特，在战争肆虐的大陆上寻找养女希里。以深刻剧情、丰富选择和栩栩如生的世界著称。', 'BV1is411i7WX'),
-    'monster hunter': ('《怪物猎人》系列是共斗动作角色扮演游戏的标杆。玩家扮演猎人，与队友一起狩猎巨型怪物，利用战利品打造更强装备。紧张刺激的战斗与合作是核心魅力。', 'BV1GJ41187Qf'),
-    'hades': ('《Hades》是一款Roguelike动作游戏。玩家扮演冥王之子扎格柔斯，试图逃离冥界。以其爽快的战斗、丰富的人物塑造和创新的叙事方式获得TGA年度最佳动作游戏。', 'BV1kK4y187Vw'),
-    'hades ii': ('《Hades II》是备受期待的续作。玩家将扮演冥王之女墨利诺厄，在全新的希腊神话世界中探索。保留了前作的精髓，同时带来更丰富的战斗系统和故事。', 'BV1SH4y177mr'),
-    'dynasty warriors': ('《真·三国无双》系列以「一骑当千」的爽快战斗闻名。玩家扮演三国武将，在战场上横扫千军。《真·三国无双 起源》是系列革新之作，带来全新战斗系统。', 'BV1RJ411q7o6'),
-    'forza horizon': ('《极限竞速：地平线》系列是开放世界赛车游戏的标杆。在广阔的墨西哥/英国/澳洲等场景中自由驰骋，参与各种赛事活动。画面精美，手感出色。', 'BV1d4411S7LY'),
-    'tmnt': ('《忍者神龟：破碎命运》是一款动作冒险游戏。四只忍者神龟再次集结，在纽约街头对抗邪恶势力。支持多人合作，还原经典动画风格。', ''),
-    'gran turismo 7': ('《跑车浪漫旅7》是索尼第一方赛车模拟游戏。收录了海量真实车型和赛道，以其逼真的驾驶体验和出色的画面表现著称。GT系列的集大成之作。', 'BV1t44y1q7LL'),
+    # Format: 'game_key': (简介, [评价标签], BV号)
+    'elden ring': ('宫崎英高与乔治·R·R·马丁联手打造的动作RPG史诗。穿越「狭间之地」，挑战半神，揭开法环碎裂之谜。辽阔的开放世界令人惊叹，隐藏地牢与巨型Boss战充满探索欲。', ['动作RPG', 'MC96 年度最佳', 'TGA 2022年度游戏', '开放世界标杆'], 'BV1q5411c7aP'),
+    'ghost of tsushima': ('以1274年元日战争为背景的开放世界动作冒险。武士境井仁在蒙古入侵下化身「战鬼」，守护对马岛。绝美的日本风光、爽快的刀剑对决、沉浸的和风叙事。', ['开放世界动作', 'MC87 佳作', '武士题材必玩', '玩家选择奖'], 'BV1d4411f7Q6'),
+    'resident evil 4': ('经典生存恐怖系列巅峰之作。特工里昂前往欧洲村庄营救总统女儿。完美融合动作射击与恐怖氛围，关卡设计教科书级别。重制版画质大幅提升，战斗系统更流畅。', ['动作恐怖', 'MC93 必玩神作', '系列天花板', '最佳重制'], 'BV1Xk4y1q7Qp'),
+    'persona 5 royal': ('风格前卫的日式角色扮演游戏。白天是高中生，夜晚化身怪盗潜入心灵迷宫。UI设计独树一帜，剧情深刻，BGM神级。皇家版加入新角色和第三学期内容。', ['日式RPG', 'MC95 神作', '200小时+内容量', '原声封神'], 'BV1JZ4y1X7YW'),
+    'persona 5': ('风格前卫的日式角色扮演游戏。白天是高中生，夜晚化身怪盗潜入心灵迷宫。UI设计独树一帜，剧情深刻，BGM神级。皇家版加入新角色和第三学期内容。', ['日式RPG', 'MC95 神作', '200小时+内容量', '原声封神'], 'BV1JZ4y1X7YW'),
+    'cyberpunk 2077': ('开放世界科幻RPG。在夜之城扮演雇佣兵V追寻永生。初期优化翻车，但经DLC「往日之影」与2.0大更新后彻底翻身——沉浸感爆棚的赛博朋克世界，剧情深刻，战斗爽快。', ['开放世界RPG', 'MC86 已修复', 'DLC口碑极佳', '2024年最佳翻身作'], 'BV1M3411C7mD'),
+    'split fiction': ('「双人成行」团队最新力作。两位女主角穿梭科幻世界，兼具创新玩法与感人剧情。每一关都有全新机制，画面震撼，2025年TGA年度游戏有力竞争者。', ['双人合作', 'MC91 年度黑马', '必玩双人游戏', '最佳合作游戏'], 'BV1Jw411d7vB'),
+    'it takes two': ('专门为双人合作设计的动作冒险游戏。一对即将离婚的夫妻变成玩偶，在奇幻世界中修复感情。每一章都有完全不同的玩法机制。荣获TGA 2021年度游戏。', ['双人合作', 'MC90 神作', 'TGA 2021年度游戏', '情侣必玩'], 'BV1rX4y1w7Td'),
+    'stellar blade': ('末世科幻动作RPG。战士夏娃在末世上与奈提巴战斗，夺回家园。战斗系统流畅华丽，女主角设计出众，BOSS战魄力十足。索尼独占品质之作。', ['动作RPG', 'MC81 佳作', '战斗爽快', '配乐出色'], 'BV1wZ421e7zh'),
+    'balatro': ('扑克牌Roguelike的独立神作。构建强力牌组挑战关底，数学策略与运气完美结合。一局接一局根本停不下来。2024年独立游戏最强口碑之一。', ['肉鸽/卡牌', 'MC90 独立神作', '上瘾警告', '性价比之王'], 'BV1rN4y1j7P1'),
+    'black myth wukong': ('国产动作游戏里程碑。扮演「天命人」在东方奇幻世界探索，体验西游故事的全新演绎。画面表现力惊艳，Boss战设计出色，战斗系统扎实。全球销量破千万。', ['动作RPG', 'MC81 国产之光', '画面顶级', '中文文化输出'], 'BV14M4m1y7Gd'),
+    'wukong': ('国产动作游戏里程碑。扮演「天命人」在东方奇幻世界探索，体验西游故事的全新演绎。画面表现力惊艳，Boss战设计出色，战斗系统扎实。全球销量破千万。', ['动作RPG', 'MC81 国产之光', '画面顶级', '中文文化输出'], 'BV14M4m1y7Gd'),
+    'the witcher': ('开放世界RPG的标杆之作。猎魔人杰洛特穿越战乱大陆寻找养女希里。分支剧情深刻影响结局、人物塑造入木三分、「血与酒」DLC被誉为最佳DLC之一。', ['开放世界RPG', 'MC93 神作', '剧情天花板', 'TGA 2015年度游戏'], 'BV1is411i7WX'),
+    'witcher': ('开放世界RPG的标杆之作。猎魔人杰洛特穿越战乱大陆寻找养女希里。分支剧情深刻影响结局、人物塑造入木三分、「血与酒」DLC被誉为最佳DLC之一。', ['开放世界RPG', 'MC93 神作', '剧情天花板', 'TGA 2015年度游戏'], 'BV1is411i7WX'),
+    'monster hunter': ('共斗动作RPG的标杆。与好友组队狩猎巨型怪物，剥取材料打造更强装备。14种武器各有深度，每场战斗都是技术与策略的博弈。千小时内容量。', ['共斗动作', 'MC90 系列巅峰', '多人必玩', '千小时内容'], 'BV1GJ41187Qf'),
+    'hades': ('Roguelike动作游戏天花板。冥王之子扎格柔斯试图逃离冥界。每一次死亡都是成长的契机，人物关系发展推动故事。战斗爽快、美术惊艳、叙事手法创新。', ['肉鸽动作', 'MC93 神作', 'TGA最佳动作', '2020年度游戏提名'], 'BV1kK4y187Vw'),
+    'hades ii': ('备受期待的续作。扮演冥王之女墨利诺厄，探索全新希腊神话世界。保留前作精华的同时带来更丰富的战斗系统、法术体系和故事深度。', ['肉鸽动作', 'MC86 佳作', 'EA持续更新中', '超越前作潜力'], 'BV1SH4y177mr'),
+    'dynasty warriors': ('「一骑当千」的爽快动作系列。三国武将横扫千军。真·三国无双 起源是系列革新之作，战斗系统大幅进化，战场氛围更真实。', ['动作割草', 'MC80 系列革新', '爽快解压', '起源口碑回升'], 'BV1RJ411q7o6'),
+    'forza horizon': ('开放世界赛车游戏标杆。在广阔的风景中自由驰骋，参与各类赛事。画面精美、手感出色、车辆海量。地平线嘉年华氛围让人放松。', ['赛车竞速', 'MC92 最佳赛车', '开放世界赛车', '系列常青树'], 'BV1d4411S7LY'),
+    'tmnt': ('忍者神龟再度集结！在纽约街头与施莱德等反派战斗。支持多人合作，经典动画画风，怀旧感满满。适合与朋友一起玩。', ['动作清版', 'MC75 中等', '多人合作', '怀旧情怀'], ''),
+    'gran turismo 7': ('索尼第一方赛车模拟巅峰。海量真实车型和赛道，逼真驾驶体验与出色画面。GT系列25周年集大成之作，从新车手到老司机都能找到乐趣。', ['赛车模拟', 'MC87 最佳竞速', '真实驾驶体验', '系列25周年'], 'BV1t44y1q7LL'),
 }
 
 def game_detail(name):
     n = name.lower().strip()
-    for key, (desc, bvid) in GAME_DETAILS.items():
+    for key, (desc, tags, bvid) in GAME_DETAILS.items():
         if key in n or n in key:
-            return desc, bvid
-    return '', ''
+            return desc, tags, bvid
+    return '', [], ''
 
 def rating_text(name):
     n = name.lower().strip()
@@ -970,11 +971,12 @@ def generate_html():
             cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
             card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
             cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
-            desc, bvid = game_detail(display_name)
+            desc, tags, bvid = game_detail(display_name)
             desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
+            tags_attr = f'data-tags="{html_mod.escape("|".join(tags))}"' if tags else ''
             bvid_attr = f'data-bvid="{bvid}"' if bvid else ''
             cards += f'''
-            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"{desc_attr} {bvid_attr}>
+            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"{desc_attr} {tags_attr} {bvid_attr}>
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">
@@ -1006,10 +1008,10 @@ def generate_html():
         rating = (r[:15] if r else "") or ""
         cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if plat == "Switch" and g.get('has_cn', False) else ""
         card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
-        desc, bvid = game_detail(display)
+        desc, tags, bvid = game_detail(display)
         desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
         bvid_attr = f'data-bvid="{bvid}"' if bvid else ''
-        top5 += f'''<div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"{desc_attr} {bvid_attr}>
+        top5 += f'''<div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"{desc_attr} {tags_attr} {bvid_attr}>
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">
@@ -1177,12 +1179,14 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 @keyframes modalIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
 .modal-close {{ position: absolute; top: 12px; right: 14px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer; z-index: 2; padding: 4px; }}
 .modal-close:hover {{ color: #e8e8f0; }}
-.modal-img {{ width: 100%; height: 200px; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }}
-.modal-body {{ padding: 16px 20px 20px; }}
-.modal-title {{ font-size: 18px; font-weight: 700; margin-bottom: 6px; }}
-.modal-price {{ font-size: 15px; color: #5dade2; font-weight: 600; margin-bottom: 8px; }}
-.modal-rating {{ font-size: 13px; color: #ffb347; margin-bottom: 12px; }}
-.modal-desc {{ font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 16px; }}
+.modal-img {{ width: 100%; height: 220px; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }}
+.modal-body {{ padding: 18px 22px 22px; }}
+.modal-title {{ font-size: 20px; font-weight: 700; margin-bottom: 4px; }}
+.modal-price {{ font-size: 16px; color: #5dade2; font-weight: 600; margin-bottom: 10px; }}
+.modal-tags {{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }}
+.modal-tag {{ display: inline-block; padding: 3px 10px; background: #2a2a4e; border-radius: 6px; font-size: 12px; color: #b0b0d0; white-space: nowrap; }}
+.modal-rating {{ font-size: 14px; color: #ffb347; margin-bottom: 12px; padding: 8px 12px; background: #1a1a2e; border-radius: 8px; border-left: 3px solid #ffb347; }}
+.modal-desc {{ font-size: 14px; color: #ccc; line-height: 1.7; margin-bottom: 16px; padding: 10px 14px; background: #16162a; border-radius: 10px; }}
 .modal-bilibili {{ display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #fb7299; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }}
 .modal-bilibili:hover {{ background: #fc8bab; }}
 </style>
@@ -1251,6 +1255,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <div class="modal-body">
 <div class="modal-title" id="modal-title"></div>
 <div class="modal-price" id="modal-price"></div>
+<div class="modal-tags" id="modal-tags"></div>
 <div class="modal-rating" id="modal-rating"></div>
 <div class="modal-desc" id="modal-desc">暂无详细介绍</div>
 <a id="modal-bili-link" class="modal-bilibili" href="#" target="_blank" rel="noopener">▶ 在 B 站搜索本游戏</a>
@@ -1366,7 +1371,8 @@ function showGameModal(el) {{
     var img = card.querySelector('.game-thumb');
     var rating = card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent.trim() : '';
     var discount = card.querySelector('.discount-badge') ? card.querySelector('.discount-badge').textContent.trim() : '';
-    var desc = card.getAttribute('data-desc') || '暂无详细介绍';
+    var desc = card.getAttribute('data-desc') || '正在查询该游戏的详细评价，请稍候...';
+    var tagsStr = card.getAttribute('data-tags') || '';
     var bvid = card.getAttribute('data-bvid') || '';
 
     document.getElementById('modal-title').textContent = name + ' ' + discount;
@@ -1374,7 +1380,21 @@ function showGameModal(el) {{
     document.getElementById('modal-rating').textContent = rating || '暂无评分';
     document.getElementById('modal-desc').textContent = desc;
 
-    if (img && img.src) {{
+    // Tags
+    var tagsEl = document.getElementById('modal-tags');
+    tagsEl.innerHTML = '';
+    if (tagsStr) {{
+        var tags = tagsStr.split('|');
+        for (var i = 0; i < tags.length; i++) {{
+            var span = document.createElement('span');
+            span.className = 'modal-tag';
+            span.textContent = tags[i];
+            tagsEl.appendChild(span);
+        }}
+        tagsEl.style.display = 'flex';
+    }} else {{
+        tagsEl.style.display = 'none';
+    }}
         document.getElementById('modal-img').src = img.src;
         document.getElementById('modal-img').style.display = 'block';
     }} else {{

@@ -89,7 +89,10 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 .medal-5 { background: linear-gradient(135deg, #38bdf8, #818cf8, #38bdf8); color: #fff; background-size: 200% 200%; animation: medalFlow 3s ease-in-out infinite, medalShine 2s linear infinite; box-shadow: 0 0 12px rgba(56,189,248,0.6); }
 @keyframes medalFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 @keyframes medalShine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-.crown { position: absolute; top: -4px; left: -4px; font-size: 20px; z-index: 2; filter: drop-shadow(0 0 4px rgba(245,158,11,0.6)); animation: crownBounce 2s ease-in-out infinite; }
+.crown { position: absolute; z-index: 2; font-size: 22px; line-height: 1; }
+.crown-1 { top: -6px; left: -6px; filter: drop-shadow(0 0 8px rgba(245,158,11,0.8)); animation: crownBounce 2s ease-in-out infinite; }
+.crown-2 { top: -4px; left: -4px; font-size: 20px; filter: drop-shadow(0 0 5px rgba(148,163,184,0.6)); animation: crownBounce 2.5s ease-in-out infinite 0.3s; }
+.crown-3 { top: -3px; left: -3px; font-size: 18px; filter: drop-shadow(0 0 4px rgba(180,83,9,0.5)); animation: crownBounce 3s ease-in-out infinite 0.6s; }
 .card-left { position: relative; }
 @keyframes crownBounce { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-3px) rotate(5deg); } }
 .top-list { display: flex; flex-direction: column; gap: 8px; }
@@ -194,7 +197,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 </div>
 <div id="disc-top5" class="disc-section" style="display:block"><section class="platform"><h2>🎯 本期值得买</h2><div class="game-list"><div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="经典生存恐怖系列巅峰之作。特工里昂前往欧洲村庄营救总统女儿。完美融合动作射击与恐怖氛围，关卡设计教科书级别。重制版画质大幅提升，战斗系统更流畅。"  >
                 <div class="game-card-inner">
-                    <div class="card-left"><div class="crown">👑</div><img src="https://image.api.playstation.com/vulcan/ap/rnd/202401/2906/78161bc117f3d712bca47348db7a8be7e4ac6c4a2b98d88a.png?w=240" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-left"><div class="crown crown-1">🥇</div><img src="https://image.api.playstation.com/vulcan/ap/rnd/202401/2906/78161bc117f3d712bca47348db7a8be7e4ac6c4a2b98d88a.png?w=240" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
                     <div class="card-right">
                         <div class="card-header">
                             <span class="medal medal-1">🏆 神之作</span>
@@ -210,7 +213,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 </div>
             </div><div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="经典生存恐怖系列巅峰之作。特工里昂前往欧洲村庄营救总统女儿。完美融合动作射击与恐怖氛围，关卡设计教科书级别。重制版画质大幅提升，战斗系统更流畅。"  >
                 <div class="game-card-inner">
-                    <div class="card-left"><div class="crown">👑</div><img src="https://image.api.playstation.com/vulcan/ap/rnd/202207/2509/85p2Dwh5iDhUzRKe40QeNYh3.png?w=240" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-left"><div class="crown crown-2">🥈</div><img src="https://image.api.playstation.com/vulcan/ap/rnd/202207/2509/85p2Dwh5iDhUzRKe40QeNYh3.png?w=240" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
                     <div class="card-right">
                         <div class="card-header">
                             <span class="medal medal-2">💎 必收藏</span>
@@ -226,7 +229,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 </div>
             </div><div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="「双人成行」团队最新力作。两位女主角穿梭科幻世界，兼具创新玩法与感人剧情。每一关都有全新机制，画面震撼，2025年TGA年度游戏有力竞争者。"  >
                 <div class="game-card-inner">
-                    <div class="card-left"><div class="crown">👑</div><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2001120/header.jpg?t=1763484567" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-left"><div class="crown crown-3">🥉</div><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2001120/header.jpg?t=1763484567" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
                     <div class="card-right">
                         <div class="card-header">
                             <span class="medal medal-3">🔥 口碑王</span>

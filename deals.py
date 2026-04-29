@@ -1040,7 +1040,8 @@ def generate_html():
         disc_cls = "disc-high" if d >= 50 else ("disc-mid" if d >= 30 else "disc-low")
         rating = (r[:15] if r else "") or ""
         medal_html = f'<span class="medal medal-{count+1}">{medals[count]}</span>' if count < 5 else ''
-        crown = '<div class="crown">👑</div>' if count < 3 else ''
+        crowns = ['🥇', '🥈', '🥉']
+        crown = f'<div class="crown crown-{count+1}">{crowns[count]}</div>' if count < 3 else ''
         cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if plat == "Switch" and g.get('has_cn', False) else ""
         card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.parentElement.style.display=\'none\'">' if g.get('img') else ''
         desc, tags, bvid = game_detail(display)
@@ -1222,7 +1223,10 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .medal-5 {{ background: linear-gradient(135deg, #38bdf8, #818cf8, #38bdf8); color: #fff; background-size: 200% 200%; animation: medalFlow 3s ease-in-out infinite, medalShine 2s linear infinite; box-shadow: 0 0 12px rgba(56,189,248,0.6); }}
 @keyframes medalFlow {{ 0% {{ background-position: 0% 50%; }} 50% {{ background-position: 100% 50%; }} 100% {{ background-position: 0% 50%; }} }}
 @keyframes medalShine {{ 0% {{ background-position: 200% 0; }} 100% {{ background-position: -200% 0; }} }}
-.crown {{ position: absolute; top: -4px; left: -4px; font-size: 20px; z-index: 2; filter: drop-shadow(0 0 4px rgba(245,158,11,0.6)); animation: crownBounce 2s ease-in-out infinite; }}
+.crown {{ position: absolute; z-index: 2; font-size: 22px; line-height: 1; }}
+.crown-1 {{ top: -6px; left: -6px; filter: drop-shadow(0 0 8px rgba(245,158,11,0.8)); animation: crownBounce 2s ease-in-out infinite; }}
+.crown-2 {{ top: -4px; left: -4px; font-size: 20px; filter: drop-shadow(0 0 5px rgba(148,163,184,0.6)); animation: crownBounce 2.5s ease-in-out infinite 0.3s; }}
+.crown-3 {{ top: -3px; left: -3px; font-size: 18px; filter: drop-shadow(0 0 4px rgba(180,83,9,0.5)); animation: crownBounce 3s ease-in-out infinite 0.6s; }}
 .card-left {{ position: relative; }}
 @keyframes crownBounce {{ 0%,100% {{ transform: translateY(0) rotate(-5deg); }} 50% {{ transform: translateY(-3px) rotate(5deg); }} }}
 .top-list {{ display: flex; flex-direction: column; gap: 8px; }}

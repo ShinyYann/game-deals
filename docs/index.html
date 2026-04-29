@@ -30,12 +30,12 @@ body.tab-mods::before { background-image: url('https://images.unsplash.com/photo
 }
 /* 粒子背景 */
 .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.particle { position: absolute; width: 3px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: particleFloat linear infinite; }
+.particle { position: absolute; pointer-events: none; animation: particleFloat linear infinite; font-size: 14px; }
 @keyframes particleFloat {
-  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; }
   10% { opacity: 1; }
   90% { opacity: 1; }
-  100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  100% { transform: translateY(-10vh) rotate(360deg) scale(1); opacity: 0; }
 }
 .tab-content-fade { animation: tabFlipIn 0.3s cubic-bezier(0.05, 0.7, 0.1, 1) forwards; }
 @keyframes tabFlipIn {
@@ -163,7 +163,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-30 00:42</p>
+<p class="last-update">🔄 上次更新: 2026-04-30 00:43</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -799,14 +799,18 @@ window.onload = function() {
 
 function spawnParticles() {
     var container = document.getElementById('particles');
-    for (var i = 0; i < 25; i++) {
+    var shapes = ['✕','◯','△','□','✦','⬡','♢','⏣','⊞','⊡'];
+    var colors = ['rgba(168,85,247,0.25)','rgba(52,211,153,0.2)','rgba(93,173,226,0.2)','rgba(249,115,22,0.2)','rgba(251,191,36,0.2)'];
+    for (var i = 0; i < 30; i++) {
         var p = document.createElement('div');
         p.className = 'particle';
+        p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
-        p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
-        p.style.animationDuration = (8 + Math.random() * 12) + 's';
-        p.style.animationDelay = (Math.random() * 10) + 's';
-        p.style.background = ['rgba(168,85,247,0.2)','rgba(52,211,153,0.15)','rgba(93,173,226,0.15)','rgba(249,115,22,0.15)'][i % 4];
+        p.style.fontSize = (10 + Math.random() * 12) + 'px';
+        p.style.color = colors[i % colors.length];
+        p.style.animationDuration = (12 + Math.random() * 18) + 's';
+        p.style.animationDelay = (Math.random() * 8) + 's';
+        p.style.opacity = '0';
         container.appendChild(p);
     }
 }

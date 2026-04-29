@@ -924,10 +924,13 @@ function loadSavedTrophy() {
 
 function toggleTrophyBar() {
     var bar = document.getElementById('trophy-bar');
+    var toggle = document.getElementById('trophy-toggle');
     if (bar.classList.contains('show')) {
         bar.classList.remove('show');
+        toggle.style.display = 'inline-flex';
     } else {
         bar.classList.add('show');
+        toggle.style.display = 'none';
         document.getElementById('trophy-input').focus();
     }
 }

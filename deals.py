@@ -524,6 +524,7 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
+<button class="tab-btn" onclick="switchTab('trophy')">🏆 奖杯查询</button>
 </div>
 
 <div id="tab-discounts" class="tab-content">
@@ -541,6 +542,15 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 {p9_sections}
 </div>
 </div>
+</div>
+
+<div id="tab-trophy" class="tab-content" style="display:none">
+<div class="trophy-intro" style="color:#888;font-size:13px;margin-bottom:12px;">输入 PSN 用户名，查看奖杯主页</div>
+<div class="p9-search-box">
+<input type="text" id="trophy-input" class="p9-search-input" placeholder="例如 ShinyYann…" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
+<button class="p9-search-btn" onclick="trophySearch()">🏆 查看奖杯</button>
+</div>
+</div>
 
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 
@@ -549,6 +559,12 @@ function p9Search() {{
     var q = document.getElementById('p9-search-input').value.trim();
     if (!q) return;
     window.open('https://www.psnine.com/psngame?title=' + encodeURIComponent(q), '_blank');
+}}
+
+function trophySearch() {{
+    var q = document.getElementById('trophy-input').value.trim();
+    if (!q) return;
+    window.open('https://www.psnine.com/psnid/' + encodeURIComponent(q), '_blank');
 }}
 
 function switchTab(name) {{

@@ -1126,10 +1126,10 @@ def generate_html():
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(160deg, #0f0f1a 0%, #161630 50%, #0f0f1a 100%); color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; transition: background 0.8s ease; position: relative; }}
 body::before {{ content: ''; position: fixed; inset: -10px; z-index: -1; background-size: cover; background-position: center; opacity: 0.08; transition: opacity 0.8s ease; pointer-events: none; animation: bgBreathe 20s ease-in-out infinite alternate; }}
-body.tab-trophy::before {{ background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&h=900&fit=crop'); }}
-body.tab-discounts::before {{ background-image: url('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1600&h=900&fit=crop'); }}
-body.tab-psnine::before {{ background-image: url('https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600&h=900&fit=crop'); }}
-body.tab-mods::before {{ background-image: url('https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&h=900&fit=crop'); }}
+body.tab-trophy::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/header.jpg'); }}
+body.tab-discounts::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg'); }}
+body.tab-psnine::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg'); }}
+body.tab-mods::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/292030/header.jpg'); }}
 @keyframes bgBreathe {{
   0% {{ transform: scale(1) translate(0, 0); }}
   50% {{ transform: scale(1.05) translate(-1%, -1%); }}

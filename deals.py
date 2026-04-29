@@ -140,6 +140,116 @@ def translate_name(name):
         return name
     return None
 
+# ─── PSNine (P9) ────────────────────────────────────────────────────
+P9_CATEGORIES = {
+    '入库游戏': '入库/会免',
+    '新史低': '史低',
+    '二档': '入库/会免',
+    '三档': '入库/会免',
+    'PLUS': '入库/会免',
+    'plus': '入库/会免',
+    '白金攻略': '攻略',
+    '白金': '攻略',
+}
+
+def extract_p9_items(soup):
+    """Extract post items from PSNine homepage."""
+    items = []
+    for div in soup.find_all('div', class_='ml64'):
+        title_div = div.find('div', class_='title')
+        if not title_div:
+            title_div = div  # some items have title directly in ml64
+        
+        title_text = None
+        link = None
+        a_tag = title_div.find('a') if title_div != div else None
+        if a_tag:
+            title_text = a_tag.get_text(strip=True)
+            link = a_tag.get('href', '')
+        else:
+            # Check if ml64 itself contains the structure
+            for a in div.find_all('a'):
+                t = a.get_text(strip=True)
+                if len(t) > 10:
+                    title_text = t
+                    link = a.get('href', '')
+                    break
+        
+        if not title_text or len(title_text) < 10:
+            continue
+        
+        # Find meta for author/time/tags
+        meta_div = div.find_next_sibling('div', class_='meta')
+        if not meta_div:
+            meta_div = div.find('div', class_='meta')
+        
+        author = ''
+        time_text = ''
+        tags = []
+        if meta_div:
+            meta_text = meta_div.get_text(strip=True)
+            # Use Python regex to extract username and time from messy P9 meta
+            # Format: "username<time>   region<tags>"
+            if meta_text:
+                # Find the time portion: digits followed by time unit words
+                tm = re.search(r'(\d+[天小分时][前内]?|前天|昨天|今天|(\d{2}[-/]\d{2}))', meta_text)
+                if tm:
+                    time_start = tm.start()
+                    # Author is everything before the time pattern
+                    raw_author = meta_text[:time_start].strip()
+                    # Take only alphanumeric chars for author
+                    author = re.match(r'^([A-Za-z0-9_-]+)', raw_author)
+                    author = author.group(1) if author else raw_author[:15]
+                    # Time = the match
+                    time_text = tm.group(1)
+                    # Check for clock time after
+                    clock = re.search(r'(\d{2}:\d{2})', meta_text[tm.end():])
+                    if clock:
+                        time_text += ' ' + clock.group(1)
+        
+        items.append({
+            'title': title_text,
+            'link': link,
+            'author': author,
+            'time': time_text,
+            'tags': tags
+        })
+    
+    return items
+
+def parse_psnine():
+    """Get PSNine latest posts."""
+    html = fetch("https://www.psnine.com/")
+    if not html:
+        return {'gamelist': [], 'new_lows': [], 'guides': []}
+    
+    soup = BeautifulSoup(html, 'lxml')
+    all_items = extract_p9_items(soup)
+    
+    result = {'gamelist': [], 'new_lows': [], 'guides': []}
+    
+    for item in all_items:
+        title = item['title']
+        tags_str = ' '.join(item['tags']).lower()
+        
+        # Categorize
+        is_gamelist = any(k in tags_str or k in title for k in ['gamelist', '入库', '二三档', '二档', '三档', 'plus', '会员'])
+        is_new_low = any(k in title or k in tags_str for k in ['新史低', '史低', 'new low', 'newlow'])
+        is_guide = any(k in tags_str or k in title for k in ['guide', '白金攻略', '攻略', '指南'])
+        
+        if is_new_low:
+            result['new_lows'].append(item)
+        elif is_gamelist and ('入库' in title or '二档' in title or '三档' in title or 'PLUS' in title or 'PLUS' in title or '会免' in title):
+            result['gamelist'].append(item)
+        elif is_guide and ('白金' in title or '攻略' in title or '指南' in title):
+            result['guides'].append(item)
+    
+    # Limit each category
+    for k in result:
+        result[k] = result[k][:8]
+    
+    return result
+
 # ─── Data sources ───────────────────────────────────────────────────
 def parse_psn():
     html = fetch("https://store.playstation.com/zh-hant-hk/pages/deals")
@@ -229,6 +339,7 @@ def generate_html():
     psn = parse_psn()
     steam = parse_steam()
     switch = parse_switch()
+    psnine = parse_psnine()
 
     def score_items(games, cn_bonus=False):
         seen, result = set(), []
@@ -307,6 +418,51 @@ def generate_html():
         count += 1
     top5 += "</div></section>"
 
+    # ─── PSNine community ───────────────────────────────────────────
+    p9_sections = ""
+
+    if psnine.get('gamelist'):
+        p9_sections += '<section class="platform"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">'
+        for item in psnine['gamelist'][:4]:
+            link = item['link']
+            if link and not link.startswith('http'):
+                link = 'https://www.psnine.com' + link
+            title = item['title'][:48]
+            p9_sections += f'''
+            <a href="{link}" class="p9-item" target="_blank" rel="noopener">
+                <span class="p9-title">{title}</span>
+                <span class="p9-meta">✎ {item['author']} · {item['time']}</span>
+            </a>'''
+        p9_sections += '</div></section>'
+
+    if psnine.get('new_lows'):
+        p9_sections += '<section class="platform"><h2>💸 P9 新史低汇总</h2><div class="p9-list">'
+        for item in psnine['new_lows'][:4]:
+            link = item['link']
+            if link and not link.startswith('http'):
+                link = 'https://www.psnine.com' + link
+            title = item['title'][:48]
+            p9_sections += f'''
+            <a href="{link}" class="p9-item" target="_blank" rel="noopener">
+                <span class="p9-title">{title}</span>
+                <span class="p9-meta">✎ {item['author']} · {item['time']}</span>
+            </a>'''
+        p9_sections += '</div></section>'
+
+    if psnine.get('guides'):
+        p9_sections += '<section class="platform"><h2>🏆 P9 热门白金攻略</h2><div class="p9-list">'
+        for item in psnine['guides'][:6]:
+            link = item['link']
+            if link and not link.startswith('http'):
+                link = 'https://www.psnine.com' + link
+            title = item['title'][:48]
+            p9_sections += f'''
+            <a href="{link}" class="p9-item" target="_blank" rel="noopener">
+                <span class="p9-title">{title}</span>
+                <span class="p9-meta">✎ {item['author']} · {item['time']}</span>
+            </a>'''
+        p9_sections += '</div></section>'
+
     html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -341,6 +497,11 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 .top-price {{ color: #5dade2; font-weight: 600; }}
 .top-disc {{ color: #ff6b6b; font-weight: 700; }}
 .top-rating {{ color: #aaa; font-size: 12px; }}
+.p9-list {{ display: flex; flex-direction: column; gap: 6px; }}
+.p9-item {{ background: #1a1a2e; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; transition: background 0.2s; }}
+.p9-item:active {{ background: #2a2a3e; }}
+.p9-title {{ font-size: 14px; font-weight: 600; color: #e8e8f0; line-height: 1.4; }}
+.p9-meta {{ font-size: 11px; color: #888; }}
 .footer {{ text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }}
 </style>
 </head>
@@ -350,7 +511,8 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 <p class="last-update">🔄 上次更新: {ts}</p>
 {cards}
 {top5}
-<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取</div>
+{p9_sections}
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </body>
 </html>'''
     return html

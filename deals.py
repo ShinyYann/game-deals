@@ -1752,7 +1752,7 @@ function switchTrophySubTab(id, btn) {{
 window.onload = function() {{
     loadSavedTrophy();
     spawnParticles();
-    checkUpdate();
+    // checkUpdate(); // APK自动更新待实现
 }};
 
 function checkUpdate() {{

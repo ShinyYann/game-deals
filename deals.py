@@ -814,9 +814,12 @@ def generate_html():
             if not disc_pct(g['discount']): continue  # 不打折的过滤掉
             seen.add(n)
             r = rating_text(n)
-            d = disc_pct(g['discount']) + (5 if cn_bonus and g.get('has_cn', False) else 0)
+            stars = r.count('⭐')
+            d = disc_pct(g['discount'])
+            # 综合得分 = 评分权重(4个⭐=30分, 5个⭐=50分) + 折扣力度 + 中文支持加分
+            score = stars * 8 + d + (10 if cn_bonus and g.get('has_cn', False) else 0)
             p = price_num(g['price'])
-            result.append((d, n, g, r, d, p))
+            result.append((score, n, g, r, d, p))
         result.sort(key=lambda x: -x[0])
         return result
 

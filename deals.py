@@ -986,7 +986,7 @@ def generate_html():
     for label, items, icon, raw_label, section_id in [
         ("PSN 港服特惠", psn_items[:100], "🔵", "PSN", "disc-psn"),
         ("Steam 国服特惠", steam_items[:100], "🟢", "Steam", "disc-steam"),
-        ("Switch 日服特惠", switch_items[:100], "🟡", "Switch", "disc-switch"),
+        ("Switch 港服特惠", switch_items[:100], "🟡", "Switch", "disc-switch"),
     ]:
         if not items:
             continue
@@ -1319,7 +1319,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <div class="tab-accent trophy" id="tab-accent"></div>
 
 <h1>🎮 Yann 的小站</h1>
-<p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
+<p class="subtitle">PSN 港服 · Steam 国服 · Switch 港服 — 每日自动更新</p>
 <p class="last-update">🔄 上次更新: {ts}</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">

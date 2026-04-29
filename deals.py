@@ -1143,12 +1143,28 @@ body.tab-mods::before {{ background-image: url('https://media2.giphy.com/media/2
 }}
 /* 粒子背景 */
 .particles {{ position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }}
-.particle {{ position: absolute; pointer-events: none; animation: particleFloat linear infinite; font-size: 14px; }}
+.particle {{ position: absolute; pointer-events: none; animation: particleFloat linear infinite; }}
+.particle.sparkle {{ animation: particleSparkle linear infinite; }}
+.particle.wander {{ animation: particleWander ease-in-out infinite; }}
 @keyframes particleFloat {{
-  0% {{ transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; }}
-  10% {{ opacity: 1; }}
-  90% {{ opacity: 1; }}
-  100% {{ transform: translateY(-10vh) rotate(360deg) scale(1); opacity: 0; }}
+  0% {{ transform: translateY(105vh) rotate(0deg); opacity: 0; }}
+  5% {{ opacity: 0.8; }}
+  80% {{ opacity: 0.6; }}
+  100% {{ transform: translateY(-5vh) rotate(480deg); opacity: 0; }}
+}}
+@keyframes particleSparkle {{
+  0% {{ transform: translateY(100vh) scale(0.3); opacity: 0; }}
+  20% {{ opacity: 1; transform: scale(1.2); }}
+  40% {{ opacity: 0.3; transform: scale(0.6); }}
+  60% {{ opacity: 1; transform: scale(1); }}
+  80% {{ opacity: 0.5; }}
+  100% {{ transform: translateY(-10vh) scale(0.3); opacity: 0; }}
+}}
+@keyframes particleWander {{
+  0% {{ transform: translateY(100vh) translateX(0); opacity: 0; }}
+  10% {{ opacity: 0.4; }}
+  50% {{ transform: translateY(50vh) translateX(20px) rotate(180deg); opacity: 0.3; }}
+  100% {{ transform: translateY(-10vh) translateX(-10px) rotate(360deg); opacity: 0; }}
 }}
 .tab-content-fade {{ animation: tabFlipIn 0.3s cubic-bezier(0.05, 0.7, 0.1, 1) forwards; }}
 @keyframes tabFlipIn {{
@@ -1391,18 +1407,43 @@ window.onload = function() {{
 
 function spawnParticles() {{
     var container = document.getElementById('particles');
-    var shapes = ['✕','◯','△','□','✦','⬡','♢','⏣','⊞','⊡'];
-    var colors = ['rgba(168,85,247,0.25)','rgba(52,211,153,0.2)','rgba(93,173,226,0.2)','rgba(249,115,22,0.2)','rgba(251,191,36,0.2)'];
-    for (var i = 0; i < 30; i++) {{
+    var shapes = ['✕','◯','△','□','✦','⬡','♢','⏣','⊞','⊡','▽','◇'];
+    var colors = ['rgba(168,85,247,0.3)','rgba(52,211,153,0.25)','rgba(93,173,226,0.25)','rgba(249,115,22,0.25)','rgba(251,191,36,0.3)','rgba(236,72,153,0.2)'];
+    // 符号粒子 - 大量缓缓上浮
+    for (var i = 0; i < 50; i++) {{
         var p = document.createElement('div');
         p.className = 'particle';
         p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
-        p.style.fontSize = (10 + Math.random() * 12) + 'px';
+        var size = 9 + Math.random() * 15;
+        p.style.fontSize = size + 'px';
         p.style.color = colors[i % colors.length];
-        p.style.animationDuration = (12 + Math.random() * 18) + 's';
-        p.style.animationDelay = (Math.random() * 8) + 's';
-        p.style.opacity = '0';
+        p.style.animationDuration = (15 + Math.random() * 25) + 's';
+        p.style.animationDelay = (Math.random() * 12) + 's';
+        container.appendChild(p);
+    }}
+    // 闪烁亮点 - 少而精
+    for (var i = 0; i < 15; i++) {{
+        var p = document.createElement('div');
+        p.className = 'particle sparkle';
+        p.textContent = ['✦','+','·','*'][i % 4];
+        p.style.left = Math.random() * 100 + '%';
+        p.style.fontSize = (12 + Math.random() * 10) + 'px';
+        p.style.color = ['rgba(255,255,255,0.5)','rgba(251,191,36,0.5)','rgba(168,85,247,0.4)'][i % 3];
+        p.style.animationDuration = (8 + Math.random() * 10) + 's';
+        p.style.animationDelay = (Math.random() * 5) + 's';
+        container.appendChild(p);
+    }}
+    // 游走粒子 - 左右飘
+    for (var i = 0; i < 12; i++) {{
+        var p = document.createElement('div');
+        p.className = 'particle wander';
+        p.textContent = ['◇','△','○'][i % 3];
+        p.style.left = (10 + Math.random() * 80) + '%';
+        p.style.fontSize = (8 + Math.random() * 8) + 'px';
+        p.style.color = 'rgba(255,255,255,0.15)';
+        p.style.animationDuration = (20 + Math.random() * 20) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
         container.appendChild(p);
     }}
 }}

@@ -1201,6 +1201,7 @@ def generate_html():
 
     news_html = ''
     if news:
+        import html as _html
         def news_img(n):
             if n.get('img'):
                 return f'<img src="{n["img"]}" loading="lazy">'
@@ -1208,12 +1209,12 @@ def generate_html():
         def news_source_label(s):
             return {'IGN中国': 'IGN', 'GameApps香港': 'GA'}.get(s, s)
         news_items = ''.join(
-            f'<div class="news-card" onclick="openNewsModal(\'{n["url"]}\')" style="cursor:pointer">'
+            f'<div class="news-card" data-title="{_html.escape(n["title"], quote=True)}" data-desc="{_html.escape(n["desc"][:200], quote=True)}" data-url="{_html.escape(n["url"], quote=True)}" onclick="openNewsModal(this)">'
             f'<div class="news-img">{news_img(n)}</div>'
             f'<div class="news-body">'
             f'<div class="news-source">{news_source_label(n.get("source",""))}</div>'
-            f'<span class="news-title">{n["title"]}</span>'
-            f'<span class="news-desc">{n["desc"]}</span>'
+            f'<span class="news-title">{_html.escape(n["title"])}</span>'
+            f'<span class="news-desc">{_html.escape(n["desc"])}</span>'
             f'</div>'
             f'</div>'
             for n in news
@@ -1393,8 +1394,13 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .modal-close {{ position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.4); border: none; color: #aaa; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; z-index: 3; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; backdrop-filter: blur(4px); }}
 .modal-close:hover {{ background: rgba(255,255,255,0.15); color: #fff; transform: rotate(90deg); }}
 .modal-img {{ width: 100%; height: 220px; object-fit: cover; border-radius: 20px 20px 0 0; display: block; }}
-.news-modal {{ max-width: 700px; width: 100%; max-height: 80vh; padding: 0; overflow: hidden; border-radius: 16px; background: #fff; transform: translateY(20px) scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }}
+.news-modal {{ max-width: 700px; width: 100%; max-height: 80vh; padding: 0; overflow: hidden; border-radius: 16px; background: #1a1a2e; transform: translateY(20px) scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }}
 .modal-overlay.show .news-modal {{ transform: translateY(0) scale(1); opacity: 1; }}
+.news-modal-content {{ padding: 16px 20px 20px; }}
+.news-modal-title {{ font-size: 16px; font-weight: 700; color: #e8e8f0; margin-bottom: 10px; }}
+.news-modal-text {{ font-size: 13px; color: #ccc; line-height: 1.7; max-height: 55vh; overflow-y: auto; white-space: pre-wrap; }}
+.news-modal-link {{ display: inline-block; margin-top: 12px; padding: 8px 16px; background: #2a2a4e; color: #5dade2; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: background 0.2s; }}
+.news-modal-link:hover {{ background: #3a3a5e; }}
 .modal-body {{ padding: 18px 22px 22px; }}
 .modal-body > * {{ opacity: 0; transform: translateY(12px); animation: modalFadeIn 0.4s ease forwards; }}
 .modal-body > *:nth-child(1) {{ animation-delay: 0.05s; }}
@@ -1503,7 +1509,11 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <div class="modal-overlay" id="news-modal-overlay" onclick="closeNewsModal(event)">
 <div class="modal news-modal" onclick="event.stopPropagation()">
 <button class="modal-close" onclick="closeNewsModal()">✕</button>
-<iframe id="news-modal-iframe" style="width:100%;height:70vh;border:none;border-radius:10px;background:#fff;"></iframe>
+<div class="news-modal-content">
+<div class="news-modal-title" id="news-modal-title"></div>
+<div class="news-modal-text" id="news-modal-text"></div>
+<a id="news-modal-link" class="news-modal-link" href="#" target="_blank" rel="noopener">🔗 查看原文</a>
+</div>
 </div>
 </div>
 
@@ -1725,15 +1735,16 @@ function closeModal(e) {{
     document.body.style.overflow = '';
 }}
 
-function openNewsModal(url) {{
-    document.getElementById('news-modal-iframe').src = url;
+function openNewsModal(el) {{
+    document.getElementById('news-modal-title').textContent = el.dataset.title;
+    document.getElementById('news-modal-text').textContent = el.dataset.desc;
+    document.getElementById('news-modal-link').href = el.dataset.url;
     document.getElementById('news-modal-overlay').classList.add('show');
     document.body.style.overflow = 'hidden';
 }}
 function closeNewsModal(e) {{
     if (e && e.target !== e.currentTarget) return;
     document.getElementById('news-modal-overlay').classList.remove('show');
-    document.getElementById('news-modal-iframe').src = '';
     document.body.style.overflow = '';
 }}
 

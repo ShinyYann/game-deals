@@ -523,9 +523,9 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 </head>
 <body>
 <div class="tab-bar">
+<button class="tab-btn" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
-<button class="tab-btn" onclick="switchTab('trophy')">🏆 奖杯</button>
 </div>
 
 <h1>🎮 Yann 的小站</h1>

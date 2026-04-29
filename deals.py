@@ -974,7 +974,7 @@ def generate_html():
             desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
             bvid_attr = f'data-bvid="{bvid}"' if bvid else ''
             cards += f'''
-            <div class="game-card"{desc_attr} {bvid_attr}>
+            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"{desc_attr} {bvid_attr}>
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">
@@ -1009,7 +1009,7 @@ def generate_html():
         desc, bvid = game_detail(display)
         desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
         bvid_attr = f'data-bvid="{bvid}"' if bvid else ''
-        top5 += f'''<div class="game-card"{desc_attr} {bvid_attr}>
+        top5 += f'''<div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"{desc_attr} {bvid_attr}>
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">
@@ -1161,11 +1161,29 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 /* Mods */
 select {{ appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23888' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 12px; padding-right: 30px; }}
 /* Trophy search */
-.trophy-bar {{ display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 4px; }}
+.trophy-bar {{ display: none; align-items: center; gap: 6px; margin-bottom: 8px; }}
+.trophy-bar.show {{ display: flex; }} justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 4px; }}
 .trophy-input {{ width: 140px; padding: 6px 10px; border: 1px solid #2a2a3e; border-radius: 8px; font-size: 13px; background: #1a1a2e; color: #e8e8f0; outline: none; }}
 .trophy-input:focus {{ border-color: #5dade2; }}
 .trophy-btn {{ padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; background: #2a2a4e; color: #e8e8f0; cursor: pointer; }}
 .trophy-btn:active {{ background: #3a3a5e; }}
+.trophy-btn-toggle {{ display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; color: #888; cursor: pointer; font-size: 18px; border: none; flex-shrink: 0; }}
+.trophy-btn-toggle:hover {{ color: #e8e8f0; }}
+/* Game detail modal */
+.modal-overlay {{ display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 20px; }}
+.modal-overlay.show {{ display: flex; }}
+.modal {{ background: #1a1a2e; border-radius: 16px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 0; position: relative; animation: modalIn 0.2s ease; }}
+@keyframes modalIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
+.modal-close {{ position: absolute; top: 12px; right: 14px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer; z-index: 2; padding: 4px; }}
+.modal-close:hover {{ color: #e8e8f0; }}
+.modal-img {{ width: 100%; height: 200px; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }}
+.modal-body {{ padding: 16px 20px 20px; }}
+.modal-title {{ font-size: 18px; font-weight: 700; margin-bottom: 6px; }}
+.modal-price {{ font-size: 15px; color: #5dade2; font-weight: 600; margin-bottom: 8px; }}
+.modal-rating {{ font-size: 13px; color: #ffb347; margin-bottom: 12px; }}
+.modal-desc {{ font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 16px; }}
+.modal-bilibili {{ display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #fb7299; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }}
+.modal-bilibili:hover {{ background: #fc8bab; }}
 </style>
 </head>
 <body>
@@ -1211,12 +1229,32 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 {mods_html}
 
 <div id="tab-trophy" class="tab-content">
-<div class="trophy-bar">
+<div class="trophy-bar" id="trophy-bar">
 <input type="text" id="trophy-input" class="trophy-input" placeholder="填PSN ID" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
 <button class="trophy-btn" onclick="trophySearch()">🔍</button>
 </div>
 <div id="trophy-frame" style="display:none; margin-top:12px;">
 <iframe id="trophy-iframe" style="width:100%;height:800px;border:none;border-radius:12px;background:#1a1a2e;"></iframe>
+</div>
+</div>
+<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; justify-content:flex-end;">
+<button class="trophy-btn-toggle" id="trophy-toggle" onclick="toggleTrophyBar()">🔍</button>
+</div>
+</div>
+
+<!-- Game detail modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+<div class="modal" id="modal" onclick="event.stopPropagation()">
+<button class="modal-close" onclick="closeModal()">✕</button>
+<img id="modal-img" class="modal-img" src="" alt="">
+<div class="modal-body">
+<div class="modal-title" id="modal-title"></div>
+<div class="modal-price" id="modal-price"></div>
+<div class="modal-rating" id="modal-rating"></div>
+<div class="modal-desc" id="modal-desc">暂无详细介绍</div>
+<a id="modal-bili-link" class="modal-bilibili" href="#" target="_blank" rel="noopener">▶ 在 B 站搜索本游戏</a>
+<iframe id="modal-bili-video" style="display:none; width:100%; height:220px; border:none; border-radius:10px; margin-top:8px;" allowfullscreen></iframe>
+</div>
 </div>
 </div>
 
@@ -1283,7 +1321,13 @@ function switchTab(name) {{
         for (var i = 0; i < sections.length; i++) sections[i].style.display = i === 0 ? 'block' : 'none';
         for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
     }}
-    if (name === 'trophy') setTimeout(function(){{ document.getElementById('trophy-input').focus(); loadSavedTrophy(); }}, 100);
+    if (name === 'trophy') {{ loadSavedTrophy(); }}
+    if (name === 'discounts') {{
+        var sections = document.querySelectorAll('#tab-discounts .disc-section');
+        var sbtns = document.querySelectorAll('#tab-discounts .sub-tab-btn');
+        for (var i = 0; i < sections.length; i++) sections[i].style.display = i === 0 ? 'block' : 'none';
+        for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
+    }}
     if (name === 'mods') {{
         var sections = document.querySelectorAll('#tab-mods .mod-section');
         var sbtns = document.querySelectorAll('#tab-mods .p9-section-bar .sub-tab-btn');
@@ -1299,6 +1343,66 @@ function switchModSubTab(id, btn) {{
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     document.getElementById(id).style.display = 'block';
     btn.classList.add('active');
+}}
+
+function toggleTrophyBar() {{
+    var bar = document.getElementById('trophy-bar');
+    var toggle = document.getElementById('trophy-toggle');
+    if (bar.classList.contains('show')) {{
+        bar.classList.remove('show');
+        toggle.style.display = 'inline-flex';
+    }} else {{
+        bar.classList.add('show');
+        toggle.style.display = 'none';
+        document.getElementById('trophy-input').focus();
+    }}
+}}
+
+function showGameModal(el) {{
+    var card = el.closest('.game-card');
+    var name = card.querySelector('.game-name').textContent.trim();
+    var price = card.querySelector('.current-price') ? card.querySelector('.current-price').textContent.trim() : '';
+    var img = card.querySelector('.game-thumb');
+    var rating = card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent.trim() : '';
+    var discount = card.querySelector('.discount-badge') ? card.querySelector('.discount-badge').textContent.trim() : '';
+    var desc = card.getAttribute('data-desc') || '暂无详细介绍';
+    var bvid = card.getAttribute('data-bvid') || '';
+
+    document.getElementById('modal-title').textContent = name + ' ' + discount;
+    document.getElementById('modal-price').textContent = price;
+    document.getElementById('modal-rating').textContent = rating || '暂无评分';
+    document.getElementById('modal-desc').textContent = desc;
+
+    if (img && img.src) {{
+        document.getElementById('modal-img').src = img.src;
+        document.getElementById('modal-img').style.display = 'block';
+    }} else {{
+        document.getElementById('modal-img').style.display = 'none';
+    }}
+
+    var biliLink = document.getElementById('modal-bili-link');
+    var biliIframe = document.getElementById('modal-bili-video');
+    var searchName = name.replace(/[《》「」]/g, '').trim();
+    
+    if (bvid) {{
+        biliLink.style.display = 'none';
+        biliIframe.style.display = 'block';
+        biliIframe.src = 'https://player.bilibili.com/player.html?bvid=' + bvid + '&autoplay=0';
+    }} else {{
+        biliLink.style.display = 'inline-flex';
+        biliIframe.style.display = 'none';
+        biliIframe.src = '';
+        biliLink.href = 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(searchName + ' 游戏') + '&from_source=webtop_search';
+    }}
+
+    document.getElementById('modal-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}}
+
+function closeModal(e) {{
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('modal-overlay').classList.remove('show');
+    document.body.style.overflow = '';
 }}
 
 function setModSearch(keyword) {{

@@ -559,7 +559,8 @@ function switchTab(name) {{
 function p9Search() {{
     var q = document.getElementById('p9-search-input').value.trim();
     if (!q) return;
-    window.open('https://www.google.com/search?q=site:psnine.com+' + encodeURIComponent(q) + '+白金攻略', '_blank');
+    // P9 has no search API. Jump to guide section directly.
+    window.open('https://www.psnine.com/node/guide', '_blank');
 }}
 </script>
 </body>

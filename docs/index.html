@@ -56,7 +56,7 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 <body>
 <h1>🎮 本周游戏折扣精选</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 12:06</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 12:13</p>
 
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
@@ -177,16 +177,6 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
             </div>
             <div class="game-card">
                 <div class="card-header">
-                    <span class="game-name">Forza Horizon 5</span>
-                    <span class="discount-badge disc-high">-50%</span>
-                </div>
-                <div class="card-price">
-                    <span class="current-price">¥99</span>
-                </div>
-                <div class="card-rating"></div>
-            </div>
-            <div class="game-card">
-                <div class="card-header">
                     <span class="game-name">《赛博朋克2077》</span>
                     <span class="discount-badge disc-mid">-35%</span>
                 </div>
@@ -222,6 +212,16 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
                 </div>
                 <div class="card-price">
                     <span class="current-price">¥38</span>
+                </div>
+                <div class="card-rating"></div>
+            </div>
+            <div class="game-card">
+                <div class="card-header">
+                    <span class="game-name">Undercover</span>
+                    <span class="discount-badge disc-low">-20%</span>
+                </div>
+                <div class="card-price">
+                    <span class="current-price">¥39</span>
                 </div>
                 <div class="card-rating"></div>
             </div></div></section><section class="platform"><h2>🟡 Switch 日服特惠</h2><div class="game-list">
@@ -384,7 +384,8 @@ function switchTab(name) {
 function p9Search() {
     var q = document.getElementById('p9-search-input').value.trim();
     if (!q) return;
-    window.open('https://www.google.com/search?q=site:psnine.com+' + encodeURIComponent(q) + '+白金攻略', '_blank');
+    // P9 has no search API. Jump to guide section directly.
+    window.open('https://www.psnine.com/node/guide', '_blank');
 }
 </script>
 </body>

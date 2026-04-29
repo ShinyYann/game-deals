@@ -972,7 +972,7 @@ def generate_html():
     </div>'''
     # Pre-cached mod search results
     mods_html += cached_mod_results
-    mods_html += '<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div></div>'
+    mods_html += '</div></section></div></div>'
     for label, items, icon, raw_label, section_id in [
         ("PSN 港服特惠", psn_items[:8], "🔵", "PSN", "disc-psn"),
         ("Steam 国服特惠", steam_items[:8], "🟢", "Steam", "disc-steam"),
@@ -1277,6 +1277,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 
 {mods_html}
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 
 <div id="tab-trophy" class="tab-content">
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -1306,6 +1307,8 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <div class="modal-desc" id="modal-desc">暂无详细介绍</div>
 <a id="modal-bili-link" class="modal-bilibili" href="#" target="_blank" rel="noopener">▶ 官方预告片</a>
 <iframe id="modal-bili-video" style="display:none; width:100%; height:220px; border:none; border-radius:10px; margin-top:8px;" allowfullscreen></iframe>
+</div>
+</div>
 </div>
 </div>
 

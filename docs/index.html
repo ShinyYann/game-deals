@@ -11,6 +11,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .tab-btn { flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }
 .tab-btn.active { background: #1a1a2e; color: #e8e8f0; }
 .tab-btn:active { background: #2a2a3e; }
+.sub-tab-bar { display: flex; gap: 4px; margin-bottom: 12px; }
+.sub-tab-btn { padding: 5px 14px; border: none; border-radius: 5px; font-size: 12px; font-weight: 500; cursor: pointer; background: transparent; color: #555; transition: all 0.2s; }
+.sub-tab-btn.active { background: #1f1f32; color: #e8e8f0; } 
 h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 16px; }
 .last-update { text-align: center; color: #555; font-size: 11px; margin-bottom: 12px; }
@@ -71,10 +74,15 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 13:08</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 13:10</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
-<section class="platform"><h2>🔵 PSN 港服特惠</h2><div class="game-list">
+<div class="sub-tab-bar">
+<button class="sub-tab-btn active" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
+</div>
+<div id="disc-psn" class="disc-section"><section class="platform"><h2>🔵 PSN 港服特惠</h2><div class="game-list">
             <div class="game-card">
                 <div class="game-card-inner">
                     <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202504/2514/6d5f046a18b67dc8cdec27bd8f781e6f402ef1ede87c7724.png?w=240" class="game-thumb" onerror="this.style.display='none'"></div>
@@ -194,7 +202,7 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
                         <div class="card-rating"></div>
                     </div>
                 </div>
-            </div></div></section><section class="platform"><h2>🟢 Steam 国服特惠</h2><div class="game-list">
+            </div></section></div><div id="disc-steam" class="disc-section"><section class="platform"><h2>🟢 Steam 国服特惠</h2><div class="game-list">
             <div class="game-card">
                 <div class="game-card-inner">
                     <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1687950/header.jpg?t=1763530018" class="game-thumb" onerror="this.style.display='none'"></div>
@@ -314,7 +322,7 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
                         <div class="card-rating"></div>
                     </div>
                 </div>
-            </div></div></section><section class="platform"><h2>🟡 Switch 日服特惠</h2><div class="game-list">
+            </div></section></div><div id="disc-switch" class="disc-section"><section class="platform"><h2>🟡 Switch 日服特惠</h2><div class="game-list">
             <div class="game-card">
                 <div class="game-card-inner">
                     <div class="card-left"></div>
@@ -434,7 +442,7 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
                         <div class="card-rating"></div>
                     </div>
                 </div>
-            </div></div></section>
+            </div></section></div>
 <section class='top5'><h2>🔥 综合推荐 TOP 5</h2><div class='top-list'><div class="top-item"><span class="top-icon">🔵</span><span class="top-name">忍者神龟：破碎命运</span> <span class="top-price">HK$26.80</span> <span class="top-disc">-90%</span> <span class="top-rating"></span></div><div class="top-item"><span class="top-icon">🟢</span><span class="top-name">女神异闻录5 皇家版</span> <span class="top-price">¥54</span> <span class="top-disc">-80%</span> <span class="top-rating">⭐⭐⭐⭐⭐ MC93 日式RP</span></div><div class="top-item"><span class="top-icon">🟢</span><span class="top-name">赛博朋克2077</span> <span class="top-price">¥104</span> <span class="top-disc">-65%</span> <span class="top-rating">⭐⭐⭐⭐ MC86 已修复值得</span></div><div class="top-item"><span class="top-icon">🔵</span><span class="top-name">生化危机4</span> <span class="top-price">HK$151.20</span> <span class="top-disc">-60%</span> <span class="top-rating">⭐⭐⭐⭐⭐ MC93 恐怖动作</span></div><div class="top-item"><span class="top-icon">🔵</span><span class="top-name">对马岛之魂</span> <span class="top-price">HK$238.56</span> <span class="top-disc">-58%</span> <span class="top-rating">⭐⭐⭐⭐ MC87 武士开放世</span></div></div></section>
 </div>
 
@@ -536,6 +544,15 @@ function loadSavedTrophy() {
         document.getElementById('trophy-frame').style.display = 'block';
         document.getElementById('trophy-iframe').src = 'https://www.psnine.com/psnid/' + encodeURIComponent(saved);
     }
+}
+
+function switchSubTab(id, btn) {
+    var sections = document.querySelectorAll('.disc-section');
+    var btns = document.querySelectorAll('.sub-tab-btn');
+    for (var i = 0; i < sections.length; i++) sections[i].style.display = 'none';
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
 }
 
 window.onload = function() {

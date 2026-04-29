@@ -378,14 +378,14 @@ def generate_html():
         return {'PSN': '🔵', 'Steam': '🟢', 'Switch': '🟡'}.get(plat, '🎮')
 
     cards = ""
-    for label, items, icon, raw_label in [
-        ("PSN 港服特惠", psn_items[:8], "🔵", "PSN"),
-        ("Steam 国服特惠", steam_items[:8], "🟢", "Steam"),
-        ("Switch 日服特惠", switch_items[:8], "🟡", "Switch"),
+    for label, items, icon, raw_label, section_id in [
+        ("PSN 港服特惠", psn_items[:8], "🔵", "PSN", "disc-psn"),
+        ("Steam 国服特惠", steam_items[:8], "🟢", "Steam", "disc-steam"),
+        ("Switch 日服特惠", switch_items[:8], "🟡", "Switch", "disc-switch"),
     ]:
         if not items:
             continue
-        cards += f'<section class="platform"><h2>{icon} {label}</h2><div class="game-list">'
+        cards += f'<div id="{section_id}" class="disc-section"><section class="platform"><h2>{icon} {label}</h2><div class="game-list">'
         for i, (score, n, g, r, d, p) in enumerate(items, 1):
             display = translate_name(n) or n
             sn = trans_short(n)
@@ -414,7 +414,7 @@ def generate_html():
                     </div>
                 </div>
             </div>'''
-        cards += '</div></section>'
+        cards += '</section></div>'
 
     top5 = "<section class='top5'><h2>🔥 综合推荐 TOP 5</h2><div class='top-list'>"
     used = set()
@@ -492,6 +492,9 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans
 .tab-btn {{ flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }}
 .tab-btn.active {{ background: #1a1a2e; color: #e8e8f0; }}
 .tab-btn:active {{ background: #2a2a3e; }}
+.sub-tab-bar {{ display: flex; gap: 4px; margin-bottom: 12px; }}
+.sub-tab-btn {{ padding: 5px 14px; border: none; border-radius: 5px; font-size: 12px; font-weight: 500; cursor: pointer; background: transparent; color: #555; transition: all 0.2s; }}
+.sub-tab-btn.active {{ background: #1f1f32; color: #e8e8f0; }} 
 h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .subtitle {{ text-align: center; color: #888; font-size: 13px; margin-bottom: 16px; }}
 .last-update {{ text-align: center; color: #555; font-size: 11px; margin-bottom: 12px; }}
@@ -555,6 +558,11 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 <p class="last-update">🔄 上次更新: {ts}</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
+<div class="sub-tab-bar">
+<button class="sub-tab-btn active" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
+</div>
 {cards}
 {top5}
 </div>
@@ -605,6 +613,15 @@ function loadSavedTrophy() {{
         document.getElementById('trophy-frame').style.display = 'block';
         document.getElementById('trophy-iframe').src = 'https://www.psnine.com/psnid/' + encodeURIComponent(saved);
     }}
+}}
+
+function switchSubTab(id, btn) {{
+    var sections = document.querySelectorAll('.disc-section');
+    var btns = document.querySelectorAll('.sub-tab-btn');
+    for (var i = 0; i < sections.length; i++) sections[i].style.display = 'none';
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
 }}
 
 window.onload = function() {{

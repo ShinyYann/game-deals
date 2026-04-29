@@ -1213,17 +1213,15 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .top5 {{ margin-top: 28px; }}
 .top5 h2 {{ font-size: 18px; margin-bottom: 12px; }}
 .plat-tag {{ display: inline-block; margin-left: 6px; font-size: 12px; vertical-align: middle; }}
-.medal {{ display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }}
-.medal-1 {{ background: linear-gradient(90deg, #f59e0b, #f97316); color: #1a1a2e; animation: medalGlow1 3s ease-in-out infinite; }}
-.medal-2 {{ background: linear-gradient(90deg, #a855f7, #6366f1); color: #fff; animation: medalGlow2 3s ease-in-out infinite; }}
-.medal-3 {{ background: linear-gradient(90deg, #ef4444, #f97316); color: #fff; animation: medalGlow3 3s ease-in-out infinite; }}
-.medal-4 {{ background: linear-gradient(90deg, #34d399, #059669); color: #fff; animation: medalGlow4 3s ease-in-out infinite; }}
-.medal-5 {{ background: linear-gradient(90deg, #38bdf8, #818cf8); color: #fff; animation: medalGlow5 3s ease-in-out infinite; }}
-@keyframes medalGlow1 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(245,158,11,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(245,158,11,0.8); }} }}
-@keyframes medalGlow2 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(168,85,247,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(168,85,247,0.8); }} }}
-@keyframes medalGlow3 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(239,68,68,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(239,68,68,0.8); }} }}
-@keyframes medalGlow4 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(52,211,153,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(52,211,153,0.8); }} }}
-@keyframes medalGlow5 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(56,189,248,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(56,189,248,0.8); }} }}
+.medal {{ display: inline-block; font-size: 12px; font-weight: 800; padding: 3px 12px; border-radius: 6px; margin-right: 8px; vertical-align: middle; position: relative; overflow: hidden; letter-spacing: 1px; }}
+.medal::after {{ content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 30%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 70%, transparent 100%); background-size: 200% 100%; animation: medalShine 2s linear infinite; }}
+.medal-1 {{ background: linear-gradient(135deg, #f59e0b, #eab308, #f59e0b); color: #1a1a2e; background-size: 200% 200%; animation: medalFlow 3s ease-in-out infinite, medalShine 2s linear infinite; box-shadow: 0 0 12px rgba(245,158,11,0.6); }}
+.medal-2 {{ background: linear-gradient(135deg, #a855f7, #c084fc, #a855f7); color: #fff; background-size: 200% 200%; animation: medalFlow 3s ease-in-out infinite, medalShine 2s linear infinite; box-shadow: 0 0 12px rgba(168,85,247,0.6); }}
+.medal-3 {{ background: linear-gradient(135deg, #ef4444, #f43f5e, #ef4444); color: #fff; background-size: 200% 200%; animation: medalFlow 3s ease-in-out infinite, medalShine 2s linear infinite; box-shadow: 0 0 12px rgba(239,68,68,0.6); }}
+.medal-4 {{ background: linear-gradient(135deg, #34d399, #10b981, #34d399); color: #fff; background-size: 200% 200%; animation: medalFlow 3s ease-in-out infinite, medalShine 2s linear infinite; box-shadow: 0 0 12px rgba(52,211,153,0.6); }}
+.medal-5 {{ background: linear-gradient(135deg, #38bdf8, #818cf8, #38bdf8); color: #fff; background-size: 200% 200%; animation: medalFlow 3s ease-in-out infinite, medalShine 2s linear infinite; box-shadow: 0 0 12px rgba(56,189,248,0.6); }}
+@keyframes medalFlow {{ 0% {{ background-position: 0% 50%; }} 50% {{ background-position: 100% 50%; }} 100% {{ background-position: 0% 50%; }} }}
+@keyframes medalShine {{ 0% {{ background-position: 200% 0; }} 100% {{ background-position: -200% 0; }} }}
 .crown {{ position: absolute; top: -4px; left: -4px; font-size: 20px; z-index: 2; filter: drop-shadow(0 0 4px rgba(245,158,11,0.6)); animation: crownBounce 2s ease-in-out infinite; }}
 .card-left {{ position: relative; }}
 @keyframes crownBounce {{ 0%,100% {{ transform: translateY(0) rotate(-5deg); }} 50% {{ transform: translateY(-3px) rotate(5deg); }} }}

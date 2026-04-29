@@ -1364,7 +1364,7 @@ function switchTab(name) {{
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
     if (name === 'psnine') {{
-        setTimeout(function(){{ document.getElementById('p9-search-input').focus(); }}, 300);
+        setTimeout(function(){{  }}, 300);
         // Show first P9 sub-tab by default
         var sections = document.querySelectorAll('#tab-psnine .p9-section');
         var sbtns = document.querySelectorAll('#tab-psnine .p9-section-bar .sub-tab-btn');

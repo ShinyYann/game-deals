@@ -1124,11 +1124,12 @@ def generate_html():
 <title>Yann 的小站</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(160deg, #0f0f1a 0%, #161630 50%, #0f0f1a 100%); color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; transition: background 0.8s ease; }}
-body.tab-trophy {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a1030 50%, #0f0f1a 100%); }}
-body.tab-discounts {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a2a10 50%, #0f0f1a 100%); }}
-body.tab-psnine {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a1a30 50%, #0f0f1a 100%); }}
-body.tab-mods {{ background: linear-gradient(160deg, #0f0f1a 0%, #2a1a10 50%, #0f0f1a 100%); }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(160deg, #0f0f1a 0%, #161630 50%, #0f0f1a 100%); color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; transition: background 0.8s ease; position: relative; }}
+body::before {{ content: ''; position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; opacity: 0.08; transition: opacity 0.8s ease; pointer-events: none; }}
+body.tab-trophy::before {{ background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&h=900&fit=crop'); }}
+body.tab-discounts::before {{ background-image: url('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1600&h=900&fit=crop'); }}
+body.tab-psnine::before {{ background-image: url('https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600&h=900&fit=crop'); }}
+body.tab-mods::before {{ background-image: url('https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&h=900&fit=crop'); }}
 .tab-accent {{ height: 3px; border-radius: 3px; margin-bottom: 12px; position: relative; overflow: hidden; transition: background 0.5s ease; }}
 .tab-accent.trophy {{ background: linear-gradient(90deg, #a855f7, #7c3aed); }}
 .tab-accent.discounts {{ background: linear-gradient(90deg, #34d399, #059669); }}

@@ -56,7 +56,7 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 <body>
 <h1>🎮 本周游戏折扣精选</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 12:13</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 12:16</p>
 
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
@@ -310,9 +310,11 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 
 <div id="tab-psnine" class="tab-content" style="display:none">
 <div class="p9-search-box">
-<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名找白金攻略…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
-<button class="p9-search-btn" onclick="p9Search()">🔍 搜索</button>
+<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名找白金攻略…" oninput="p9Filter()" onkeydown="if(event.key===&apos;Enter&apos;) p9Filter()">
+<button class="p9-search-btn" onclick="p9Filter()">🔍 搜索</button>
 </div>
+<div id="p9-results">
+<div id="p9-default-content">
 <section class="platform"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">
             <a href="https://www.psnine.com/topic/39091" class="p9-item" target="_blank" rel="noopener">
                 <span class="p9-title">2026年4月港服PLUS二三档新增及退库游戏目录(4月21日提供)暨抽奖活动开奖</span>
@@ -367,10 +369,43 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
                 <span class="p9-meta">✎ hjuy65tghmmmx3 · 04-08 06:32</span>
             </a></div></section>
 </div>
+</div>
+</div>
 
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 
 <script>
+// ─── P9 攻略搜索数据（约80条） ───
+var p9Guides = [{"title": "《怪物猎人：世界冰原》大小金救济任务汇总", "link": "https://www.psnine.com/topic/38870", "author": "zevinlee", "time": "前天 09:19", "tags": []}, {"title": "PS5《红色沙漠》游玩指南", "link": "https://www.psnine.com/topic/39108", "author": "peneltykill", "time": "前天 10:05", "tags": []}, {"title": "装甲核心6四套机甲安天下", "link": "https://www.psnine.com/topic/39104", "author": "neverlostlove", "time": "5天前 02:32", "tags": []}, {"title": "《咒》全收集文字攻略+全收集列表", "link": "https://www.psnine.com/topic/39084", "author": "aimeraya", "time": "04-09 08:27", "tags": []}, {"title": "PS4/PS5《告别回忆 双想～Break out of my shell～》（秋之回忆9 双想FD）白金攻略", "link": "https://www.psnine.com/topic/39088", "author": "mikukukukuku", "time": "15天前 00:13", "tags": []}, {"title": "PS4｜PS5《连咒》简易白金攻略", "link": "https://www.psnine.com/topic/39092", "author": "xbcded", "time": "14天前 22:12", "tags": []}, {"title": "PS5《超级肉肉男孩3D》全A+以及一命通关视频攻略", "link": "https://www.psnine.com/topic/39089", "author": "lazifox", "time": "200215天前 20:54", "tags": []}, {"title": "「羊蹄山之魂」奇谭模式 全职业进阶向配装与实战思路", "link": "https://www.psnine.com/topic/39076", "author": "ecchimu_495", "time": "03-31 14:55", "tags": []}, {"title": "《无双大蛇Z / 無双OROCHI Z》白金攻略", "link": "https://www.psnine.com/topic/39064", "author": "hjuy65tghmmmx3", "time": "03-26 16:15", "tags": []}, {"title": "战锤40K混沌之门恶魔猎人白金攻略及打法思路", "link": "https://www.psnine.com/topic/39082", "author": "r1esenrad1", "time": "04-07 23:41", "tags": []}, {"title": "2档会员游戏【奇迹时代 星陨】【age of wonders:planetfall】简易白金攻略", "link": "https://www.psnine.com/topic/39056", "author": "lanfulide3", "time": "03-23 18:33", "tags": []}, {"title": "《人中之龙/如龙极3/3外传 Dark Ties》白金攻略", "link": "https://www.psnine.com/topic/39063", "author": "lzlzmc", "time": "03-26 14:28", "tags": []}, {"title": "《战锤40K 星际战士2》白金攻略", "link": "https://www.psnine.com/topic/39074", "author": "scottzheng", "time": "03-27 12:21", "tags": []}, {"title": "《幻想水浒传2》HARD难度快速白金攻略", "link": "https://www.psnine.com/topic/38465", "author": "saudade_hdf", "time": "03-23 13:34", "tags": []}, {"title": "《PGA TOUR 2K25》白金攻略", "link": "https://www.psnine.com/topic/39029", "author": "finn527", "time": "03-16 07:12", "tags": []}, {"title": "《孤岛惊魂3血龙》全奖杯攻略", "link": "https://www.psnine.com/topic/39045", "author": "chinese-pandaman", "time": "03-19 21:06", "tags": []}, {"title": "《环法自行车赛2025》白金攻略", "link": "https://www.psnine.com/topic/39055", "author": "finn527", "time": "03-23 13:30", "tags": []}, {"title": "《怪诞扑克夜|Poker Night at the Inventory》白金攻略（简易）", "link": "https://www.psnine.com/topic/39051", "author": "lazifox2002", "time": "03-20 13:52", "tags": []}, {"title": "20小时白金！生化危机9奶奶级攻略制作完成，10万积分稳拿，欢迎来玩～", "link": "https://www.psnine.com/topic/39023", "author": "lkn-player", "time": "03-10 20:15", "tags": []}, {"title": "机动战士高达-代号妖精 全奖杯攻略", "link": "https://www.psnine.com/topic/39020", "author": "sleepyjohn-ex", "time": "03-08 18:35", "tags": []}, {"title": "PS4《Coffee Talk》白金攻略", "link": "https://www.psnine.com/topic/35279", "author": "satsukiye_", "time": "03-10 16:59", "tags": []}, {"title": "新年献礼——560小时终极探索！老奶奶级攻略硬刚天国拯救2～", "link": "https://www.psnine.com/topic/39007", "author": "lkn-player", "time": "02-26 11:58", "tags": []}, {"title": "《死亡终局 轮回试炼 Code Z》白金攻略", "link": "https://www.psnine.com/topic/39003", "author": "whl414", "time": "02-24 21:07", "tags": []}, {"title": "【四周年献礼】艾尔登法环极功利白金攻略", "link": "https://www.psnine.com/topic/38999", "author": "soarqin2", "time": "02-18 22:02", "tags": []}, {"title": "Undisputed白金攻略", "link": "https://www.psnine.com/topic/38962", "author": "sleepyjohn-ex", "time": "02-09 13:58", "tags": []}, {"title": "PS5《NBA 2K26》白金攻略", "link": "https://www.psnine.com/topic/38906", "author": "finn527", "time": "01-27 11:10", "tags": []}, {"title": "超英派遣中心 白金攻略", "link": "https://www.psnine.com/topic/38978", "author": "winning-watch4", "time": "02-09 15:31", "tags": []}, {"title": "《MLB The Show 25》白金攻略", "link": "https://www.psnine.com/topic/38926", "author": "finn527", "time": "02-08 15:53", "tags": []}, {"title": "《开拓者 正义之怒》图文全奖杯攻略（按流程顺序）", "link": "https://www.psnine.com/topic/38886", "author": "heimu", "time": "01-10 20:20", "tags": []}, {"title": "PS5《天国 拯救2》单周目速通攻略", "link": "https://www.psnine.com/topic/38877", "author": "return_cn", "time": "01-08 06:50", "tags": []}, {"title": "《最终幻想12: 黄道年代》超功利白金攻略", "link": "https://www.psnine.com/topic/38862", "author": "soarqin220", "time": "25-12 03:37", "tags": []}, {"title": "【PS3 如龙3】小游戏AXA答题工具", "link": "https://www.psnine.com/topic/38851", "author": "mou_lou_nei_diu20", "time": "25-12 11:29", "tags": []}, {"title": "《Tormented Souls丨受折磨的灵魂》DEBUG模式白金攻略", "link": "https://www.psnine.com/topic/38858", "author": "p789cs20", "time": "25-12 23:09", "tags": []}, {"title": "《天国拯救2》保姆级图文白金攻略", "link": "https://www.psnine.com/topic/38830", "author": "lxe_dake7620", "time": "25-12 10:34", "tags": []}, {"title": "超级机器人大战Y白金流程攻略", "link": "https://www.psnine.com/topic/38828", "author": "mistysprite012520", "time": "25-12 20:48", "tags": []}, {"title": "《BENEATH》（渊域）PSN版游戏流程攻略简述与白金指南", "link": "https://www.psnine.com/topic/38856", "author": "wuming198320", "time": "25-12 20:39", "tags": []}, {"title": "凯瑟琳FULL BODY白金攻略", "link": "https://www.psnine.com/topic/38838", "author": "q-_-mtommy20", "time": "25-12 12:43", "tags": []}, {"title": "PS+游戏终极汇总表", "link": "https://www.psnine.com/topic/38817", "author": "skyfantasyhong20", "time": "25-12 11:22", "tags": []}, {"title": "《血染小镇|Paint the Town Red》白金图文攻略（详细）", "link": "https://www.psnine.com/topic/38820", "author": "lazifox200220", "time": "25-12 02:41", "tags": []}, {"title": "《杀戮空间3》速白攻略", "link": "https://www.psnine.com/topic/38819", "author": "loopbrt20", "time": "25-12 12:19", "tags": []}, {"title": "【2026年总结】只开一个月PS+会员领三个月会免游戏", "link": "https://www.psnine.com/topic/38778", "author": "skyfantasyhong20", "time": "25-11 11:13", "tags": []}, {"title": "《明末-渊虚之羽》白金攻略【已更新全支线攻略】", "link": "https://www.psnine.com/topic/38795", "author": "chinese-pandaman20", "time": "25-11 00:34", "tags": []}];
+
+function p9Filter() {
+    var q = document.getElementById('p9-search-input').value.trim().toLowerCase();
+    var results = document.getElementById('p9-results');
+    if (!q) {
+        results.innerHTML = document.getElementById('p9-default-content').innerHTML;
+        return;
+    }
+    var matched = p9Guides.filter(function(g) {
+        return g.title && g.title.toLowerCase().indexOf(q) !== -1;
+    });
+    if (matched.length === 0) {
+        results.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">😕 没找到相关攻略，试试其他关键词</div>';
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < Math.min(matched.length, 20); i++) {
+        var g = matched[i];
+        var link = g.link;
+        if (link && link.indexOf('http') !== 0) link = 'https://www.psnine.com' + link;
+        var author = g.author || '';
+        var timeText = g.time || '';
+        html += '<a href="' + link + '" class="p9-item" target="_blank" rel="noopener">' +
+            '<span class="p9-title">' + g.title + '</span>' +
+            '<span class="p9-meta">✎ ' + author + ' · ' + timeText + '</span></a>';
+    }
+    results.innerHTML = html;
+}
+
 function switchTab(name) {
     var btns = document.querySelectorAll('.tab-btn');
     var contents = document.querySelectorAll('.tab-content');
@@ -379,13 +414,6 @@ function switchTab(name) {
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
     if (name === 'psnine') setTimeout(function(){ document.getElementById('p9-search-input').focus(); }, 300);
-}
-
-function p9Search() {
-    var q = document.getElementById('p9-search-input').value.trim();
-    if (!q) return;
-    // P9 has no search API. Jump to guide section directly.
-    window.open('https://www.psnine.com/node/guide', '_blank');
 }
 </script>
 </body>

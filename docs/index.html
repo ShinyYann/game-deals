@@ -74,13 +74,14 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 13:10</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 13:14</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
 <button class="sub-tab-btn active" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-top5', this)">🔥 Top5</button>
 </div>
 <div id="disc-psn" class="disc-section"><section class="platform"><h2>🔵 PSN 港服特惠</h2><div class="game-list">
             <div class="game-card">
@@ -443,7 +444,77 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
                     </div>
                 </div>
             </div></section></div>
-<section class='top5'><h2>🔥 综合推荐 TOP 5</h2><div class='top-list'><div class="top-item"><span class="top-icon">🔵</span><span class="top-name">忍者神龟：破碎命运</span> <span class="top-price">HK$26.80</span> <span class="top-disc">-90%</span> <span class="top-rating"></span></div><div class="top-item"><span class="top-icon">🟢</span><span class="top-name">女神异闻录5 皇家版</span> <span class="top-price">¥54</span> <span class="top-disc">-80%</span> <span class="top-rating">⭐⭐⭐⭐⭐ MC93 日式RP</span></div><div class="top-item"><span class="top-icon">🟢</span><span class="top-name">赛博朋克2077</span> <span class="top-price">¥104</span> <span class="top-disc">-65%</span> <span class="top-rating">⭐⭐⭐⭐ MC86 已修复值得</span></div><div class="top-item"><span class="top-icon">🔵</span><span class="top-name">生化危机4</span> <span class="top-price">HK$151.20</span> <span class="top-disc">-60%</span> <span class="top-rating">⭐⭐⭐⭐⭐ MC93 恐怖动作</span></div><div class="top-item"><span class="top-icon">🔵</span><span class="top-name">对马岛之魂</span> <span class="top-price">HK$238.56</span> <span class="top-disc">-58%</span> <span class="top-rating">⭐⭐⭐⭐ MC87 武士开放世</span></div></div></section>
+<div id="disc-top5" class="disc-section"><section class="platform"><h2>🔥 综合推荐 TOP 5</h2><div class="game-list"><div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202504/2514/6d5f046a18b67dc8cdec27bd8f781e6f402ef1ede87c7724.png?w=240" class="game-thumb" onerror="this.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">忍者神龟：破碎命运</span>
+                            <span class="discount-badge disc-high">-90%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">HK$26.80</span>
+                        </div>
+                        <div class="card-rating"></div>
+                    </div>
+                </div>
+            </div><div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1687950/header.jpg?t=1763530018" class="game-thumb" onerror="this.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">女神异闻录5 皇家版</span>
+                            <span class="discount-badge disc-high">-80%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">¥54</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐⭐ MC93 日式RP</div>
+                    </div>
+                </div>
+            </div><div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/e9047d8ec47ae3d94bb8b464fb0fc9e9972b4ac7/header.jpg?t=1769690377" class="game-thumb" onerror="this.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">赛博朋克2077</span>
+                            <span class="discount-badge disc-high">-65%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">¥104</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐ MC86 已修复值得</div>
+                    </div>
+                </div>
+            </div><div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202401/2906/78161bc117f3d712bca47348db7a8be7e4ac6c4a2b98d88a.png?w=240" class="game-thumb" onerror="this.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">生化危机4</span>
+                            <span class="discount-badge disc-high">-60%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">HK$151.20</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐⭐ MC93 恐怖动作</div>
+                    </div>
+                </div>
+            </div><div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202106/2322/c16gs6a7lbAYzPf7ZTikbH1c.png?w=240" class="game-thumb" onerror="this.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">对马岛之魂</span>
+                            <span class="discount-badge disc-high">-58%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">HK$238.56</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐ MC87 武士开放世</div>
+                    </div>
+                </div>
+            </div></div></section></div>
 </div>
 
 <div id="tab-psnine" class="tab-content" style="display:none">

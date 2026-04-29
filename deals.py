@@ -416,7 +416,7 @@ def generate_html():
             </div>'''
         cards += '</section></div>'
 
-    top5 = "<section class='top5'><h2>🔥 综合推荐 TOP 5</h2><div class='top-list'>"
+    top5 = '<div id="disc-top5" class="disc-section"><section class="platform"><h2>🔥 综合推荐 TOP 5</h2><div class="game-list">'
     used = set()
     count = 0
     for s, n, g, r, d, p, plat in all_items:
@@ -427,10 +427,27 @@ def generate_html():
         icon = platform_icon(plat)
         price = g['price']
         disc_s = g['discount']
+        disc_cls = "disc-high" if d >= 50 else ("disc-mid" if d >= 30 else "disc-low")
         rating = (r[:15] if r else "") or ""
-        top5 += f'<div class="top-item"><span class="top-icon">{icon}</span><span class="top-name">{display}</span> <span class="top-price">{price}</span> <span class="top-disc">{disc_s}</span> <span class="top-rating">{rating}</span></div>'
+        cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if plat == "Switch" and g.get('has_cn', False) else ""
+        card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
+        top5 += f'''<div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left">{card_img}</div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">{display}</span>
+                            <span class="discount-badge {disc_cls}">{disc_s}</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">{price}</span>{cn_tag}
+                        </div>
+                        <div class="card-rating">{rating}</div>
+                    </div>
+                </div>
+            </div>'''
         count += 1
-    top5 += "</div></section>"
+    top5 += "</div></section></div>"
 
     # ─── PSNine community ───────────────────────────────────────────
     p9_sections = ""
@@ -562,6 +579,7 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 <button class="sub-tab-btn active" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-top5', this)">🔥 Top5</button>
 </div>
 {cards}
 {top5}

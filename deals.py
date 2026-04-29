@@ -646,30 +646,36 @@ def parse_psnine():
 
 # ─── Data sources ───────────────────────────────────────────────────
 def parse_psn():
-    html = fetch("https://store.playstation.com/zh-hant-hk/pages/deals")
-    if not html: return []
-    soup = BeautifulSoup(html, 'lxml')
+    # 多页面抓取 PS5 + PS4 折扣
+    urls = [
+        "https://store.playstation.com/zh-hant-hk/pages/deals",
+        "https://store.playstation.com/zh-hant-hk/pages/browse/1?category=all_ps4_discounts&sort=discount_rate&page=1",
+        "https://store.playstation.com/zh-hant-hk/pages/browse/1?category=all_ps5_discounts&sort=discount_rate&page=1",
+    ]
     games = []
-    for tile in soup.find_all('div', class_=lambda c: c and 'psw-product-tile' in c):
-        nt = tile.find('span', {'data-qa': re.compile(r'product-name')})
-        if not nt: continue
-        name = nt.get_text(strip=True)
-        if not name or len(name) > 80: continue
-        tt = tile.find('span', {'data-qa': re.compile(r'product-type')})
-        if tt and tt.get_text(strip=True) in ['物品', '武器', '服裝', '追加內容', '章節']:
-            continue
-        dt = tile.find('span', {'data-qa': re.compile(r'discount-badge')})
-        disc = dt.get_text(strip=True) if dt else ''
-        pt = tile.find('span', {'data-qa': re.compile(r'price#display-price')})
-        price = pt.get_text(strip=True) if pt else ''
-        st = tile.find('s', {'data-qa': re.compile(r'price#price-strikethrough')})
-        orig = st.get_text(strip=True) if st else ''
-        img = tile.find('img')
-        img_url = img.get('src', '') if img else ''
-        # Clean up PSN image URL: remove width parameter for larger version
-        if img_url:
-            img_url = img_url.split('?')[0] + '?w=240'
-        games.append({'name': name.strip(), 'price': price.strip(), 'discount': disc.strip(), 'original_price': orig.strip(), 'img': img_url})
+    for url in urls:
+        html = fetch(url)
+        if not html: continue
+        soup = BeautifulSoup(html, 'lxml')
+        for tile in soup.find_all('div', class_=lambda c: c and 'psw-product-tile' in c):
+            nt = tile.find('span', {'data-qa': re.compile(r'product-name')})
+            if not nt: continue
+            name = nt.get_text(strip=True)
+            if not name or len(name) > 80: continue
+            tt = tile.find('span', {'data-qa': re.compile(r'product-type')})
+            if tt and tt.get_text(strip=True) in ['物品', '武器', '服裝', '追加內容', '章節']:
+                continue
+            dt = tile.find('span', {'data-qa': re.compile(r'discount-badge')})
+            disc = dt.get_text(strip=True) if dt else ''
+            pt = tile.find('span', {'data-qa': re.compile(r'price#display-price')})
+            price = pt.get_text(strip=True) if pt else ''
+            st = tile.find('s', {'data-qa': re.compile(r'price#price-strikethrough')})
+            orig = st.get_text(strip=True) if st else ''
+            img = tile.find('img')
+            img_url = img.get('src', '') if img else ''
+            if img_url:
+                img_url = img_url.split('?')[0] + '?w=240'
+            games.append({'name': name.strip(), 'price': price.strip(), 'discount': disc.strip(), 'original_price': orig.strip(), 'img': img_url})
     return games
 
 def parse_steam():

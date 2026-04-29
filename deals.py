@@ -266,7 +266,12 @@ def parse_psn():
         price = pt.get_text(strip=True) if pt else ''
         st = tile.find('s', {'data-qa': re.compile(r'price#price-strikethrough')})
         orig = st.get_text(strip=True) if st else ''
-        games.append({'name': name.strip(), 'price': price.strip(), 'discount': disc.strip(), 'original_price': orig.strip()})
+        img = tile.find('img')
+        img_url = img.get('src', '') if img else ''
+        # Clean up PSN image URL: remove width parameter for larger version
+        if img_url:
+            img_url = img_url.split('?')[0] + '?w=240'
+        games.append({'name': name.strip(), 'price': price.strip(), 'discount': disc.strip(), 'original_price': orig.strip(), 'img': img_url})
     return games
 
 def parse_steam():
@@ -290,7 +295,8 @@ def parse_steam_item(item):
         'name': name.strip(),
         'price': f'¥{fp/100:.0f}' if fp else '',
         'discount': f'-{dp}%' if dp else '',
-        'original_price': f'¥{op/100:.0f}' if op else ''
+        'original_price': f'¥{op/100:.0f}' if op else '',
+        'img': item.get('header_image', '')
     }
 
 def parse_switch():
@@ -320,12 +326,17 @@ def parse_switch():
             continue
         lang = item.get('lang', [])
         has_cn = any('zh' in l for l in lang) if isinstance(lang, list) else False
+        # Get image - Nintendo API has 'image' field
+        img_url = item.get('image', '') or item.get('screenshot', '') or ''
+        if isinstance(img_url, list):
+            img_url = img_url[0] if img_url else ''
         games.append({
             'name': title.strip(),
             'price': f'¥{current_price:,.0f}' if current_price else '',
             'discount': f'-{drate:.0f}%' if drate else '',
             'original_price': f'¥{price:,.0f}' if price else '',
-            'has_cn': has_cn
+            'has_cn': has_cn,
+            'img': img_url
         })
     return games
 
@@ -385,16 +396,23 @@ def generate_html():
             rating = r or ""
             disc_cls = "disc-high" if dc >= 50 else ("disc-mid" if dc >= 30 else "disc-low")
             cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
+            card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
+            cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
             cards += f'''
             <div class="game-card">
-                <div class="card-header">
-                    <span class="game-name">{display_name}</span>
-                    <span class="discount-badge {disc_cls}">{disc_s}</span>
+                <div class="game-card-inner">
+                    <div class="card-left">{card_img}</div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">{display_name}</span>
+                            <span class="discount-badge {disc_cls}">{disc_s}</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">{price}</span>{cn_tag}
+                        </div>
+                        <div class="card-rating">{rating}</div>
+                    </div>
                 </div>
-                <div class="card-price">
-                    <span class="current-price">{price}</span>{cn_tag}
-                </div>
-                <div class="card-rating">{rating}</div>
             </div>'''
         cards += '</div></section>'
 
@@ -481,8 +499,12 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .platform {{ margin-bottom: 24px; }}
 .platform h2 {{ font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a2a3e; }}
 .game-list {{ display: flex; flex-direction: column; gap: 10px; }}
-.game-card {{ background: #1a1a2e; border-radius: 12px; padding: 14px 16px; }}
-.card-header {{ display: flex; justify-content: space-between; align-items: center; }}
+.game-card {{ background: #1a1a2e; border-radius: 12px; padding: 10px 12px; }}
+.game-card-inner {{ display: flex; gap: 12px; }}
+.card-left {{ flex-shrink: 0; }}
+.game-thumb {{ width: 80px; height: 45px; border-radius: 6px; object-fit: cover; display: block; }}
+.card-right {{ flex: 1; min-width: 0; }}
+.card-header {{ display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }}
 .game-name {{ font-size: 15px; font-weight: 600; }}
 .discount-badge {{ padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; flex-shrink: 0; }}
 .disc-high {{ background: #e74c3c22; color: #ff6b6b; border: 1px solid #e74c3c44; }}

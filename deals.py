@@ -523,8 +523,8 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 </head>
 <body>
 <div class="tab-bar">
-<button class="tab-btn" onclick="switchTab('trophy')">🏆 奖杯</button>
-<button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
+<button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
+<button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
 </div>
 
@@ -532,7 +532,7 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
 <p class="last-update">🔄 上次更新: {ts}</p>
 
-<div id="tab-discounts" class="tab-content">
+<div id="tab-discounts" class="tab-content" style="display:none">
 {cards}
 {top5}
 </div>
@@ -549,7 +549,7 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 </div>
 </div>
 
-<div id="tab-trophy" class="tab-content" style="display:none">
+<div id="tab-trophy" class="tab-content">
 <div class="trophy-bar">
 <input type="text" id="trophy-input" class="trophy-input" placeholder="填PSN ID" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
 <button class="trophy-btn" onclick="trophySearch()">🔍</button>

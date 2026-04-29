@@ -972,7 +972,7 @@ def generate_html():
     </div>'''
     # Pre-cached mod search results
     mods_html += cached_mod_results
-    mods_html += '</div></section></div></div>'
+    mods_html += '<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div></div>'
     for label, items, icon, raw_label, section_id in [
         ("PSN 港服特惠", psn_items[:8], "🔵", "PSN", "disc-psn"),
         ("Steam 国服特惠", steam_items[:8], "🟢", "Steam", "disc-steam"),
@@ -1255,6 +1255,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 {cards}
 {top5}
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 
 <div id="tab-psnine" class="tab-content" style="display:none">
@@ -1272,6 +1273,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 {p9_sections}
 </div>
 </div>
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 
 {mods_html}
@@ -1288,6 +1290,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <div id="trophy-frame" style="display:none; margin-top:12px; max-width:500px; margin-left:auto; margin-right:auto;">
 <iframe id="trophy-iframe" style="width:100%;height:600px;max-width:500px;border:none;border-radius:12px;background:#1a1a2e;display:block;margin:0 auto;"></iframe>
 </div>
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 
 <!-- Game detail modal -->
@@ -1306,7 +1309,6 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 </div>
 
-<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 
 <script>
 function p9Search() {{

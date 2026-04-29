@@ -567,10 +567,17 @@ function p9Search() {{
 function trophySearch() {{
     var q = document.getElementById('trophy-input').value.trim();
     if (!q) return;
-    var frame = document.getElementById('trophy-frame');
-    var iframe = document.getElementById('trophy-iframe');
-    iframe.src = 'https://www.psnine.com/psnid/' + encodeURIComponent(q);
-    frame.style.display = 'block';
+    localStorage.setItem('trophy_id', q);
+    document.getElementById('trophy-frame').style.display = 'block';
+    document.getElementById('trophy-iframe').src = 'https://www.psnine.com/psnid/' + encodeURIComponent(q);
+}}
+
+function loadSavedTrophy() {{
+    var saved = localStorage.getItem('trophy_id');
+    if (saved) {{
+        document.getElementById('trophy-input').value = saved;
+        trophySearch();
+    }}
 }}
 
 function switchTab(name) {{
@@ -581,6 +588,7 @@ function switchTab(name) {{
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
     if (name === 'psnine') setTimeout(function(){{ document.getElementById('p9-search-input').focus(); }}, 300);
+    if (name === 'trophy') setTimeout(function(){{ loadSavedTrophy(); }}, 100);
 }}
 </script>
 </body>

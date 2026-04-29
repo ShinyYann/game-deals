@@ -56,7 +56,7 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 <body>
 <h1>🎮 本周游戏折扣精选</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 12:48</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 12:50</p>
 
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
@@ -319,7 +319,7 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 <section class="platform"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">
             <a href="https://www.psnine.com/topic/39091" class="p9-item" target="_blank" rel="noopener">
                 <span class="p9-title">2026年4月港服PLUS二三档新增及退库游戏目录(4月21日提供)暨抽奖活动开奖</span>
-                <span class="p9-meta">✎ kuusoumenreiki · 3小</span>
+                <span class="p9-meta">✎ kuusoumenreiki · 4小</span>
             </a>
             <a href="https://www.psnine.com/topic/39098" class="p9-item" target="_blank" rel="noopener">
                 <span class="p9-title">【26年4月入库】PS+会员二三档游戏白金难度</span>
@@ -396,10 +396,17 @@ function p9Search() {
 function trophySearch() {
     var q = document.getElementById('trophy-input').value.trim();
     if (!q) return;
-    var frame = document.getElementById('trophy-frame');
-    var iframe = document.getElementById('trophy-iframe');
-    iframe.src = 'https://www.psnine.com/psnid/' + encodeURIComponent(q);
-    frame.style.display = 'block';
+    localStorage.setItem('trophy_id', q);
+    document.getElementById('trophy-frame').style.display = 'block';
+    document.getElementById('trophy-iframe').src = 'https://www.psnine.com/psnid/' + encodeURIComponent(q);
+}
+
+function loadSavedTrophy() {
+    var saved = localStorage.getItem('trophy_id');
+    if (saved) {
+        document.getElementById('trophy-input').value = saved;
+        trophySearch();
+    }
 }
 
 function switchTab(name) {
@@ -410,6 +417,7 @@ function switchTab(name) {
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
     if (name === 'psnine') setTimeout(function(){ document.getElementById('p9-search-input').focus(); }, 300);
+    if (name === 'trophy') setTimeout(function(){ loadSavedTrophy(); }, 100);
 }
 </script>
 </body>

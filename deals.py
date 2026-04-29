@@ -1125,11 +1125,16 @@ def generate_html():
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(160deg, #0f0f1a 0%, #161630 50%, #0f0f1a 100%); color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; transition: background 0.8s ease; position: relative; }}
-body::before {{ content: ''; position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; opacity: 0.12; transition: opacity 0.8s ease; pointer-events: none; }}
-body.tab-trophy::before {{ background-image: url('https://media3.giphy.com/media/26AHONQ79Fm0LKyWc/giphy.gif'); }}
-body.tab-discounts::before {{ background-image: url('https://media4.giphy.com/media/l0HlOBofxL2Kd0G2M/giphy.gif'); }}
-body.tab-psnine::before {{ background-image: url('https://media0.giphy.com/media/26gsl7Q6tkHhyL3mo/giphy.gif'); }}
-body.tab-mods::before {{ background-image: url('https://media1.giphy.com/media/UYBD1rMsdYuCQ/giphy.gif'); }}
+body::before {{ content: ''; position: fixed; inset: -10px; z-index: -1; background-size: cover; background-position: center; opacity: 0.08; transition: opacity 0.8s ease; pointer-events: none; animation: bgBreathe 20s ease-in-out infinite alternate; }}
+body.tab-trophy::before {{ background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&h=900&fit=crop'); }}
+body.tab-discounts::before {{ background-image: url('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1600&h=900&fit=crop'); }}
+body.tab-psnine::before {{ background-image: url('https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600&h=900&fit=crop'); }}
+body.tab-mods::before {{ background-image: url('https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&h=900&fit=crop'); }}
+@keyframes bgBreathe {{
+  0% {{ transform: scale(1) translate(0, 0); }}
+  50% {{ transform: scale(1.05) translate(-1%, -1%); }}
+  100% {{ transform: scale(1) translate(0, 0); }}
+}}
 .tab-accent {{ height: 3px; border-radius: 3px; margin-bottom: 12px; position: relative; overflow: hidden; transition: background 0.5s ease; }}
 .tab-accent.trophy {{ background: linear-gradient(90deg, #a855f7, #7c3aed); }}
 .tab-accent.discounts {{ background: linear-gradient(90deg, #34d399, #059669); }}

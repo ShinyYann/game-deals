@@ -805,6 +805,74 @@ def fetch_news():
     all_news.sort(key=lambda x: x['date'], reverse=True)
     return all_news[:12]
 
+# ─── Steam achievements ──────────────────────────────────────────
+STEAM_ID = '76561198206837309'
+
+def fetch_steam_stats_page():
+    import urllib.request, re
+    url = f'https://steamcommunity.com/profiles/{STEAM_ID}/stats/'
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        data = urllib.request.urlopen(req, timeout=10).read().decode('utf-8', errors='replace')
+    except Exception as e:
+        print(f'  ⚠ Steam stats page fetch failed: {e}')
+        return []
+    return sorted(set(re.findall(r'/stats/(\d+)/achievements/', data)))
+
+def fetch_steam_achievements(appid, game_name):
+    import urllib.request, re, html as html_mod
+    url = f'https://steamcommunity.com/profiles/{STEAM_ID}/stats/{appid}/achievements/'
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        data = urllib.request.urlopen(req, timeout=10).read().decode('utf-8', errors='replace')
+    except:
+        return []
+    achs = []
+    for block in re.findall(r'<div[^>]*class="achieveRow"[^>]*>.*?</div>\s*</div>', data, re.DOTALL):
+        img_m = re.search(r'<img[^>]*src="([^"]+)"', block)
+        name_m = re.search(r'<h3[^>]*class="ellipsis"[^>]*>([^<]+)</h3>', block)
+        desc_m = re.search(r'<h5[^>]*>([^<]*)</h5>', block)
+        unlock_m = re.search(r'achieveUnlockTime', block)
+        date_m = re.search(r'Unlocked\s+([^<]+)<br/>', block)
+        if name_m:
+            achs.append({
+                'name': name_m.group(1).strip(),
+                'desc': desc_m.group(1).strip() if desc_m else '',
+                'img': img_m.group(1) if img_m else '',
+                'unlocked': bool(unlock_m),
+                'date': date_m.group(1).strip() if date_m else '',
+                'appid': appid,
+                'game_name': game_name
+            })
+    return achs
+
+def fetch_all_steam_achievements():
+    import urllib.request, json
+    appids = fetch_steam_stats_page()
+    if not appids:
+        return []
+    names = {}
+    for aid in appids:
+        try:
+            d = json.loads(urllib.request.urlopen(
+                f'https://store.steampowered.com/api/appdetails/?appids={aid}',
+                timeout=5).read())
+            dd = d.get(aid, {})
+            names[aid] = dd['data'].get('name', 'Unknown') if dd.get('success') else 'Unknown'
+        except:
+            names[aid] = 'Unknown'
+    games = []
+    for aid in appids:
+        gn = names.get(aid, 'Unknown')
+        achs = fetch_steam_achievements(aid, gn)
+        games.append({
+            'appid': aid, 'name': gn,
+            'total': len(achs),
+            'unlocked': sum(1 for a in achs if a['unlocked']),
+            'achievements': achs
+        })
+    return games
+
 # ─── HTML generation ───────────────────────────────────────────────
 def pre_search_mods():
     """Pre-cache mod search results using DuckDuckGo."""
@@ -859,6 +927,7 @@ def generate_html():
     switch = parse_switch()
     psnine = parse_psnine()
     news = fetch_news()
+    steam_achs = fetch_all_steam_achievements()
 
     # Build image lookup from all game data
     game_images = {}
@@ -1225,6 +1294,45 @@ def generate_html():
     <div class="news-grid">{news_items}</div>
 </div>'''
 
+    # Build Steam achievements HTML
+    steam_achs_html = ''
+    if steam_achs:
+        game_cards = ''
+        for g in steam_achs:
+            if not g['achievements']: continue
+            pct = int(g['unlocked'] / max(g['total'], 1) * 100) if g['total'] else 0
+            bar_color = '#34d399' if pct >= 80 else '#f59e0b' if pct >= 50 else '#ef4444'
+            achvs = ''
+            for a in g['achievements']:
+                cls = 'achv-locked' if not a['unlocked'] else ''
+                date_html = f'<div class="achv-date">✅ {_html.escape(a["date"])}</div>' if a['unlocked'] else ''
+                achvs += (
+                    f'<div class="achv-card {cls}">'
+                    f'<img src="{a["img"]}" class="achv-icon" loading="lazy">'
+                    f'<div class="achv-info">'
+                    f'<div class="achv-name">{_html.escape(a["name"])}</div>'
+                    f'<div class="achv-desc">{_html.escape(a["desc"])}</div>'
+                    f'{date_html}</div></div>'
+                )
+            game_cards += (
+                f'<div class="steam-game-section">'
+                f'<div class="steam-game-header">'
+                f'<div class="steam-game-name">{_html.escape(g["name"])}</div>'
+                f'<div class="steam-game-progress">{g["unlocked"]}/{g["total"]} ({pct}%)</div>'
+                f'</div>'
+                f'<div class="steam-progress-bar"><div class="steam-progress-fill" style="width:{pct}%;background:{bar_color};"></div></div>'
+                f'<div class="steam-achv-grid">{achvs}</div></div>'
+            )
+        total_u = sum(g['unlocked'] for g in steam_achs)
+        total_t = sum(g['total'] for g in steam_achs)
+        steam_achs_html = (
+            f'<div class="steam-profile-card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(26,26,46,0.6);border-radius:12px;margin-bottom:12px;">'
+            f'<div style="font-size:40px;">👤</div>'
+            f'<div><div style="font-size:16px;font-weight:700;color:#e8e8f0;">Yann</div>'
+            f'<div style="font-size:12px;color:#888;">Steam · 加入于 July 2015 · {total_u}/{total_t} 成就</div>'
+            f'</div></div>{game_cards}'
+        )
+
     html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1251,6 +1359,21 @@ body.tab-news::before {{ background-image: url('https://shared.akamai.steamstati
 .tab-accent.psnine {{ background: linear-gradient(90deg, #5dade2, #3b82f6); }}
 .tab-accent.mods {{ background: linear-gradient(90deg, #f97316, #ea580c); }}
 .tab-accent.news {{ background: linear-gradient(90deg, #5dade2, #38bdf8); }}
+/* Steam achievements */
+.steam-game-section {{ background: rgba(26,26,46,0.5); border-radius: 10px; padding: 12px; margin-bottom: 12px; }}
+.steam-game-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }}
+.steam-game-name {{ font-size: 14px; font-weight: 700; color: #e8e8f0; }}
+.steam-game-progress {{ font-size: 12px; color: #888; }}
+.steam-progress-bar {{ height: 4px; background: #2a2a3e; border-radius: 2px; margin-bottom: 10px; overflow: hidden; }}
+.steam-progress-fill {{ height: 100%; border-radius: 2px; transition: width 0.5s ease; }}
+.steam-achv-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }}
+.achv-card {{ display: flex; gap: 8px; padding: 6px 8px; background: rgba(15,15,26,0.4); border-radius: 8px; align-items: flex-start; }}
+.achv-locked {{ opacity: 0.4; filter: grayscale(0.8); }}
+.achv-icon {{ width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0; }}
+.achv-info {{ flex: 1; min-width: 0; }}
+.achv-name {{ font-size: 11px; font-weight: 600; color: #e8e8f0; line-height: 1.2; }}
+.achv-desc {{ font-size: 10px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+.achv-date {{ font-size: 10px; color: #34d399; margin-top: 2px; }}
 .tab-accent::after {{ content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 3s ease-in-out infinite; }}
 @keyframes shimmer {{
   0% {{ left: -100%; }}
@@ -1493,15 +1616,8 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 
 <div id="trophy-steam" class="sub-tab-content" style="display:none">
-<div class="steam-profile-card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(26,26,46,0.6);border-radius:12px;margin-bottom:12px;">
-<div style="font-size:40px;">👤</div>
-<div>
-<div style="font-size:16px;font-weight:700;color:#e8e8f0;">Yann💯</div>
-<div style="font-size:12px;color:#888;">Steam · 加入于 July 2015</div>
-</div>
-</div>
-<iframe src="https://steamcommunity.com/profiles/76561198206837309/stats/" style="width:100%;height:600px;border:none;border-radius:12px;background:#1a1a2e;"></iframe>
-<div class="footer" style="margin-top:8px;text-align:center;color:#888;font-size:11px;">🔗 如果无法加载，请确保你能访问 steamcommunity.com（需代理）</div>
+{steam_achs_html}
+<div class="footer" style="margin-top:12px;">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div><div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 

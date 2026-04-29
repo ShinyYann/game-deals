@@ -384,6 +384,39 @@ RATINGS = {
     'pokémon': '⭐⭐⭐⭐ MC80 宝可梦RPG',
 }
 
+# ─── Game Details (descriptions, B站 BV IDs) ──────────────────────
+# Format: '游戏名': ('简介', 'BV号或空')
+GAME_DETAILS = {
+    'elden ring': ('《艾尔登法环》是一款以黑暗奇幻世界为舞台的动作RPG。玩家将穿越辽阔的「狭间之地」，探索神秘的地下城，挑战强大的半神。由宫崎英高与乔治·R·R·马丁联手打造。', 'BV1q5411c7aP'),
+    'ghost of tsushima': ('《对马岛之魂》以1274年元日战争为背景，玩家扮演武士境井仁，在蒙古大军入侵下为保护对马岛而战。独特的「武士」与「战鬼」双玩法，配合绝美的日式开放世界。', 'BV1d4411f7Q6'),
+    'resident evil 4': ('《生化危机4》是经典生存恐怖系列的巅峰之作。玩家将操控特工里昂，前往欧洲偏远村庄营救总统女儿。融合动作射击与恐怖氛围，被誉为系列最杰出的作品。', 'BV1Xk4y1q7Qp'),
+    'persona 5 royal': ('《女神异闻录5 皇家版》是一款日式角色扮演游戏。玩家扮演高中生怪盗，白天过着校园生活，夜晚潜入他人心灵迷宫偷走「宝物」。风格前卫，剧情深刻。', 'BV1JZ4y1X7YW'),
+    'persona 5': ('《女神异闻录5 皇家版》是一款日式角色扮演游戏。玩家扮演高中生怪盗，白天过着校园生活，夜晚潜入他人心灵迷宫偷走「宝物」。风格前卫，剧情深刻。', 'BV1JZ4y1X7YW'),
+    'cyberpunk 2077': ('《赛博朋克2077》是一款开放世界动作冒险游戏。玩家在夜之城中扮演雇佣兵V，追寻永生的秘密。经过多年更新修复，现已是一款内容丰富、体验出色的科幻大作。', 'BV1M3411C7mD'),
+    'split fiction': ('《双影奇境》是「双人成行」团队最新力作，支持双人合作的科幻冒险游戏。两位女主角穿梭于不同世界，兼具创新玩法与感人剧情。被誉为2025年度游戏有力竞争者。', 'BV1Jw411d7vB'),
+    'it takes two': ('《双人成行》是一款专门为双人合作设计的动作冒险游戏，讲述一对即将离婚的夫妻意外变成玩偶，在奇幻世界中修复感情的故事。荣获2021年TGA年度游戏大奖。', 'BV1rX4y1w7Td'),
+    'stellar blade': ('《剑星》是一款动作角色扮演游戏。玩家操控战士夏娃，在末世地球上与神秘生物奈提巴战斗，夺回失落的家园。以华丽的动作设计和引人入胜的剧情著称。', 'BV1wZ421e7zh'),
+    'balatro': ('《Balatro》是一款融合了扑克牌与Roguelike元素的独立游戏。玩家需要构建强力牌组，挑战各种关卡。以其上瘾的玩法和高重玩性获得了广泛好评。', 'BV1rN4y1j7P1'),
+    'black myth wukong': ('《黑神话：悟空》是一款以中国神话为背景的动作角色扮演游戏。玩家扮演「天命人」，在充满妖怪的奇幻世界中探索，体验西游故事的全新演绎。国产游戏里程碑之作。', 'BV14M4m1y7Gd'),
+    'wukong': ('《黑神话：悟空》是一款以中国神话为背景的动作角色扮演游戏。玩家扮演「天命人」，在充满妖怪的奇幻世界中探索，体验西游故事的全新演绎。国产游戏里程碑之作。', 'BV14M4m1y7Gd'),
+    'the witcher': ('《巫师3：狂猎》是一款开放世界角色扮演游戏。玩家扮演猎魔人杰洛特，在战争肆虐的大陆上寻找养女希里。以深刻剧情、丰富选择和栩栩如生的世界著称。', 'BV1is411i7WX'),
+    'witcher': ('《巫师3：狂猎》是一款开放世界角色扮演游戏。玩家扮演猎魔人杰洛特，在战争肆虐的大陆上寻找养女希里。以深刻剧情、丰富选择和栩栩如生的世界著称。', 'BV1is411i7WX'),
+    'monster hunter': ('《怪物猎人》系列是共斗动作角色扮演游戏的标杆。玩家扮演猎人，与队友一起狩猎巨型怪物，利用战利品打造更强装备。紧张刺激的战斗与合作是核心魅力。', 'BV1GJ41187Qf'),
+    'hades': ('《Hades》是一款Roguelike动作游戏。玩家扮演冥王之子扎格柔斯，试图逃离冥界。以其爽快的战斗、丰富的人物塑造和创新的叙事方式获得TGA年度最佳动作游戏。', 'BV1kK4y187Vw'),
+    'hades ii': ('《Hades II》是备受期待的续作。玩家将扮演冥王之女墨利诺厄，在全新的希腊神话世界中探索。保留了前作的精髓，同时带来更丰富的战斗系统和故事。', 'BV1SH4y177mr'),
+    'dynasty warriors': ('《真·三国无双》系列以「一骑当千」的爽快战斗闻名。玩家扮演三国武将，在战场上横扫千军。《真·三国无双 起源》是系列革新之作，带来全新战斗系统。', 'BV1RJ411q7o6'),
+    'forza horizon': ('《极限竞速：地平线》系列是开放世界赛车游戏的标杆。在广阔的墨西哥/英国/澳洲等场景中自由驰骋，参与各种赛事活动。画面精美，手感出色。', 'BV1d4411S7LY'),
+    'tmnt': ('《忍者神龟：破碎命运》是一款动作冒险游戏。四只忍者神龟再次集结，在纽约街头对抗邪恶势力。支持多人合作，还原经典动画风格。', ''),
+    'gran turismo 7': ('《跑车浪漫旅7》是索尼第一方赛车模拟游戏。收录了海量真实车型和赛道，以其逼真的驾驶体验和出色的画面表现著称。GT系列的集大成之作。', 'BV1t44y1q7LL'),
+}
+
+def game_detail(name):
+    n = name.lower().strip()
+    for key, (desc, bvid) in GAME_DETAILS.items():
+        if key in n or n in key:
+            return desc, bvid
+    return '', ''
+
 def rating_text(name):
     n = name.lower().strip()
     for key, text in RATINGS.items():
@@ -937,8 +970,11 @@ def generate_html():
             cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
             card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
             cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
+            desc, bvid = game_detail(display_name)
+            desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
+            bvid_attr = f'data-bvid="{bvid}"' if bvid else ''
             cards += f'''
-            <div class="game-card">
+            <div class="game-card"{desc_attr} {bvid_attr}>
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">
@@ -970,7 +1006,10 @@ def generate_html():
         rating = (r[:15] if r else "") or ""
         cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if plat == "Switch" and g.get('has_cn', False) else ""
         card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
-        top5 += f'''<div class="game-card">
+        desc, bvid = game_detail(display)
+        desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
+        bvid_attr = f'data-bvid="{bvid}"' if bvid else ''
+        top5 += f'''<div class="game-card"{desc_attr} {bvid_attr}>
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">

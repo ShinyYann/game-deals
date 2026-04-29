@@ -468,6 +468,10 @@ def generate_html():
 {cards}
 </div>'''
     tab_p9 = f'''<div class="tab-content" id="tab-psnine" style="display:none">
+<div class="p9-search-box">
+<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名找白金攻略…" onkeydown="if(event.key==='Enter') p9Search()">
+<button class="p9-search-btn" onclick="p9Search()">🔍 搜索</button>
+</div>
 {p9_sections}
 </div>'''
 
@@ -518,6 +522,12 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 .p9-title {{ font-size: 14px; font-weight: 600; color: #e8e8f0; line-height: 1.4; }}
 .p9-meta {{ font-size: 11px; color: #888; }}
 .footer {{ text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }}
+/* Search */
+.p9-search-box {{ display: flex; gap: 8px; margin-bottom: 16px; }}
+.p9-search-input {{ flex: 1; padding: 10px 14px; border: 1px solid #2a2a3e; border-radius: 10px; font-size: 14px; background: #1a1a2e; color: #e8e8f0; outline: none; }}
+.p9-search-input:focus {{ border-color: #5dade2; }}
+.p9-search-btn {{ padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; background: #2a2a4e; color: #e8e8f0; cursor: pointer; white-space: nowrap; }}
+.p9-search-btn:active {{ background: #3a3a5e; }}
 </style>
 </head>
 <body>
@@ -549,6 +559,13 @@ function switchTab(name) {{
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
+    if (name === 'psnine') setTimeout(function(){{ document.getElementById('p9-search-input').focus(); }}, 300);
+}}
+
+function p9Search() {{
+    var q = document.getElementById('p9-search-input').value.trim();
+    if (!q) return;
+    window.open('https://www.google.com/search?q=site:psnine.com+' + encodeURIComponent(q) + '+白金攻略', '_blank');
 }}
 </script>
 </body>

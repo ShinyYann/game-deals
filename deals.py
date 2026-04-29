@@ -704,44 +704,44 @@ def parse_steam_item(item):
     }
 
 def parse_switch():
-    """Get Switch deals from Nintendo Japan eShop."""
-    url = "https://search.nintendo.jp/nintendo_soft/search.json?q=&opt_sshow=1&limit=100"
-    raw = fetch(url)
-    if not raw: return []
-    try:
-        data = json.loads(raw)
-    except:
-        return []
+    """Get Switch deals from Nintendo HK eShop."""
+    import re
     games = []
-    for item in data.get('result', {}).get('items', []):
-        if item.get('sctg', '') != 'dl_soft':
-            continue
-        if item.get('sale_flg', '0') != '1':
-            continue
-        drates = item.get('drate', ['0'])
-        drate = float(drates[0]) if isinstance(drates, list) else 0
-        if drate <= 0:
-            continue
-        title = item.get('title', '')
-        price = item.get('price', 0)
-        sprice = item.get('sprice', None)
-        current_price = sprice if sprice and sprice != price else item.get('dprice', price)
-        if not title:
-            continue
-        lang = item.get('lang', [])
-        has_cn = any('zh' in l for l in lang) if isinstance(lang, list) else False
-        # Get image - Nintendo API has 'image' field
-        img_url = item.get('image', '') or item.get('screenshot', '') or ''
-        if isinstance(img_url, list):
-            img_url = img_url[0] if img_url else ''
-        games.append({
-            'name': title.strip(),
-            'price': f'¥{current_price:,.0f}' if current_price else '',
-            'discount': f'-{drate:.0f}%' if drate else '',
-            'original_price': f'¥{price:,.0f}' if price else '',
-            'has_cn': has_cn,
-            'img': img_url
-        })
+    urls = [
+        "https://store.nintendo.com.hk/digital-games",
+        "https://store.nintendo.com.hk/games/all-released-games",
+    ]
+    for url in urls:
+        raw = fetch(url)
+        if not raw: continue
+        items_raw = re.findall(r'<li class="[^"]*product[^"]*"[^>]*>.*?</li>', raw, re.DOTALL)
+        for item_html in items_raw:
+            # 只有打折的才要
+            if 'price-label' not in item_html and 'old-price' not in item_html:
+                continue
+            name_m = re.search(r'class="product-item-link"[^>]*>([^<]+)<', item_html)
+            if not name_m: continue
+            name = name_m.group(1).strip()
+            if not name: continue
+            price_m = re.search(r'data-price-amount="([^"]+)"\s+data-price-type="finalPrice"', item_html)
+            price = price_m.group(1) if price_m else '0'
+            old_m = re.search(r'data-price-amount="([^"]+)"\s+data-price-type="oldPrice"', item_html)
+            old_price = old_m.group(1) if old_m else price
+            img_m = re.search(r'<img[^>]*src="([^"]+)"[^>]*>', item_html)
+            img_url = img_m.group(1) if img_m else ''
+            if float(old_price) > 0:
+                disc_pct = f'{- ((1 - float(price)/float(old_price)) * 100):.0f}%'
+            else:
+                disc_pct = ''
+            has_cn = bool(re.search(r'[\u4e00-\u9fff]', name))
+            games.append({
+                'name': name,
+                'price': f'HK${price}' if price else '',
+                'discount': disc_pct,
+                'original_price': f'HK${old_price}' if old_price else '',
+                'has_cn': has_cn,
+                'img': img_url
+            })
     return games
 
 # ─── HTML generation ───────────────────────────────────────────────

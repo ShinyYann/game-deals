@@ -1403,7 +1403,7 @@ function spawnParticles() {{
         p.className = 'particle';
         p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
-        p.style.fontSize = (10 + Math.random() * 12) + 'px';
+        p.style.fontSize = (14 + Math.random() * 20) + 'px';
         p.style.color = colors[i % colors.length];
         p.style.animationDuration = (12 + Math.random() * 18) + 's';
         p.style.animationDelay = (Math.random() * 10) + 's';

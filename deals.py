@@ -1194,6 +1194,8 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .trophy-btn:active {{ background: #3a3a5e; }}
 .trophy-btn-toggle {{ display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; color: #888; cursor: pointer; font-size: 18px; border: none; flex-shrink: 0; }}
 .trophy-btn-toggle:hover {{ color: #e8e8f0; }}
+.p9-search-bar {{ display: none; }} 
+.p9-search-bar.show {{ display: block; }}
 /* Game detail modal */
 .modal-overlay {{ display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; }}
 .modal-overlay.show {{ display: flex !important; opacity: 1; background: rgba(0,0,0,0.75); }}
@@ -1259,8 +1261,12 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 
 <div id="tab-psnine" class="tab-content" style="display:none">
-<div style="display:flex; justify-content:flex-end; align-items:center; gap:6px; margin-bottom:8px;">
-<input type="text" id="p9-search-input" style="width:180px;padding:6px 10px;border:1px solid #2a2a3e;border-radius:8px;font-size:13px;background:#1a1a2e;color:#e8e8f0;outline:none;" placeholder="搜游戏名直达P9…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
+<div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
+<button class="trophy-btn-toggle" id="p9-toggle" onclick="toggleP9Bar()">🔍</button>
+</div>
+<div class="p9-search-bar" id="p9-search-bar">
+<div style="display:flex; gap:6px; margin-bottom:8px;">
+<input type="text" id="p9-search-input" style="flex:1;padding:8px 12px;border:1px solid #2a2a3e;border-radius:8px;font-size:13px;background:#1a1a2e;color:#e8e8f0;outline:none;" placeholder="搜游戏名直达P9…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
 <button style="padding:6px 10px;border:none;border-radius:8px;font-size:13px;background:#2a2a4e;color:#e8e8f0;cursor:pointer;" onclick="p9Search()">🔍</button>
 </div>
 <div class="sub-tab-bar p9-section-bar">
@@ -1405,6 +1411,19 @@ function toggleTrophyBar() {{
         bar.classList.add('show');
         toggle.style.display = 'none';
         document.getElementById('trophy-input').focus();
+    }}
+}}
+
+function toggleP9Bar() {{
+    var bar = document.getElementById('p9-search-bar');
+    var toggle = document.getElementById('p9-toggle');
+    if (bar.classList.contains('show')) {{
+        bar.classList.remove('show');
+        toggle.style.display = 'inline-flex';
+    }} else {{
+        bar.classList.add('show');
+        toggle.style.display = 'none';
+        document.getElementById('p9-search-input').focus();
     }}
 }}
 

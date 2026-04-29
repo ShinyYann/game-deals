@@ -8,7 +8,7 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#0f0f1a; color:#d0d0e0; font-family:-apple-system,BlinkMacSystemFont,sans-serif; min-height:100vh; }
 .container { max-width:600px; margin:0 auto; padding:10px; }
-.back-btn { display:inline-block; padding:6px 14px; background:#2a2a44; color:#aaa; border-radius:8px; text-decoration:none; font-size:13px; margin-bottom:10px; }
+.back-btn { padding:6px 14px; background:#2a2a44; color:#aaa; border-radius:8px; text-decoration:none; font-size:13px; flex-shrink:0; }
 .back-btn:hover { background:#3a3a5e; color:#fff; }
 .platform { margin-bottom:20px; }
 .platform h2 { font-size:16px; font-weight:600; margin-bottom:10px; color:#e8e8f0; }
@@ -23,7 +23,7 @@ body { background:#0f0f1a; color:#d0d0e0; font-family:-apple-system,BlinkMacSyst
 .card-rating { font-size:12px; color:#aaa; margin-top:4px; }
 .discount-badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; margin-top:4px; }
 .disc-low { background:rgba(100,180,255,0.15); color:#88ccff; }
-.sub-tab-bar { display:flex; gap:4px; margin-bottom:12px; }
+.sub-tab-bar { display:flex; gap:4px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
 .sub-tab-btn { padding:6px 14px; background:transparent; color:#888; border:1px solid #333; border-radius:8px; cursor:pointer; font-size:13px; }
 .sub-tab-btn.active { background:#3a3a5e; color:#e8e8f0; border-color:#5a5a8e; }
 .iframe-wrapper { position:relative; width:100%; height:80vh; border-radius:12px; overflow:hidden; }
@@ -33,8 +33,8 @@ body { background:#0f0f1a; color:#d0d0e0; font-family:-apple-system,BlinkMacSyst
 </head>
 <body>
 <div class="container">
-<a class="back-btn" href="https://shinyyann.github.io/game-deals">← 返回主站</a>
 <div class="sub-tab-bar">
+<a class="back-btn" href="https://shinyyann.github.io/game-deals">← 返回主站</a>
 <button class="sub-tab-btn active" onclick="switchTab('mod-hot')">🔥 热门 Mod</button>
 <button class="sub-tab-btn" onclick="switchTab('mod-search')">🔍 搜 Mod</button>
 </div>

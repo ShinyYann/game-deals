@@ -1155,9 +1155,9 @@ body.tab-mods::before {{ background-image: url('https://images.unsplash.com/phot
   90% {{ opacity: 1; }}
   100% {{ transform: translateY(-10vh) rotate(720deg); opacity: 0; }}
 }}
-.tab-content-fade {{ animation: tabFlipIn 0.35s ease-out forwards; }}
+.tab-content-fade {{ animation: tabFlipIn 0.3s cubic-bezier(0.05, 0.7, 0.1, 1) forwards; }}
 @keyframes tabFlipIn {{
-  0% {{ opacity: 0.6; transform: translateY(-6px); }}
+  0% {{ opacity: 0.3; transform: translateY(-8px); }}
   100% {{ opacity: 1; transform: translateY(0); }}
 }}
 .tab-bar {{ display: flex; gap: 4px; margin-bottom: 0; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }}

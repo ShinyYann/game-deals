@@ -1150,10 +1150,10 @@ body.tab-mods::before {{ background-image: url('https://images.unsplash.com/phot
 .particles {{ position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }}
 .particle {{ position: absolute; pointer-events: none; animation: particleFloat linear infinite; font-size: 14px; }}
 @keyframes particleFloat {{
-  0% {{ transform: translateY(-5vh) rotate(0deg) scale(0.5); opacity: 0; }}
-  10% {{ opacity: 1; }}
-  90% {{ opacity: 1; }}
-  100% {{ transform: translateY(105vh) rotate(360deg) scale(1); opacity: 0; }}
+  0% {{ transform: translateY(-5vh) rotate(0deg); opacity: 0; }}
+  20% {{ opacity: 0.7; transform: translateY(10vh); }}
+  80% {{ opacity: 0.5; transform: translateY(80vh); }}
+  100% {{ transform: translateY(105vh) rotate(360deg); opacity: 0; }}
 }}
 .tab-content-fade {{ animation: tabFlipIn 0.3s cubic-bezier(0.05, 0.7, 0.1, 1) forwards; }}
 @keyframes tabFlipIn {{
@@ -1406,7 +1406,10 @@ function spawnParticles() {{
         p.style.fontSize = (10 + Math.random() * 12) + 'px';
         p.style.color = colors[i % colors.length];
         p.style.animationDuration = (12 + Math.random() * 18) + 's';
-        p.style.animationDelay = (Math.random() * 8) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        if (i >= 15) {{
+            p.style.animationDirection = 'reverse';
+        }}
         container.appendChild(p);
     }}
 }}

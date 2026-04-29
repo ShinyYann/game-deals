@@ -10,6 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -19,194 +24,22 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create Android WebView project
+      - name: Create Capacitor Android project
         run: |
-          mkdir -p android/app/src/main
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          mkdir -p android/app/src/main/res/mipmap-mdpi
-          mkdir -p android/app/src/main/res/mipmap-xhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android/app/src/main/res/values
-          mkdir -p android/gradle/wrapper
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "Yann小站" "com.yann.gamedeals" --web-dir docs
+          npx cap add android
+          echo "SERVER_URL=https://shinyyann.github.io/game-deals/" >> .env
 
-      - name: Write AndroidManifest.xml
-        run: |
-          cat > android/app/src/main/AndroidManifest.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yann.gamedeals"
-    android:versionCode="1"
-    android:versionName="1.0">
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="Yann小站"
-        android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
-        <activity
-            android:name=".MainActivity"
-            android:label="Yann小站"
-            android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-EOF
-
-      - name: Write MainActivity.java
-        run: |
-          cat > android/app/src/main/java/com/yann/gamedeals/MainActivity.java << 'JAVAEOF'
-package com.yann.gamedeals;
-import android.os.Bundle;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.webkit.WebSettings;
-import androidx.appcompat.app.AppCompatActivity;
-public class MainActivity extends AppCompatActivity {
-    private WebView webView;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        webView = new WebView(this);
-        setContentView(webView);
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
-        settings.setAllowFileAccess(true);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("https://shinyyann.github.io/game-deals/");
-    }
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
-    }
-}
-JAVAEOF
-
-      - name: Write styles.xml
-        run: |
-          cat > android/app/src/main/res/values/styles.xml << 'XMLEOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">#0f0f1a</item>
-        <item name="android:statusBarColor">#0f0f1a</item>
-        <item name="android:navigationBarColor">#0f0f1a</item>
-    </style>
-</resources>
-XMLEOF
-
-      - name: Generate launcher icon
-        run: |
-          python3 -c "
-import struct, zlib
-def create_png(w,h):
-    raw = b''
-    for y in range(h):
-        raw += b'\x00'
-        for x in range(w):
-            cx,cy = w//2,h//2
-            dist = ((x-cx)**2+(y-cy)**2)**0.5
-            if dist < w*0.26:
-                r,g,b = 200,200,220
-            elif abs(x-w//2)<w*0.1:
-                r,g,b = 200,200,220
-            else:
-                r,g,b = 15,22,48
-            raw += bytes([r,g,b,255])
-    def c(ty,d):
-        return struct.pack('>I',len(d))+ty+d+struct.pack('>I',zlib.crc32(ty+d)&0xffffffff)
-    sig = b'\x89PNG\r\n\x1a\n'
-    ihdr = struct.pack('>IIBBBBB',w,h,8,6,0,0,0)
-    return sig+c(b'IHDR',ihdr)+c(b'IDAT',zlib.compress(raw))+c(b'IEND',b'')
-for name,size in [('mipmap-mdpi',48),('mipmap-hdpi',72),('mipmap-xhdpi',96),('mipmap-xxhdpi',144)]:
-    with open(f'android/app/src/main/res/{name}/ic_launcher.png','wb') as f:
-        f.write(create_png(size,size))
-print('Icons done')
-"
-
-      - name: Write build.gradle (project)
-        run: |
-          cat > android/build.gradle << 'GRADLE'
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.0'
-    }
-}
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-GRADLE
-
-          cat > android/settings.gradle << 'GRADLE'
-rootProject.name = 'YannGameDeals'
-include ':app'
-GRADLE
-
-          cat > android/gradle.properties << 'GRADLE'
-org.gradle.jvmargs=-Xmx2048m
-android.useAndroidX=true
-GRADLE
-
-      - name: Write app build.gradle
-        run: |
-          cat > android/app/build.gradle << 'GRADLE'
-plugins {
-    id 'com.android.application'
-}
-android {
-    namespace 'com.yann.gamedeals'
-    compileSdk 34
-    defaultConfig {
-        applicationId "com.yann.gamedeals"
-        minSdk 21
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
-        }
-    }
-}
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-}
-GRADLE
-
-      - name: Setup Gradle wrapper
+      - name: Build APK
         run: |
           cd android
-          gradle wrapper --gradle-version 8.2
-
-      - name: Sign & Build APK
-        run: |
-          cd android
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Yann小站-APK
-          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

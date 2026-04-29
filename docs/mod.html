@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🎮 Mod - Yann 的小站</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0f0f1a; color:#d0d0e0; font-family:-apple-system,BlinkMacSystemFont,sans-serif; min-height:100vh; }
+.container { max-width:600px; margin:0 auto; padding:10px; }
+.back-btn { display:inline-block; padding:6px 14px; background:#2a2a44; color:#aaa; border-radius:8px; text-decoration:none; font-size:13px; margin-bottom:10px; }
+.back-btn:hover { background:#3a3a5e; color:#fff; }
+.platform { margin-bottom:20px; }
+.platform h2 { font-size:16px; font-weight:600; margin-bottom:10px; color:#e8e8f0; }
+.game-list { display:flex; flex-direction:column; gap:8px; }
+.game-card { background:#1a1a2e; border-radius:12px; overflow:hidden; transition:transform 0.15s; }
+.game-card:active { transform:scale(0.98); }
+.game-card-inner { display:flex; gap:10px; padding:10px; }
+.card-left { flex-shrink:0; width:80px; }
+.game-thumb { width:80px; height:45px; border-radius:6px; object-fit:cover; display:block; }
+.card-right { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; }
+.game-name { font-size:14px; font-weight:600; color:#e8e8f0; }
+.card-rating { font-size:12px; color:#aaa; margin-top:4px; }
+.discount-badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; margin-top:4px; }
+.disc-low { background:rgba(100,180,255,0.15); color:#88ccff; }
+.sub-tab-bar { display:flex; gap:4px; margin-bottom:12px; }
+.sub-tab-btn { padding:6px 14px; background:transparent; color:#888; border:1px solid #333; border-radius:8px; cursor:pointer; font-size:13px; }
+.sub-tab-btn.active { background:#3a3a5e; color:#e8e8f0; border-color:#5a5a8e; }
+iframe { width:100%; height:80vh; border:none; border-radius:12px; }
+@media (max-width:480px) { .container { padding:8px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back-btn" href="https://shinyyann.github.io/game-deals">← 返回主站</a>
+<div class="sub-tab-bar">
+<button class="sub-tab-btn active" onclick="switchTab('mod-hot')">🔥 热门 Mod</button>
+<button class="sub-tab-btn" onclick="switchTab('mod-search')">🔍 搜 Mod</button>
+</div>
+<div id="mod-hot" class="mod-section" style="display:block">
+<section class="platform"><h2>🔥 精选热门 Mod</h2><div class="game-list">
+    <a href="https://mod.3dmgame.com/skyrimspecialedition" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/489830/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">Skyrim UE / 天际重制</div><div style="font-size:12px;color:#888;margin-top:4px">The Elder Scrolls V: Skyrim SE</div><div class="card-rating">最新 Mod 整合包，包含材质、光照、战斗大修</div><span class="discount-badge disc-low" style="font-size:10px">🧩 3DM</span></div></div></div></a>
+    <a href="https://mod.3dmgame.com/cyberpunk2077" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">Cyberpunk 2077 画质大修</div><div style="font-size:12px;color:#888;margin-top:4px">Cyberpunk 2077</div><div class="card-rating">光线追踪增强、城市细节重制、天气系统</div><span class="discount-badge disc-low" style="font-size:10px">🧩 3DM</span></div></div></div></a>
+    <a href="https://www.nexusmods.com/baldursgate3" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">Baldur's Gate 3 Mod 合集</div><div style="font-size:12px;color:#888;margin-top:4px">Baldur's Gate 3</div><div class="card-rating">新增职业、法术、外观、UI增强等热门Mod</div><span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span></div></div></div></a>
+    <a href="https://www.nexusmods.com/eldenring" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">Elden Ring 无缝联机</div><div style="font-size:12px;color:#888;margin-top:4px">Elden Ring</div><div class="card-rating">Seamless Co-op Mod — 联机不再被入侵限制</div><span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span></div></div></div></a>
+    <a href="https://www.nexusmods.com/stardewvalley" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">Stardew Valley 扩展</div><div style="font-size:12px;color:#888;margin-top:4px">Stardew Valley</div><div class="card-rating">Stardew Valley Expanded — 新地图/角色/事件</div><span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span></div></div></div></a>
+    <a href="https://www.nexusmods.com/gta5" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">GTA V LSPDFR</div><div style="font-size:12px;color:#888;margin-top:4px">Grand Theft Auto V</div><div class="card-rating">警察模组 — 扮演警探执法</div><span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span></div></div></div></a>
+    <a href="https://gamebanana.com/mods/cats/1" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1677280/header_chinese.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">塞尔达 旷野之息 Mod</div><div style="font-size:12px;color:#888;margin-top:4px">The Legend of Zelda: Breath of the Wild</div><div class="card-rating">60帧解锁+画质增强+性能优化 (Cemu)</div><span class="discount-badge disc-low" style="font-size:10px">🧩 3DM</span></div></div></div></a>
+    <a href="https://www.nexusmods.com/7daystodie" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/251570/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">七日杀 Mod 整合</div><div style="font-size:12px;color:#888;margin-top:4px">7 Days to Die</div><div class="card-rating">Undead Legacy / Darkness Falls 大改版</div><span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span></div></div></div></a>
+    <a href="https://www.nexusmods.com/blackmythwukong" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">黑神话·悟空 Mod</div><div style="font-size:12px;color:#888;margin-top:4px">Black Myth: Wukong</div><div class="card-rating">画质提升+视角Mod+性能优化</div><span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span></div></div></div></a>
+    <a href="https://mods.factorio.com/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="game-card" style="cursor:pointer"><div class="game-card-inner"><div class="card-left"><img class="game-thumb" loading="lazy" src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427520/header.jpg" onerror="this.parentElement.style.display='none'"/></div><div class="card-right"><div class="game-name">Factorio 大型Mod</div><div style="font-size:12px;color:#888;margin-top:4px">Factorio</div><div class="card-rating">Space Exploration / Krastorio 2 / AngelBob</div><span class="discount-badge disc-low" style="font-size:10px">🧩 3DM</span></div></div></div></a>
+</div></section>
+</div>
+<div id="mod-search" class="mod-section" style="display:none">
+<iframe src="https://mod.3dmgame.com/"></iframe>
+</div>
+</div>
+<script>
+function switchTab(name) {
+    var sections = document.querySelectorAll('.mod-section');
+    var btns = document.querySelectorAll('.sub-tab-btn');
+    for (var i=0;i<sections.length;i++) sections[i].style.display='none';
+    for (var i=0;i<btns.length;i++) btns[i].className='sub-tab-btn';
+    document.getElementById(name).style.display='block';
+    event.target.className='sub-tab-btn active';
+}
+</script>
+</body>
+</html>

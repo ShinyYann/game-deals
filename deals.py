@@ -244,15 +244,6 @@ def parse_psnine():
         elif is_guide and ('白金' in title or '攻略' in title or '指南' in title):
             result['guides'].append(item)
     
-    # Also fetch guide section for search
-    guide_items = []
-    guide_html = fetch("https://www.psnine.com/node/guide")
-    if guide_html:
-        guide_soup = BeautifulSoup(guide_html, 'lxml')
-        guide_items = extract_p9_items(guide_soup)
-    
-    result['all_guides'] = guide_items[:80]  # Keep up to 80 for search
-    
     return result
 
 # ─── Data sources ───────────────────────────────────────────────────
@@ -542,48 +533,22 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 
 <div id="tab-psnine" class="tab-content" style="display:none">
 <div class="p9-search-box">
-<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名找白金攻略…" oninput="p9Filter()" onkeydown="if(event.key===&apos;Enter&apos;) p9Filter()">
-<button class="p9-search-btn" onclick="p9Filter()">🔍 搜索</button>
+<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名直达P9游戏区…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
+<button class="p9-search-btn" onclick="p9Search()">🔍 直达游戏</button>
 </div>
 <div id="p9-results">
 <div id="p9-default-content">
 {p9_sections}
 </div>
 </div>
-</div>
 
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 
 <script>
-// ─── P9 攻略搜索数据（约80条） ───
-var p9Guides = {json.dumps(psnine.get('all_guides', []), ensure_ascii=False)};
-
-function p9Filter() {{
-    var q = document.getElementById('p9-search-input').value.trim().toLowerCase();
-    var results = document.getElementById('p9-results');
-    if (!q) {{
-        results.innerHTML = document.getElementById('p9-default-content').innerHTML;
-        return;
-    }}
-    var matched = p9Guides.filter(function(g) {{
-        return g.title && g.title.toLowerCase().indexOf(q) !== -1;
-    }});
-    if (matched.length === 0) {{
-        results.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">😕 没找到相关攻略，试试其他关键词</div>';
-        return;
-    }}
-    var html = '';
-    for (var i = 0; i < Math.min(matched.length, 20); i++) {{
-        var g = matched[i];
-        var link = g.link;
-        if (link && link.indexOf('http') !== 0) link = 'https://www.psnine.com' + link;
-        var author = g.author || '';
-        var timeText = g.time || '';
-        html += '<a href="' + link + '" class="p9-item" target="_blank" rel="noopener">' +
-            '<span class="p9-title">' + g.title + '</span>' +
-            '<span class="p9-meta">✎ ' + author + ' · ' + timeText + '</span></a>';
-    }}
-    results.innerHTML = html;
+function p9Search() {{
+    var q = document.getElementById('p9-search-input').value.trim();
+    if (!q) return;
+    window.open('https://www.psnine.com/psngame?title=' + encodeURIComponent(q), '_blank');
 }}
 
 function switchTab(name) {{

@@ -463,6 +463,14 @@ def generate_html():
             </a>'''
         p9_sections += '</div></section>'
 
+    # Build tab content for each section
+    tab_discounts = f'''<div class="tab-content" id="tab-discounts">
+{cards}
+</div>'''
+    tab_p9 = f'''<div class="tab-content" id="tab-psnine" style="display:none">
+{p9_sections}
+</div>'''
+
     html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -475,6 +483,12 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans
 h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 .subtitle {{ text-align: center; color: #888; font-size: 13px; margin-bottom: 20px; }}
 .last-update {{ text-align: center; color: #555; font-size: 11px; margin-bottom: 20px; }}
+/* Tabs */
+.tab-bar {{ display: flex; gap: 8px; margin-bottom: 16px; position: sticky; top: 0; background: #0f0f1a; padding: 8px 0; z-index: 10; }}
+.tab-btn {{ flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; background: #1a1a2e; color: #888; transition: all 0.2s; }}
+.tab-btn.active {{ background: #2a2a4e; color: #e8e8f0; }}
+.tab-btn:active {{ background: #3a3a5e; }}
+/* Discounts */
 .platform {{ margin-bottom: 24px; }}
 .platform h2 {{ font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a2a3e; }}
 .game-list {{ display: flex; flex-direction: column; gap: 10px; }}
@@ -497,6 +511,7 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 .top-price {{ color: #5dade2; font-weight: 600; }}
 .top-disc {{ color: #ff6b6b; font-weight: 700; }}
 .top-rating {{ color: #aaa; font-size: 12px; }}
+/* P9 */
 .p9-list {{ display: flex; flex-direction: column; gap: 6px; }}
 .p9-item {{ background: #1a1a2e; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; transition: background 0.2s; }}
 .p9-item:active {{ background: #2a2a3e; }}
@@ -509,10 +524,33 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 <h1>🎮 本周游戏折扣精选</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
 <p class="last-update">🔄 上次更新: {ts}</p>
+
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
+<button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
+</div>
+
+<div id="tab-discounts" class="tab-content">
 {cards}
 {top5}
+</div>
+
+<div id="tab-psnine" class="tab-content" style="display:none">
 {p9_sections}
+</div>
+
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
+
+<script>
+function switchTab(name) {{
+    var btns = document.querySelectorAll('.tab-btn');
+    var contents = document.querySelectorAll('.tab-content');
+    for (var i = 0; i < contents.length; i++) contents[i].style.display = 'none';
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    document.getElementById('tab-' + name).style.display = 'block';
+    event.target.classList.add('active');
+}}
+</script>
 </body>
 </html>'''
     return html

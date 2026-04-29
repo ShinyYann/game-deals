@@ -1141,10 +1141,10 @@ body.tab-mods::before {{ background-image: url('https://images.unsplash.com/phot
   50% {{ left: 100%; }}
   100% {{ left: 100%; }}
 }}
-.tab-content-fade {{ animation: tabFlipIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; transform-origin: top center; perspective: 800px; }}
+.tab-content-fade {{ animation: tabFlipIn 0.35s ease-out forwards; }}
 @keyframes tabFlipIn {{
-  0% {{ opacity: 0; transform: rotateX(-12deg) scale(0.95) translateY(-10px); }}
-  100% {{ opacity: 1; transform: rotateX(0deg) scale(1) translateY(0); }}
+  0% {{ opacity: 0.6; transform: translateY(-6px); }}
+  100% {{ opacity: 1; transform: translateY(0); }}
 }}
 .tab-bar {{ display: flex; gap: 4px; margin-bottom: 0; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }}
 .tab-btn {{ flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }}

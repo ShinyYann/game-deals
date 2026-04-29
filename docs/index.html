@@ -23,10 +23,10 @@ body.tab-mods::before { background-image: url('https://images.unsplash.com/photo
   50% { left: 100%; }
   100% { left: 100%; }
 }
-.tab-content-fade { animation: tabFlipIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; transform-origin: top center; perspective: 800px; }
+.tab-content-fade { animation: tabFlipIn 0.35s ease-out forwards; }
 @keyframes tabFlipIn {
-  0% { opacity: 0; transform: rotateX(-12deg) scale(0.95) translateY(-10px); }
-  100% { opacity: 1; transform: rotateX(0deg) scale(1) translateY(0); }
+  0% { opacity: 0.6; transform: translateY(-6px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 .tab-bar { display: flex; gap: 4px; margin-bottom: 0; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }
 .tab-btn { flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }
@@ -148,7 +148,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-30 00:34</p>
+<p class="last-update">🔄 上次更新: 2026-04-30 00:35</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">

@@ -1398,6 +1398,7 @@ function spawnParticles() {{
     var container = document.getElementById('particles');
     var shapes = ['Yann','✕','◯','△','□','✦','⬡','♢','Yann','✕','◯','△','□','✦','⬡','♢','Yann','✕','◯','△','□','✦','⬡','♢'];
     var colors = ['rgba(168,85,247,0.3)','rgba(52,211,153,0.25)','rgba(93,173,226,0.25)','rgba(249,115,22,0.25)','rgba(251,191,36,0.3)','rgba(236,72,153,0.2)'];
+    // 首屏立即显示一批 - 无延迟、随机初始透明度
     for (var i = 0; i < 30; i++) {{
         var p = document.createElement('div');
         p.className = 'particle';
@@ -1408,12 +1409,33 @@ function spawnParticles() {{
         p.style.color = colors[i % colors.length];
         p.style.animationDuration = (15 + Math.random() * 20) + 's';
         p.style.animationDelay = (Math.random() * 5) + 's';
-        p.style.opacity = '0';
+        p.style.opacity = (0.1 + Math.random() * 0.4).toString();
+        p.style.transform = 'translateY(' + (Math.random() * 60 - 30) + 'px)';
         if (i >= 15) {{
             p.style.animationDirection = 'reverse';
         }}
         container.appendChild(p);
     }}
+    // 每10秒再补一批
+    setInterval(function() {{
+        for (var j = 0; j < 10; j++) {{
+            var p = document.createElement('div');
+            p.className = 'particle';
+            p.textContent = shapes[j % shapes.length];
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.fontSize = (14 + Math.random() * 20) + 'px';
+            p.style.color = colors[j % colors.length];
+            p.style.animationDuration = (15 + Math.random() * 20) + 's';
+            p.style.animationDelay = '0s';
+            p.style.opacity = '0.3';
+            p.style.transform = 'translateY(' + (Math.random() * 60 - 30) + 'px)';
+            if (j >= 5) {{
+                p.style.animationDirection = 'reverse';
+            }}
+            container.appendChild(p);
+        }}
+    }}, 10000);
 }}
 
 function switchTab(name) {{

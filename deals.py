@@ -1239,7 +1239,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
-<button class="tab-btn" onclick="switchTab('mods')">🎮 Mod</button>
+<a href="/mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn">🎮 Mod</button></a>
 </div>
 
 <h1>🎮 Yann 的小站</h1>
@@ -1275,9 +1275,6 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
-
-{mods_html}
-<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 
 <div id="tab-trophy" class="tab-content">
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">

@@ -121,12 +121,12 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
-<a class="tab-btn" href="mod.html" style="text-decoration:none;display:inline-block">🎮 Mod</a>
+<a href="/mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn">🎮 Mod</button></a>
 </div>
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 22:03</p>
+<p class="last-update">🔄 上次更新: 2026-04-30 00:07</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -286,6 +286,21 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                     </div>
                 </div>
             </div>
+            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="专门为双人合作设计的动作冒险游戏。一对即将离婚的夫妻变成玩偶，在奇幻世界中修复感情。每一章都有完全不同的玩法机制。荣获TGA 2021年度游戏。" data-tags="双人合作|MC90 神作|TGA 2021年度游戏|情侣必玩" >
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/header.jpg?t=1777395376" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">It Takes Two</span>
+                            <span class="discount-badge disc-high">-65%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">¥69</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐⭐ MC88 双人合作神作</div>
+                    </div>
+                </div>
+            </div>
             <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="开放世界犯罪题材的标杆之作。自由探索洛圣都，体验多主角叙事。在线模式GTA Online更是经久不衰。" data-tags="开放世界|MC97 神作|在线模式常青|开放世界之王" >
                 <div class="game-card-inner">
                     <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3240220/header.jpg?t=1765479644" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
@@ -360,22 +375,22 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                         <div class="card-rating"></div>
                     </div>
                 </div>
-            </div>
+            </div></section></div><div id="disc-switch" class="disc-section"><section class="platform"><h2>🟡 Switch 日服特惠</h2><div class="game-list">
             <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"  >
                 <div class="game-card-inner">
-                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3562120/e8f83bc42faf610b3a435bf8fa360fb91dcc8bc8/header.jpg?t=1777348229" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-left"></div>
                     <div class="card-right">
                         <div class="card-header">
-                            <span class="game-name">Magical Princess</span>
-                            <span class="discount-badge disc-low">-20%</span>
+                            <span class="game-name">《ちっぴーとのっぽー なかよしコンビのわくわく工場 Nintendo Switch 2》</span>
+                            <span class="discount-badge disc-high">-60%</span>
                         </div>
                         <div class="card-price">
-                            <span class="current-price">¥38</span>
+                            <span class="current-price">¥1,120</span> <span class="cn-tag">🇨🇳 中文</span>
                         </div>
                         <div class="card-rating"></div>
                     </div>
                 </div>
-            </div></section></div><div id="disc-switch" class="disc-section"><section class="platform"><h2>🟡 Switch 日服特惠</h2><div class="game-list">
+            </div>
             <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"  >
                 <div class="game-card-inner">
                     <div class="card-left"></div>
@@ -401,21 +416,6 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                         </div>
                         <div class="card-price">
                             <span class="current-price">¥1,625</span> <span class="cn-tag">🇨🇳 中文</span>
-                        </div>
-                        <div class="card-rating"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"  >
-                <div class="game-card-inner">
-                    <div class="card-left"></div>
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name">《ボクらの消しゴム落とし4 時空バトル Nintendo Switch 2》</span>
-                            <span class="discount-badge disc-low">-26%</span>
-                        </div>
-                        <div class="card-price">
-                            <span class="current-price">¥1,300</span>
                         </div>
                         <div class="card-rating"></div>
                     </div>
@@ -456,11 +456,11 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                     <div class="card-left"></div>
                     <div class="card-right">
                         <div class="card-header">
-                            <span class="game-name">Psyvariar3</span>
-                            <span class="discount-badge disc-low">-20%</span>
+                            <span class="game-name">《飛空艇クエスト島 – Nintendo Switch 2》</span>
+                            <span class="discount-badge disc-low">-10%</span>
                         </div>
                         <div class="card-price">
-                            <span class="current-price">¥5,104</span> <span class="cn-tag">🇨🇳 中文</span>
+                            <span class="current-price">¥1,800</span> <span class="cn-tag">🇨🇳 中文</span>
                         </div>
                         <div class="card-rating"></div>
                     </div>
@@ -486,11 +486,11 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                     <div class="card-left"></div>
                     <div class="card-right">
                         <div class="card-header">
-                            <span class="game-name">Total Chaos</span>
+                            <span class="game-name">Bandit Trap</span>
                             <span class="discount-badge disc-low">-10%</span>
                         </div>
                         <div class="card-price">
-                            <span class="current-price">¥2,835</span> <span class="cn-tag">🇨🇳 中文</span>
+                            <span class="current-price">¥1,980</span> <span class="cn-tag">🇨🇳 中文</span>
                         </div>
                         <div class="card-rating"></div>
                     </div>
@@ -538,6 +538,20 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                         <div class="card-rating">⭐⭐⭐⭐ MC86 已修复值得</div>
                     </div>
                 </div>
+            </div><div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="专门为双人合作设计的动作冒险游戏。一对即将离婚的夫妻变成玩偶，在奇幻世界中修复感情。每一章都有完全不同的玩法机制。荣获TGA 2021年度游戏。"  >
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/header.jpg?t=1777395376" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">It Takes Two</span>
+                            <span class="discount-badge disc-high">-65%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">¥69</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐⭐ MC88 双人合作</div>
+                    </div>
+                </div>
             </div><div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="经典生存恐怖系列巅峰之作。特工里昂前往欧洲村庄营救总统女儿。完美融合动作射击与恐怖氛围，关卡设计教科书级别。重制版画质大幅提升，战斗系统更流畅。"  >
                 <div class="game-card-inner">
                     <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202401/2906/78161bc117f3d712bca47348db7a8be7e4ac6c4a2b98d88a.png?w=240" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
@@ -552,21 +566,8 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                         <div class="card-rating">⭐⭐⭐⭐⭐ MC93 恐怖动作</div>
                     </div>
                 </div>
-            </div><div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="以1274年元日战争为背景的开放世界动作冒险。武士境井仁在蒙古入侵下化身「战鬼」，守护对马岛。绝美的日本风光、爽快的刀剑对决、沉浸的和风叙事。"  >
-                <div class="game-card-inner">
-                    <div class="card-left"><img src="https://image.api.playstation.com/vulcan/ap/rnd/202106/2322/c16gs6a7lbAYzPf7ZTikbH1c.png?w=240" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name">对马岛之魂</span>
-                            <span class="discount-badge disc-high">-58%</span>
-                        </div>
-                        <div class="card-price">
-                            <span class="current-price">HK$238.56</span>
-                        </div>
-                        <div class="card-rating">⭐⭐⭐⭐ MC87 武士开放世</div>
-                    </div>
-                </div>
             </div></div></section></div>
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 
 <div id="tab-psnine" class="tab-content" style="display:none">
@@ -586,21 +587,21 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR24321_00/96674236-573c-422c-9754-0357cfde931d.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">2026年4月港服PLUS二三档新增及退库游戏目录(4月21日提供)暨抽奖活动开奖</span>
-                <span class="p9-meta">✎ kuusoumenreiki · 今天 09:49</span>
+                <span class="p9-meta">✎ kuusoumenreiki · 昨天 09:49</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39098" class="p9-item" target="_blank" rel="noopener">
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR24321_00/96674236-573c-422c-9754-0357cfde931d.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">【26年4月入库】PS+会员二三档游戏白金难度</span>
-                <span class="p9-meta">✎ skyfantasyhong · 前天 17:28</span>
+                <span class="p9-meta">✎ skyfantasyhong · 3天前 17:28</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39095" class="p9-item" target="_blank" rel="noopener">
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR24321_00/96674236-573c-422c-9754-0357cfde931d.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">2026年4月港服 PS PLUS 二/三档入库游戏指南 白金时间/难度/DLC/自动跳杯</span>
-                <span class="p9-meta">✎ dikefeisi · 8天前 13:19</span>
+                <span class="p9-meta">✎ dikefeisi · 9天前 13:19</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39024" class="p9-item" target="_blank" rel="noopener">
@@ -614,14 +615,14 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://image.api.playstation.com/trophy/np/NPWR25088_00_006841AC0C54A402B362ABB17C77C0881412A9FC69/2B31B69F4A987A544969399583A67C4A144290B0.PNG" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">2026.4.22-2026.5.6 PSN港服商店 新史低游戏</span>
-                <span class="p9-meta">✎ wanshuai · 121383小</span>
+                <span class="p9-meta">✎ wanshuai · 121385小</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39083" class="p9-item" target="_blank" rel="noopener">
                 <div class="p9-item-inner"><div class="p9-thumb p9-thumb-low">💸</div>
                 <div class="p9-item-texts">
                 <span class="p9-title">2026.4.8-2026.4.22 PSN港服商店 新史低游戏</span>
-                <span class="p9-meta">✎ wanshuai · 1213814天前 23:13</span>
+                <span class="p9-meta">✎ wanshuai · 1213815天前 23:13</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39061" class="p9-item" target="_blank" rel="noopener">
@@ -635,35 +636,35 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="p9-item-inner"><div class="p9-thumb p9-thumb-guide">🏆</div>
                 <div class="p9-item-texts">
                 <span class="p9-title">PS5《红色沙漠》游玩指南</span>
-                <span class="p9-meta">✎ peneltykill · 昨天 17:02</span>
+                <span class="p9-meta">✎ peneltykill · 前天 17:02</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39084" class="p9-item" target="_blank" rel="noopener">
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR55253_00/8500524e-f303-41a3-909c-a6bd0ce178c9.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">《咒》全收集文字攻略+全收集列表</span>
-                <span class="p9-meta">✎ aimeraya · 8天前 10:45</span>
+                <span class="p9-meta">✎ aimeraya · 9天前 10:45</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39088" class="p9-item" target="_blank" rel="noopener">
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://psnobj.prod.dl.playstation.net/psnobj/NPWR58500_00/57b1f7b6-d28f-4547-bb98-1e4e0ed189dd.png" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">PS4/PS5《告别回忆 双想～Break out of my shell～》（秋之回忆9 双想</span>
-                <span class="p9-meta">✎ mikukukukuku · 10天前 00:19</span>
+                <span class="p9-meta">✎ mikukukukuku · 11天前 00:19</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39092" class="p9-item" target="_blank" rel="noopener">
                 <div class="p9-item-inner"><div class="p9-thumb p9-thumb-guide">🏆</div>
                 <div class="p9-item-texts">
                 <span class="p9-title">PS4｜PS5《连咒》简易白金攻略</span>
-                <span class="p9-meta">✎ xbcded · 12天前 16:33</span>
+                <span class="p9-meta">✎ xbcded · 13天前 16:33</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39089" class="p9-item" target="_blank" rel="noopener">
                 <div class="p9-item-inner"><div class="p9-thumb p9-thumb-guide">🏆</div>
                 <div class="p9-item-texts">
                 <span class="p9-title">PS5《超级肉肉男孩3D》全A+以及一命通关视频攻略</span>
-                <span class="p9-meta">✎ lazifox · 200214天前 16:57</span>
+                <span class="p9-meta">✎ lazifox · 200215天前 16:57</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39064" class="p9-item" target="_blank" rel="noopener">
@@ -675,165 +676,8 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
             </a></div></section>
 </div>
 </div>
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
-
-<div id="tab-mods" class="tab-content" style="display:none"><div class="sub-tab-bar p9-section-bar"><button class="sub-tab-btn active" onclick="switchModSubTab('mod-hot', this)">🔥 热门 Mod</button><button class="sub-tab-btn" onclick="switchModSubTab('mod-search', this)">🔍 搜 Mod</button></div><div id="mod-hot" class="mod-section" style="display:block"><section class="platform"><h2>🔥 精选热门 Mod</h2><div class="game-list">
-        <a href="https://mod.3dmgame.com/skyrimspecialedition" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/489830/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Skyrim UE / 天际重制</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">The Elder Scrolls V: Skyrim SE</div>
-                    <div class="card-rating">最新 Mod 整合包，包含材质、光照、战斗大修</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://mod.3dmgame.com/cyberpunk2077" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Cyberpunk 2077 画质大修</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Cyberpunk 2077</div>
-                    <div class="card-rating">光线追踪增强、城市细节重制、天气系统</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://www.nexusmods.com/baldursgate3" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Baldur's Gate 3 Mod 合集</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Baldur's Gate 3</div>
-                    <div class="card-rating">新增职业、法术、外观、UI增强等热门Mod</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://www.nexusmods.com/eldenring" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Elden Ring 无缝联机</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Elden Ring</div>
-                    <div class="card-rating">Seamless Co-op Mod — 联机不再被入侵限制</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://www.nexusmods.com/stardewvalley" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Stardew Valley 扩展</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Stardew Valley</div>
-                    <div class="card-rating">Stardew Valley Expanded — 新地图/角色/事件</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://www.curseforge.com/minecraft" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://media.forgecdn.net/avatars/thumbnails/0/102/64/64/636420395584242713.png" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Minecraft 模组精选</span>
-                        <span class="discount-badge disc-low">CurseForge</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Minecraft</div>
-                    <div class="card-rating">OptiFine + Create + JEI + 光影包</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://www.nexusmods.com/gta5" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">GTA V LSPDFR</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Grand Theft Auto V</div>
-                    <div class="card-rating">警察模组 — 扮演警探执法</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://gamebanana.com/mods/cats/1" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1677280/header_chinese.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">塞尔达 旷野之息 Mod</span>
-                        <span class="discount-badge disc-low">3DM</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">The Legend of Zelda: Breath of the Wild</div>
-                    <div class="card-rating">60帧解锁+画质增强+性能优化 (Cemu)</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://www.nexusmods.com/7daystodie" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/251570/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">七日杀 Mod 整合</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">7 Days to Die</div>
-                    <div class="card-rating">Undead Legacy / Darkness Falls 大改版</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://www.nexusmods.com/blackmythwukong" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">黑神话·悟空 Mod</span>
-                        <span class="discount-badge disc-low">Nexus</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Black Myth: Wukong</div>
-                    <div class="card-rating">画质提升+视角Mod+性能优化</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://steamcommunity.com/workshop/browse/?appid=255710" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/255710/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Cities: Skylines 资产包</span>
-                        <span class="discount-badge disc-low">Steam工坊</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Cities: Skylines</div>
-                    <div class="card-rating">真实建筑+道路模组+交通管理</div>
-                </div>
-            </div>
-        </a>
-        <a href="https://mods.factorio.com/" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-            <div class="game-card-inner">
-                <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427520/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                <div class="card-right">
-                    <div class="card-header">
-                        <span class="game-name">Factorio 大型Mod</span>
-                        <span class="discount-badge disc-low">3DM</span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin-top:4px">Factorio</div>
-                    <div class="card-rating">Space Exploration / Krastorio 2 / AngelBob</div>
-                </div>
-            </div>
-        </a></div></section></div><div id="mod-search" class="mod-section" style="display:none"><div id="mod-results" style="border-radius:14px;overflow:hidden;"><iframe id="mod-results-iframe" style="width:100%;height:80vh;border:none;border-radius:12px;" src="https://mod.3dmgame.com/"></iframe></div></div></div>
 
 <div id="tab-trophy" class="tab-content">
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -844,9 +688,10 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 <input type="text" id="trophy-input" class="trophy-input" placeholder="填PSN ID" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
 <button class="trophy-btn" onclick="trophySearch()">🔍</button>
 </div>
-<div id="trophy-frame" style="display:none; margin-top:-120px; max-width:500px; margin-left:auto; margin-right:auto; position:relative; z-index:10;">
+<div id="trophy-frame" style="display:none; margin-top:12px; max-width:500px; margin-left:auto; margin-right:auto;">
 <iframe id="trophy-iframe" style="width:100%;height:600px;max-width:500px;border:none;border-radius:12px;background:#1a1a2e;display:block;margin:0 auto;"></iframe>
 </div>
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 
 <!-- Game detail modal -->
@@ -1042,8 +887,7 @@ function setModSearchGame(game) {
 function modSearchRedirect() {
     var q = document.getElementById('mod-search-input').value.trim();
     if (!q) return;
-    var iframe = document.getElementById('mod-results-iframe');
-    iframe.src = 'https://mod.3dmgame.com/search?keyword=' + encodeURIComponent(q);
+    window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(q), '_blank');
 }
 
 function modSearchRedirectKW(kw, game) {
@@ -1057,14 +901,12 @@ function modSearchRedirectKW(kw, game) {
         el.style.display = 'block';
         document.getElementById('mod-cache-results').style.display = 'block';
     } else {
-        var iframe = document.getElementById('mod-results-iframe');
-        iframe.src = 'https://mod.3dmgame.com/search?keyword=' + encodeURIComponent(kw + ' ' + game);
+        window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(kw + ' ' + game), '_blank');
     }
 }
 
 function modSearchRedirectGame(game) {
-    var iframe = document.getElementById('mod-results-iframe');
-    iframe.src = 'https://mod.3dmgame.com/search?keyword=' + encodeURIComponent(game);
+    window.open('https://www.nexusmods.com/' + game + '/mods/', '_blank');
 }
 </script>
 </body>

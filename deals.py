@@ -1755,30 +1755,6 @@ window.onload = function() {{
     // checkUpdate(); // APK自动更新待实现
 }};
 
-function checkUpdate() {{
-    var xhr = new XMLHttpRequest();
-    var now = new Date().getTime();
-    xhr.open('GET', 'version.json?_=' + now, true);
-    xhr.onload = function() {{
-        if (xhr.status !== 200) return;
-        try {{
-            var ver = JSON.parse(xhr.responseText);
-            var saved = localStorage.getItem('app_version');
-            if (saved && saved !== ver.version) {{
-                var d = document.createElement('div');
-                d.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;background:#1a1a2e;border:1px solid #34d399;border-radius:12px;padding:14px 16px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-                d.innerHTML = '<div style="font-size:14px;font-weight:700;color:#34d399;margin-bottom:4px;">📦 有新版本</div>' +
-                    '<div style="font-size:12px;color:#aaa;margin-bottom:8px;">' + ver.date + '</div>' +
-                    '<a href="' + ver.apk_url + '" style="display:inline-block;padding:6px 14px;background:#34d399;color:#0f0f1a;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;" target="_blank">⬇ 下载更新</a>' +
-                    '<button onclick="this.parentElement.remove()" style="float:right;background:none;border:none;color:#666;font-size:12px;cursor:pointer;padding:6px;">稍后</button>';
-                document.body.appendChild(d);
-            }}
-            localStorage.setItem('app_version', ver.version);
-        }} catch(e) {{}}
-    }};
-    xhr.send();
-}}
-
 function spawnParticles() {{
     var container = document.getElementById('particles');
     var shapes = ['Yann','✕','◯','△','□','✦','⬡','♢','Yann','✕','◯','△','□','✦','⬡','♢','Yann','✕','◯','△','□','✦','⬡','♢'];
@@ -2019,15 +1995,4 @@ if __name__ == '__main__':
     out_path = os.path.join(out_dir, 'index.html')
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
-    # Write version.json for APK auto-update detection
-    ver = time.strftime('%Y%m%d')
-    ver_path = os.path.join(out_dir, 'version.json')
-    with open(ver_path, 'w', encoding='utf-8') as f:
-        f.write(json.dumps({
-            'version': ver,
-            'date': time.strftime('%Y-%m-%d %H:%M'),
-            'apk_url': f'https://github.com/ShinyYann/game-deals/releases/latest/download/app-debug.apk',
-            'release_url': f'https://github.com/ShinyYann/game-deals/releases/tag/v{ver}',
-            'update_url': f'https://github.com/ShinyYann/game-deals/releases',
-        }, ensure_ascii=False, indent=2))
     print(f"✅ HTML saved to {out_path}")

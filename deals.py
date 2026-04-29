@@ -757,35 +757,53 @@ def parse_switch():
 
 # ─── Game news feed ───────────────────────────────────────────────
 def fetch_news():
-    """Fetch latest game news from IGN China RSS."""
-    raw = fetch("https://www.ign.com.cn/feed.xml", timeout=10)
-    if not raw: return []
+    """Fetch latest game news from multiple Chinese gaming news RSS feeds."""
+    sources = [
+        ("IGN中国", "https://www.ign.com.cn/feed.xml"),
+        ("GameApps香港", "https://www.gameapps.hk/rss"),
+    ]
     import xml.etree.ElementTree as ET
-    news = []
-    try:
-        root = ET.fromstring(raw)
-        for item in list(root.iter('item'))[:8]:
-            title = item.findtext('title', '')
-            link = item.findtext('link', '')
-            desc = item.findtext('description', '')
-            pubdate = item.findtext('pubDate', '')
-            # Strip HTML from desc
-            desc = re.sub(r'<[^>]+>', '', desc).strip()
-            if not title: continue
-            # Get image from enclosure
-            img = ''
-            enc = item.find('enclosure')
-            if enc is not None:
-                img = enc.get('url', '')
-                # Fix relative URLs
-                if img and not img.startswith('http'):
-                    img = 'https://www.ign.com.cn' + img
-            # Format date
-            d = pubdate[:16] if pubdate else ''
-            news.append({'title': title, 'url': link, 'desc': desc[:100], 'date': d, 'img': img})
-    except Exception as e:
-        print(f"  ⚠ News parse error: {e}")
-    return news
+    all_news = []
+    seen_urls = set()
+    for src_name, feed_url in sources:
+        raw = fetch(feed_url, timeout=10)
+        if not raw:
+            print(f"  ⚠ News fetch failed: {src_name}")
+            continue
+        try:
+            root = ET.fromstring(raw)
+            for item in list(root.iter('item')):
+                title = item.findtext('title', '')
+                link = item.findtext('link', '')
+                desc = item.findtext('description', '')
+                pubdate = item.findtext('pubDate', '')
+                # Strip HTML from desc
+                desc = re.sub(r'<[^>]+>', '', desc).strip()
+                if not title or not link: continue
+                if link in seen_urls: continue
+                seen_urls.add(link)
+                # Get image from enclosure
+                img = ''
+                enc = item.find('enclosure')
+                if enc is not None:
+                    img = enc.get('url', '')
+                    if img and not img.startswith('http'):
+                        img = 'https://www.ign.com.cn' + img
+                # Also check content:encoded for first image (GameApps)
+                if not img:
+                    content = item.find('{http://purl.org/rss/1.0/modules/content/}encoded')
+                    if content is not None and content.text:
+                        m = re.search(r'<img[^>]+src="([^"]+)"', content.text)
+                        if m:
+                            img = m.group(1)
+                # Format date
+                d = pubdate[:16] if pubdate else ''
+                all_news.append({'title': title, 'url': link, 'desc': desc[:120], 'date': d, 'img': img, 'source': src_name})
+        except Exception as e:
+            print(f"  ⚠ News parse error ({src_name}): {e}")
+    # Sort by date (newest first) and limit to 12
+    all_news.sort(key=lambda x: x['date'], reverse=True)
+    return all_news[:12]
 
 # ─── HTML generation ───────────────────────────────────────────────
 def pre_search_mods():
@@ -1187,19 +1205,22 @@ def generate_html():
             if n.get('img'):
                 return f'<img src="{n["img"]}" loading="lazy">'
             return '<div class="news-img-fallback">📰</div>'
+        def news_source_label(s):
+            return {'IGN中国': 'IGN', 'GameApps香港': 'GA'}.get(s, s)
         news_items = ''.join(
-            f'<a class="news-card" href="{n["url"]}" target="_blank" rel="noopener">'
+            f'<div class="news-card" onclick="openNewsModal(\'{n["url"]}\')" style="cursor:pointer">'
             f'<div class="news-img">{news_img(n)}</div>'
             f'<div class="news-body">'
+            f'<div class="news-source">{news_source_label(n.get("source",""))}</div>'
             f'<span class="news-title">{n["title"]}</span>'
             f'<span class="news-desc">{n["desc"]}</span>'
             f'</div>'
-            f'</a>'
+            f'</div>'
             for n in news
         )
         news_html = f'''
 <div class="news-section">
-    <h2 class="news-heading">📰 游戏快讯 · IGN中国</h2>
+    <h2 class="news-heading">📰 游戏快讯</h2>
     <div class="news-grid">{news_items}</div>
 </div>'''
 
@@ -1331,6 +1352,7 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .news-img img {{ width: 100%; height: 100%; object-fit: cover; }}
 .news-img-fallback {{ width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #444; }}
 .news-body {{ padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; flex: 1; }}
+.news-source {{ display: inline-block; font-size: 10px; font-weight: 700; color: #5dade2; margin-bottom: 2px; }}
 .news-title {{ font-size: 12px; font-weight: 600; color: #e8e8f0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }}
 .news-desc {{ font-size: 11px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 .footer {{ text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }}
@@ -1371,6 +1393,8 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .modal-close {{ position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.4); border: none; color: #aaa; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; z-index: 3; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; backdrop-filter: blur(4px); }}
 .modal-close:hover {{ background: rgba(255,255,255,0.15); color: #fff; transform: rotate(90deg); }}
 .modal-img {{ width: 100%; height: 220px; object-fit: cover; border-radius: 20px 20px 0 0; display: block; }}
+.news-modal {{ max-width: 700px; width: 100%; max-height: 80vh; padding: 0; overflow: hidden; border-radius: 16px; background: #fff; transform: translateY(20px) scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }}
+.modal-overlay.show .news-modal {{ transform: translateY(0) scale(1); opacity: 1; }}
 .modal-body {{ padding: 18px 22px 22px; }}
 .modal-body > * {{ opacity: 0; transform: translateY(12px); animation: modalFadeIn 0.4s ease forwards; }}
 .modal-body > *:nth-child(1) {{ animation-delay: 0.05s; }}
@@ -1473,6 +1497,16 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 </div>
 </div>
+</div>
+
+<!-- News inline viewer modal -->
+<div class="modal-overlay" id="news-modal-overlay" onclick="closeNewsModal(event)">
+<div class="modal news-modal" onclick="event.stopPropagation()">
+<button class="modal-close" onclick="closeNewsModal()">✕</button>
+<iframe id="news-modal-iframe" style="width:100%;height:70vh;border:none;border-radius:10px;background:#fff;"></iframe>
+</div>
+</div>
+
 </div>
 
 
@@ -1688,6 +1722,18 @@ function showGameModal(el) {{
 function closeModal(e) {{
     if (e && e.target !== e.currentTarget) return;
     document.getElementById('modal-overlay').classList.remove('show');
+    document.body.style.overflow = '';
+}}
+
+function openNewsModal(url) {{
+    document.getElementById('news-modal-iframe').src = url;
+    document.getElementById('news-modal-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}}
+function closeNewsModal(e) {{
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('news-modal-overlay').classList.remove('show');
+    document.getElementById('news-modal-iframe').src = '';
     document.body.style.overflow = '';
 }}
 

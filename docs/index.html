@@ -126,6 +126,7 @@ h1 { text-align: center; font-size: 20px; padding: 8px 0; }
 .news-img img { width: 100%; height: 100%; object-fit: cover; }
 .news-img-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #444; }
 .news-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.news-source { display: inline-block; font-size: 10px; font-weight: 700; color: #5dade2; margin-bottom: 2px; }
 .news-title { font-size: 12px; font-weight: 600; color: #e8e8f0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .news-desc { font-size: 11px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .footer { text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }
@@ -166,6 +167,8 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 .modal-close { position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.4); border: none; color: #aaa; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; z-index: 3; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; backdrop-filter: blur(4px); }
 .modal-close:hover { background: rgba(255,255,255,0.15); color: #fff; transform: rotate(90deg); }
 .modal-img { width: 100%; height: 220px; object-fit: cover; border-radius: 20px 20px 0 0; display: block; }
+.news-modal { max-width: 700px; width: 100%; max-height: 80vh; padding: 0; overflow: hidden; border-radius: 16px; background: #fff; transform: translateY(20px) scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.modal-overlay.show .news-modal { transform: translateY(0) scale(1); opacity: 1; }
 .modal-body { padding: 18px 22px 22px; }
 .modal-body > * { opacity: 0; transform: translateY(12px); animation: modalFadeIn 0.4s ease forwards; }
 .modal-body > *:nth-child(1) { animation-delay: 0.05s; }
@@ -200,7 +203,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 港服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-30 02:23</p>
+<p class="last-update">🔄 上次更新: 2026-04-30 02:27</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -848,14 +851,14 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
             </div>
             <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"  >
                 <div class="game-card-inner">
-                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3412900/d0c2cb1fd69c94e72d3e5a25f1c0fbba779201ff/header_alt_assets_1.jpg?t=1777478028" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3562120/e8f83bc42faf610b3a435bf8fa360fb91dcc8bc8/header.jpg?t=1777348229" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
                     <div class="card-right">
                         <div class="card-header">
-                            <span class="game-name">The Three Kingdoms: Rebirth</span>
-                            <span class="discount-badge disc-low">-15%</span>
+                            <span class="game-name">Magical Princess</span>
+                            <span class="discount-badge disc-low">-20%</span>
                         </div>
                         <div class="card-price">
-                            <span class="current-price">¥49</span>
+                            <span class="current-price">¥38</span>
                         </div>
                         <div class="card-rating"></div>
                     </div>
@@ -1077,12 +1080,16 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 <div id="tab-news" class="tab-content" style="display:none">
 
 <div class="news-section">
-    <h2 class="news-heading">📰 游戏快讯 · IGN中国</h2>
-    <div class="news-grid"><a class="news-card" href="https://www.ign.com.cn/re9/59761/sheng-hua-wei-ji-an-hun-qu-cun-zai-yi-ge-bei-shan-chu-de-zhang-jie" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/resident-evil-requiem-20260225185941_zbhn.jpg" loading="lazy"></div><div class="news-body"><span class="news-title">《生化危机 安魂曲》存在一个被删除的章节</span><span class="news-desc">没玩够</span></div></a><a class="news-card" href="https://www.ign.com.cn/grand-theft-auto-6/59758/aikai-shi-hui-zuo-you-xi-shi-ji-zhi-hou-kai-fa-liu-cheng-bian-liao" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/shi-pin-hao-jia-shi-ji_htag.jpg" loading="lazy"></div><div class="news-body"><span class="news-title">AI开始会做「游戏实机」之后，开发流程变了</span><span class="news-desc">假实机的作用
-从 Midjourney 到 NanoBanana，再到这次的 GPT-Image2，几乎每一次生图模型的进步，都会在互联网上引发一轮狂欢。最近这段时间，自媒体上铺天盖地的「游戏实机演示</span></div></a><a class="news-card" href="https://www.ign.com.cn/gamegame/59757/suo-you-da-zai-liao-djia-mi-de-dan-ji-ji-fei-vrlei-you-xi-jun-bei-po-jie" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/photo/d/denuvo-unv/denuvo-unveils-new-tech-that-will-make-it-easier-for-devs-to_6n1g.jpg" loading="lazy"></div><div class="news-body"><span class="news-title">所有搭载了D加密的单机及非VR类游戏均被破解</span><span class="news-desc">D加密还有用吗</span></div></a><a class="news-card" href="https://www.ign.com.cn/moomintroll-winters-warmth/59739/mu-ming-nuan-xin-dong-ri-33fen-zhong-shi-ji-yan-shi" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/mu-ming-shi-ji_yw61.jpg" loading="lazy"></div><div class="news-body"><span class="news-title">《姆明：暖心冬日》33分钟实机演示</span><span class="news-desc">游戏现已发售
-当姆明从冬眠中意外惊醒，他平生第一次发现自己孤身一人，置身于一片几乎认不出的陌生天地。冰雪女王为姆明谷熟悉的风光，披上了一层冰霜织成的面纱。起初，小小的姆明只是想找个伴儿，好驱散这恼人的</span></div></a><a class="news-card" href="https://www.ign.com.cn/mindseye/59756/xin-zhi-yan-fa-bu-blacklistedgeng-xin-bing-yong-jiu-jiang-jie" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/blacklisted_n9bj.png" loading="lazy"></div><div class="news-body"><span class="news-title">《心之眼》发布Blacklisted更新并永久降价</span><span class="news-desc">能打赢复活赛吗</span></div></a><a class="news-card" href="https://www.ign.com.cn/the-blood-of-dawnwalker/59755/li-ming-xing-zhe-zhi-xie-cheng-ren-shi-yong-aidan-qiang-diao-you-xi-nei-wu-ren-he-aizi-chan" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/qq20260429-073402_g8qr.png" loading="lazy"></div><div class="news-body"><span class="news-title">《黎明行者之血》承认使用AI，但强调游戏内无任何AI资产</span><span class="news-desc">AI的正确使用方法？</span></div></a><a class="news-card" href="https://www.ign.com.cn/repterra/59753/repterra-fa-shou-xuan-chuan-shi-pin" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/repterralaunchtrailer-ign-blogroll-1777384483992_f4ra.jpg" loading="lazy"></div><div class="news-body"><span class="news-title">《Repterra》发售宣传视频</span><span class="news-desc">为人类夺回世界而战
-《Repterra》是一款以恐龙横行的世界为背景的基地建设生存即时战略游戏。管理你的殖民地，同时对抗数量庞大的恐龙大军。培育并驾驭你自己的恐龙，解锁永久升级，为人类夺回世界而战。游</span></div></a><a class="news-card" href="https://www.ign.com.cn/tom-clancys-the-division-resurgence/59751/pcban-quan-jing-feng-suo-shu-guang-12fen-zhong-shi-ji-yan-shi" target="_blank" rel="noopener"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/division_64t2.jpg" loading="lazy"></div><div class="news-body"><span class="news-title">PC版《全境封锁：曙光》12分钟实机演示</span><span class="news-desc">在广阔的开放世界中体验全新的独立故事情节
-《全境封锁：曙光（The Division Resurgence）》是一款设定在巨大城市开放世界的第三人称RPG射击游戏，玩家将在广阔的开放世界中体验到全新的</span></div></a></div>
+    <h2 class="news-heading">📰 游戏快讯</h2>
+    <div class="news-grid"><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/re9/59761/sheng-hua-wei-ji-an-hun-qu-cun-zai-yi-ge-bei-shan-chu-de-zhang-jie')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/resident-evil-requiem-20260225185941_zbhn.jpg" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《生化危机 安魂曲》存在一个被删除的章节</span><span class="news-desc">没玩够</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/grand-theft-auto-6/59758/aikai-shi-hui-zuo-you-xi-shi-ji-zhi-hou-kai-fa-liu-cheng-bian-liao')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/shi-pin-hao-jia-shi-ji_htag.jpg" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">AI开始会做「游戏实机」之后，开发流程变了</span><span class="news-desc">假实机的作用
+从 Midjourney 到 NanoBanana，再到这次的 GPT-Image2，几乎每一次生图模型的进步，都会在互联网上引发一轮狂欢。最近这段时间，自媒体上铺天盖地的「游戏实机演示」视频就是最直观的例子。当生图能力开始变</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/gamegame/59757/suo-you-da-zai-liao-djia-mi-de-dan-ji-ji-fei-vrlei-you-xi-jun-bei-po-jie')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/photo/d/denuvo-unv/denuvo-unveils-new-tech-that-will-make-it-easier-for-devs-to_6n1g.jpg" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">所有搭载了D加密的单机及非VR类游戏均被破解</span><span class="news-desc">D加密还有用吗</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/moomintroll-winters-warmth/59739/mu-ming-nuan-xin-dong-ri-33fen-zhong-shi-ji-yan-shi')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/mu-ming-shi-ji_yw61.jpg" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《姆明：暖心冬日》33分钟实机演示</span><span class="news-desc">游戏现已发售
+当姆明从冬眠中意外惊醒，他平生第一次发现自己孤身一人，置身于一片几乎认不出的陌生天地。冰雪女王为姆明谷熟悉的风光，披上了一层冰霜织成的面纱。起初，小小的姆明只是想找个伴儿，好驱散这恼人的冬天。但他却终究不情不愿地踏上了一场走向</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/mindseye/59756/xin-zhi-yan-fa-bu-blacklistedgeng-xin-bing-yong-jiu-jiang-jie')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/blacklisted_n9bj.png" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《心之眼》发布Blacklisted更新并永久降价</span><span class="news-desc">能打赢复活赛吗</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/the-blood-of-dawnwalker/59755/li-ming-xing-zhe-zhi-xie-cheng-ren-shi-yong-aidan-qiang-diao-you-xi-nei-wu-ren-he-aizi-chan')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/qq20260429-073402_g8qr.png" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《黎明行者之血》承认使用AI，但强调游戏内无任何AI资产</span><span class="news-desc">AI的正确使用方法？</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/repterra/59753/repterra-fa-shou-xuan-chuan-shi-pin')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/repterralaunchtrailer-ign-blogroll-1777384483992_f4ra.jpg" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《Repterra》发售宣传视频</span><span class="news-desc">为人类夺回世界而战
+《Repterra》是一款以恐龙横行的世界为背景的基地建设生存即时战略游戏。管理你的殖民地，同时对抗数量庞大的恐龙大军。培育并驾驭你自己的恐龙，解锁永久升级，为人类夺回世界而战。游戏现已登陆PC平台。</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/tom-clancys-the-division-resurgence/59751/pcban-quan-jing-feng-suo-shu-guang-12fen-zhong-shi-ji-yan-shi')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/division_64t2.jpg" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">PC版《全境封锁：曙光》12分钟实机演示</span><span class="news-desc">在广阔的开放世界中体验全新的独立故事情节
+《全境封锁：曙光（The Division Resurgence）》是一款设定在巨大城市开放世界的第三人称RPG射击游戏，玩家将在广阔的开放世界中体验到全新的独立故事情节，以独特的视角经历在《全境封</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/helldivers-ii/59750/jue-di-qian-bing-2-jie-fang-xian-xia-xuan-chuan-shi-pin')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/helldivers2thumb-1777382243259_u9z3.png" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《绝地潜兵2》「解放闲暇」宣传视频</span><span class="news-desc">净化未知星球
+超级地球的公民，理应享有最好的一切——无压力、无恐惧的生活，以及全新解放的度假胜地，供他们休憩、放松，尽情欣赏那些美丽世界的风景与官方许可的娱乐活动。绝地潜兵，即刻部署，净化未知星球，为我们忠诚的公民们带来这份美好体验！</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/final-fantasy-vii-rebirth/59749/xboxyu-switch-2ban-zui-zhong-huan-xiang-7-zhong-sheng-shi-wan-demoxuan-chuan-shi-pin')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/ffthumb-1777383327085_pynh.png" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">Xbox与Switch 2版《最终幻想7 重生》试玩Demo宣传视频</span><span class="news-desc">保存数据可直接继承至正式版
+克劳德一行人脱离魔晄都市米德加，跨越命运之墙，迈入未知的荒野旅程。在具备形形色色面貌的辽阔世界中，骑乘陆行鸟在草原上驰骋，自由自在地巡游探索点，展开一段全新的故事。《最终幻想7 重生》试玩Demo现已在Xbox </span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/hitman-the-board-game/59748/sha-shou-zhuo-you-ban-xian-dao-yu-gao')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/hitmanthumb-1777387736661_3nzt.png" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《杀手 桌游版》先导预告</span><span class="news-desc">游戏将于4月30日开启众筹
+《杀手 桌游版（Hitman: The Board Game）》是一款可供1-4人游玩的桌游，成败取决于即兴发挥、创造力和外科手术般的精准度。玩家将环游世界，潜入异国风情的地点，暗杀高价值目标——但这一次，你不再</span></div></div><div class="news-card" onclick="openNewsModal('https://www.ign.com.cn/mindseye/59747/xin-zhi-yan-blacklisted-xuan-chuan-shi-pin')" style="cursor:pointer"><div class="news-img"><img src="https://www.ign.com.cn/sm/ign_cn/screenshot/default/fc217edcfc29a4783fc2085ec3b7cf8adf692bf7_sxy7.png" loading="lazy"></div><div class="news-body"><div class="news-source">IGN</div><span class="news-title">《心之眼》「Blacklisted」宣传视频</span><span class="news-desc">让真相浮出水面
+《心之眼》更新7.1现已上线，包含更多体验优化和问题修复，以及一个新增ARCADIA任务「Blacklisted」。玩家将扮演世界顶级刺客茱莉亚·布莱克，奉命前往红石城执行一项任务——铲除两大关键目标。她效力的Meridia</span></div></div></div>
 </div>
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
@@ -1227,6 +1234,16 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 </div>
 </div>
 </div>
+</div>
+
+<!-- News inline viewer modal -->
+<div class="modal-overlay" id="news-modal-overlay" onclick="closeNewsModal(event)">
+<div class="modal news-modal" onclick="event.stopPropagation()">
+<button class="modal-close" onclick="closeNewsModal()">✕</button>
+<iframe id="news-modal-iframe" style="width:100%;height:70vh;border:none;border-radius:10px;background:#fff;"></iframe>
+</div>
+</div>
+
 </div>
 
 
@@ -1442,6 +1459,18 @@ function showGameModal(el) {
 function closeModal(e) {
     if (e && e.target !== e.currentTarget) return;
     document.getElementById('modal-overlay').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+function openNewsModal(url) {
+    document.getElementById('news-modal-iframe').src = url;
+    document.getElementById('news-modal-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closeNewsModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('news-modal-overlay').classList.remove('show');
+    document.getElementById('news-modal-iframe').src = '';
     document.body.style.overflow = '';
 }
 

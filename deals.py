@@ -1146,6 +1146,15 @@ body.tab-mods::before {{ background-image: url('https://images.unsplash.com/phot
   50% {{ left: 100%; }}
   100% {{ left: 100%; }}
 }}
+/* 粒子背景 */
+.particles {{ position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }}
+.particle {{ position: absolute; width: 3px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 50%; animation: particleFloat linear infinite; }}
+@keyframes particleFloat {{
+  0% {{ transform: translateY(100vh) rotate(0deg); opacity: 0; }}
+  10% {{ opacity: 1; }}
+  90% {{ opacity: 1; }}
+  100% {{ transform: translateY(-10vh) rotate(720deg); opacity: 0; }}
+}}
 .tab-content-fade {{ animation: tabFlipIn 0.35s ease-out forwards; }}
 @keyframes tabFlipIn {{
   0% {{ opacity: 0.6; transform: translateY(-6px); }}
@@ -1261,6 +1270,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </style>
 </head>
 <body>
+<div class="particles" id="particles"></div>
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
@@ -1381,7 +1391,22 @@ function switchP9SubTab(id, btn) {{
 
 window.onload = function() {{
     loadSavedTrophy();
+    spawnParticles();
 }};
+
+function spawnParticles() {{
+    var container = document.getElementById('particles');
+    for (var i = 0; i < 25; i++) {{
+        var p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
+        p.style.animationDuration = (8 + Math.random() * 12) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        p.style.background = ['rgba(168,85,247,0.2)','rgba(52,211,153,0.15)','rgba(93,173,226,0.15)','rgba(249,115,22,0.15)'][i % 4];
+        container.appendChild(p);
+    }}
+}}
 
 function switchTab(name) {{
     var btns = document.querySelectorAll('.tab-btn');

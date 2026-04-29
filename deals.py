@@ -1292,8 +1292,8 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <input type="text" id="trophy-input" class="trophy-input" placeholder="填PSN ID" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
 <button class="trophy-btn" onclick="trophySearch()">🔍</button>
 </div>
-<div id="trophy-frame" style="display:none; margin-top:12px;">
-<iframe id="trophy-iframe" style="width:100%;height:800px;border:none;border-radius:12px;background:#1a1a2e;"></iframe>
+<div id="trophy-frame" style="display:none; margin-top:12px; max-width:500px; margin-left:auto; margin-right:auto;">
+<iframe id="trophy-iframe" style="width:100%;height:600px;max-width:500px;border:none;border-radius:12px;background:#1a1a2e;display:block;margin:0 auto;"></iframe>
 </div>
 </div>
 

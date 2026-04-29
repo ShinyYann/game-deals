@@ -1213,7 +1213,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
   initial-value: 0deg;
   inherits: false;
 }}
-.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 1; }}
+.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; z-index: 2; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }}
 .modal-overlay.show .modal-wrapper {{ transform: translateY(0) scale(1); opacity: 1; }}
 .modal::-webkit-scrollbar {{ width: 4px; }}
 .modal::-webkit-scrollbar-thumb {{ background: #3a3a5e; border-radius: 4px; }}

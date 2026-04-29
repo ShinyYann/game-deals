@@ -1395,6 +1395,7 @@ function showGameModal(el) {{
     }} else {{
         tagsEl.style.display = 'none';
     }}
+    if (img && img.src) {{
         document.getElementById('modal-img').src = img.src;
         document.getElementById('modal-img').style.display = 'block';
     }} else {{

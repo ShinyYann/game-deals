@@ -892,14 +892,14 @@ def generate_html():
     hot_mods = [
         {"name": "Skyrim UE / 天际重制", "game": "The Elder Scrolls V: Skyrim SE", "desc": "最新 Mod 整合包，包含材质、光照、战斗大修", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/489830/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/skyrimspecialedition"},
         {"name": "Cyberpunk 2077 画质大修", "game": "Cyberpunk 2077", "desc": "光线追踪增强、城市细节重制、天气系统", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/cyberpunk2077"},
-        {"name": "Baldur's Gate 3 Mod 合集", "game": "Baldur's Gate 3", "desc": "新增职业、法术、外观、UI增强等热门Mod", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/baldursgate3"},
+        {"name": "Baldur's Gate 3 Mod 合集", "game": "Baldur's Gate 3", "desc": "新增职业、法术、外观、UI增强等热门Mod", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/baldursgate3"},
         {"name": "Elden Ring 无缝联机", "game": "Elden Ring", "desc": "Seamless Co-op Mod — 联机不再被入侵限制", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/eldenring"},
         {"name": "Stardew Valley 扩展", "game": "Stardew Valley", "desc": "Stardew Valley Expanded — 新地图/角色/事件", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/stardewvalley"},
         {"name": "Minecraft 模组精选", "game": "Minecraft", "desc": "OptiFine + Create + JEI + 光影包", "img": "https://media.forgecdn.net/avatars/thumbnails/0/102/64/64/636420395584242713.png", "site": "curseforge", "link": "https://www.curseforge.com/minecraft"},
         {"name": "GTA V LSPDFR", "game": "Grand Theft Auto V", "desc": "警察模组 — 扮演警探执法", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/gta5"},
         {"name": "塞尔达 旷野之息 Mod", "game": "The Legend of Zelda: Breath of the Wild", "desc": "60帧解锁+画质增强+性能优化 (Cemu)", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1677280/header_chinese.jpg", "site": "other", "link": "https://gamebanana.com/mods/cats/1"},
         {"name": "七日杀 Mod 整合", "game": "7 Days to Die", "desc": "Undead Legacy / Darkness Falls 大改版", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/251570/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/7daystodie"},
-        {"name": "黑神话·悟空 Mod", "game": "Black Myth: Wukong", "desc": "画质提升+视角Mod+性能优化", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/blackmythwukong"},
+        {"name": "黑神话·悟空 Mod", "game": "Black Myth: Wukong", "desc": "画质提升+视角Mod+性能优化", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/367520/header.jpg", "site": "nexus", "link": "https://www.nexusmods.com/blackmythwukong"},
         {"name": "Cities: Skylines 资产包", "game": "Cities: Skylines", "desc": "真实建筑+道路模组+交通管理", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/255710/header.jpg", "site": "steam", "link": "https://steamcommunity.com/workshop/browse/?appid=255710"},
         {"name": "Factorio 大型Mod", "game": "Factorio", "desc": "Space Exploration / Krastorio 2 / AngelBob", "img": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427520/header.jpg", "site": "other", "link": "https://mods.factorio.com/"},
     ]
@@ -1129,7 +1129,7 @@ body::before {{ content: ''; position: fixed; inset: -10px; z-index: -1; backgro
 body.tab-trophy::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/header.jpg'); }}
 body.tab-discounts::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg'); }}
 body.tab-psnine::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg'); }}
-body.tab-mods::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/292030/header.jpg'); }}
+body.tab-mods::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1085660/header.jpg'); }}
 @keyframes bgBreathe {{
   0% {{ transform: scale(1) translate(0, 0); }}
   50% {{ transform: scale(1.05) translate(-1%, -1%); }}

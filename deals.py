@@ -1197,24 +1197,16 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 /* Game detail modal */
 .modal-overlay {{ display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; }}
 .modal-overlay.show {{ display: flex; opacity: 1; background: rgba(0,0,0,0.75); }}
-.modal-wrapper {{ position: relative; border-radius: 22px; padding: 3px; max-width: 506px; width: 100%; overflow: hidden; }}
-.modal-wrapper::before {{ content: ''; position: absolute; inset: 0; border-radius: 22px; background: conic-gradient(
-    from var(--gradient-angle),
-    #5dade2,
-    #a855f7,
-    #fb7299,
-    #fbbf24,
-    #34d399,
-    #5dade2
-); animation: rotateGradient 3s linear infinite; }}
-@keyframes rotateGradient {{ to {{ --gradient-angle: 360deg; }} }}
-@property --gradient-angle {{
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
+.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 3px solid #5dade2; animation: borderGlow 3s linear infinite; }}
+@keyframes borderGlow {{
+  15% {{ border-color: #a855f7; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(168, 85, 247, 0.25); }}
+  30% {{ border-color: #fb7299; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(251, 114, 153, 0.25); }}
+  45% {{ border-color: #fbbf24; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(251, 191, 36, 0.25); }}
+  60% {{ border-color: #34d399; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(52, 211, 153, 0.25); }}
+  75% {{ border-color: #5dade2; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(93, 173, 226, 0.25); }}
+  90% {{ border-color: #a855f7; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(168, 85, 247, 0.25); }}
 }}
-.modal {{ background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; z-index: 2; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }}
-.modal-overlay.show .modal-wrapper {{ transform: translateY(0) scale(1); opacity: 1; }}
+.modal-overlay.show .modal {{ transform: translateY(0) scale(1); opacity: 1; }}
 .modal::-webkit-scrollbar {{ width: 4px; }}
 .modal::-webkit-scrollbar-thumb {{ background: #3a3a5e; border-radius: 4px; }}
 .modal-close {{ position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.4); border: none; color: #aaa; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; z-index: 3; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; backdrop-filter: blur(4px); }}
@@ -1299,7 +1291,6 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 
 <!-- Game detail modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-<div class="modal-wrapper" id="modal-wrapper">
 <div class="modal" id="modal" onclick="event.stopPropagation()">
 <button class="modal-close" onclick="closeModal()">✕</button>
 <img id="modal-img" class="modal-img" src="" alt="">
@@ -1311,8 +1302,6 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <div class="modal-desc" id="modal-desc">暂无详细介绍</div>
 <a id="modal-bili-link" class="modal-bilibili" href="#" target="_blank" rel="noopener">▶ 官方预告片</a>
 <iframe id="modal-bili-video" style="display:none; width:100%; height:220px; border:none; border-radius:10px; margin-top:8px;" allowfullscreen></iframe>
-</div>
-</div>
 </div>
 </div>
 

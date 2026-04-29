@@ -1280,7 +1280,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <div class="modal-tags" id="modal-tags"></div>
 <div class="modal-rating" id="modal-rating"></div>
 <div class="modal-desc" id="modal-desc">暂无详细介绍</div>
-<a id="modal-bili-link" class="modal-bilibili" href="#" target="_blank" rel="noopener">▶ 在 B 站搜索本游戏</a>
+<a id="modal-bili-link" class="modal-bilibili" href="#" target="_blank" rel="noopener">▶ 官方预告片</a>
 <iframe id="modal-bili-video" style="display:none; width:100%; height:220px; border:none; border-radius:10px; margin-top:8px;" allowfullscreen></iframe>
 </div>
 </div>
@@ -1436,7 +1436,7 @@ function showGameModal(el) {{
         biliLink.style.display = 'inline-flex';
         biliIframe.style.display = 'none';
         biliIframe.src = '';
-        biliLink.href = 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(searchName + ' 游戏') + '&from_source=webtop_search';
+        biliLink.href = 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(searchName + ' 官方预告片') + '&from_source=webtop_search';
     }}
 
     document.getElementById('modal-overlay').classList.add('show');

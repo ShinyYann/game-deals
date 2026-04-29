@@ -514,6 +514,12 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 .p9-search-input:focus {{ border-color: #5dade2; }}
 .p9-search-btn {{ padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; background: #2a2a4e; color: #e8e8f0; cursor: pointer; white-space: nowrap; }}
 .p9-search-btn:active {{ background: #3a3a5e; }}
+/* Trophy search */
+.trophy-bar {{ display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 4px; }}
+.trophy-input {{ width: 140px; padding: 6px 10px; border: 1px solid #2a2a3e; border-radius: 8px; font-size: 13px; background: #1a1a2e; color: #e8e8f0; outline: none; }}
+.trophy-input:focus {{ border-color: #5dade2; }}
+.trophy-btn {{ padding: 6px 10px; border: none; border-radius: 8px; font-size: 13px; background: #2a2a4e; color: #e8e8f0; cursor: pointer; }}
+.trophy-btn:active {{ background: #3a3a5e; }}
 </style>
 </head>
 <body>
@@ -545,10 +551,9 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 </div>
 
 <div id="tab-trophy" class="tab-content" style="display:none">
-<div class="trophy-intro" style="color:#888;font-size:13px;margin-bottom:12px;">输入 PSN 用户名查看奖杯</div>
-<div class="p9-search-box">
-<input type="text" id="trophy-input" class="p9-search-input" placeholder="例如 wanshuai12138…" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
-<button class="p9-search-btn" onclick="trophySearch()">🏆 查看奖杯</button>
+<div class="trophy-bar">
+<input type="text" id="trophy-input" class="trophy-input" placeholder="填PSN ID" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
+<button class="trophy-btn" onclick="trophySearch()">🔍</button>
 </div>
 <div id="trophy-frame" style="display:none; margin-top:12px;">
 <iframe id="trophy-iframe" style="width:100%;height:800px;border:none;border-radius:12px;background:#1a1a2e;"></iframe>
@@ -593,7 +598,7 @@ function switchTab(name) {{
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
     if (name === 'psnine') setTimeout(function(){{ document.getElementById('p9-search-input').focus(); }}, 300);
-    if (name === 'trophy') setTimeout(function(){{ loadSavedTrophy(); }}, 100);
+    if (name === 'trophy') setTimeout(function(){{ document.getElementById('trophy-input').focus(); loadSavedTrophy(); }}, 100);
 }}
 </script>
 </body>

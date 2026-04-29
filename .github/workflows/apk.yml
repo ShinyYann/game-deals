@@ -1,206 +1,40 @@
 name: Build APK
-
 on:
   push:
     branches: [ main ]
-
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Android SDK
+      - name: Install SDK
         run: |
           mkdir -p $HOME/android/cmdline-tools
           cd $HOME/android
           curl -sLo cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
           unzip -q cmdline-tools.zip -d cmdline-tools
           mv cmdline-tools/cmdline-tools cmdline-tools/latest 2>/dev/null || true
-          export ANDROID_HOME=$HOME/android
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-          yes | sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -5
+          yes | sdkmanager --sdk_root=$HOME/android "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
           echo "ANDROID_HOME=$HOME/android" >> $GITHUB_ENV
           echo "$HOME/android/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$HOME/android/platform-tools" >> $GITHUB_PATH
-          echo "SDK installed"
-
-      - name: Create Android project
-        run: |
-          # Create directory structure
-          APP_DIR=android
-          mkdir -p $APP_DIR/app/src/main/java/com/yann/gamedeals
-          mkdir -p $APP_DIR/app/src/main/res/values
-          mkdir -p $APP_DIR/app/src/main/res/mipmap-hdpi
-          mkdir -p $APP_DIR/gradle/wrapper
-
-          # AndroidManifest
-          cat > $APP_DIR/app/src/main/AndroidManifest.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yann.gamedeals">
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="Yann小站"
-        android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-EOF
-
-          # MainActivity
-          cat > $APP_DIR/app/src/main/java/com/yann/gamedeals/MainActivity.java << 'EOF'
-package com.yann.gamedeals;
-import android.os.Bundle;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.webkit.WebSettings;
-import androidx.appcompat.app.AppCompatActivity;
-public class MainActivity extends AppCompatActivity {
-    private WebView webView;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        webView = new WebView(this);
-        setContentView(webView);
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setLoadWithOverviewMode(true);
-        s.setUseWideViewPort(true);
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("https://shinyyann.github.io/game-deals/");
-    }
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
-    }
-}
-EOF
-
-          # styles.xml
-          cat > $APP_DIR/app/src/main/res/values/styles.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">#0f0f1a</item>
-    </style>
-</resources>
-EOF
-
-      - name: Generate app icon
-        run: |
-          python3 << 'PYEOF'
-import struct, zlib, os
-def png(w,h):
-    raw = b''
-    for y in range(h):
-        raw += b'\x00'
-        for x in range(w):
-            cx,cy = w//2,h//2
-            d = ((x-cx)**2+(y-cy)**2)**0.5
-            if d < w*0.26 or abs(x-w//2) < w*0.1:
-                raw += bytes([200,200,220,255])
-            else:
-                raw += bytes([15,22,48,255])
-    def c(ty,d):
-        return struct.pack('>I',len(d))+ty+d+struct.pack('>I',zlib.crc32(ty+d)&0xffffffff)
-    sig = b'\x89PNG\r\n\x1a\n'
-    ihdr = struct.pack('>IIBBBBB',w,h,8,6,0,0,0)
-    return sig+c(b'IHDR',ihdr)+c(b'IDAT',zlib.compress(raw))+c(b'IEND',b'')
-for name,size in [('mipmap-hdpi',72),('mipmap-xhdpi',96),('mipmap-xxhdpi',144),('mipmap-xxxhdpi',192)]:
-    d = f'android/app/src/main/res/{name}'
-    os.makedirs(d, exist_ok=True)
-    with open(f'{d}/ic_launcher.png','wb') as f:
-        f.write(png(size))
-print('Icons done')
-PYEOF
-
-      - name: Write Gradle files
-        run: |
-          cat > android/build.gradle << 'EOF'
-buildscript {
-    repositories { google(); mavenCentral() }
-    dependencies { classpath 'com.android.tools.build:gradle:8.2.0' }
-}
-allprojects { repositories { google(); mavenCentral() } }
-EOF
-          cat > android/settings.gradle << 'EOF'
-rootProject.name = 'YannGameDeals'
-include ':app'
-EOF
-          cat > android/gradle.properties << 'EOF'
-org.gradle.jvmargs=-Xmx2048m
-android.useAndroidX=true
-EOF
-          cat > android/app/build.gradle << 'EOF'
-plugins { id 'com.android.application' }
-android {
-    namespace 'com.yann.gamedeals'
-    compileSdk 34
-    defaultConfig {
-        applicationId "com.yann.gamedeals"
-        minSdk 21
-        targetSdk 34
-        versionCode 1
-        versionName "1.0.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
-        }
-    }
-}
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-}
-EOF
-
-      - name: Download Gradle
+      - name: Prepare project
+        run: python3 prepare_apk.py
+      - name: Gradle wrapper
         run: |
           cd android
-          mkdir -p gradle/wrapper
-          cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOF
-          # Download gradlew
           curl -sL -o gradlew https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradlew
           chmod +x gradlew
-
       - name: Build APK
-        run: |
-          cd android
-          ./gradlew assembleRelease --no-daemon
+        run: cd android && ./gradlew assembleDebug --no-daemon
         env:
-          ANDROID_HOME: /root/android
-
-      - name: Move APK to root
+          ANDROID_HOME: /home/runner/android
+      - name: Prepare Release
         run: |
-          ls -la android/app/build/outputs/apk/release/ || true
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk Yann小站.apk 2>/dev/null || true
-
+          find android -name "*.apk" 2>/dev/null
+          cp android/app/build/outputs/apk/debug/app-debug.apk Yann小站.apk 2>/dev/null || echo "No APK found"
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:

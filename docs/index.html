@@ -80,7 +80,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; }
 .modal-overlay.show { display: flex; opacity: 1; background: rgba(0,0,0,0.75); }
 .modal-wrapper { position: relative; border-radius: 22px; padding: 3px; max-width: 506px; width: 100%; overflow: hidden; }
-.modal-wrapper::before { content: ''; position: absolute; inset: -6px; border-radius: 23px; background: conic-gradient(
+.modal-wrapper::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 22px; background: conic-gradient(
     from var(--gradient-angle),
     #5dade2,
     #a855f7,
@@ -89,7 +89,6 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
     #34d399,
     #5dade2
 ); animation: rotateGradient 3s linear infinite; z-index: 0; }
-.modal-wrapper::after { content: ''; position: absolute; inset: 3px; border-radius: 20px; background: #0f0f1a; z-index: 0; }
 @keyframes rotateGradient { to { --gradient-angle: 360deg; } }
 @property --gradient-angle {
   syntax: '<angle>';
@@ -134,7 +133,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 17:33</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 17:35</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -622,7 +621,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://image.api.playstation.com/trophy/np/NPWR25088_00_006841AC0C54A402B362ABB17C77C0881412A9FC69/2B31B69F4A987A544969399583A67C4A144290B0.PNG" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">2026.4.22-2026.5.6 PSN港服商店 新史低游戏</span>
-                <span class="p9-meta">✎ wanshuai · 121389小</span>
+                <span class="p9-meta">✎ wanshuai · 1213810小</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39083" class="p9-item" target="_blank" rel="noopener">

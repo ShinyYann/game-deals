@@ -1198,7 +1198,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .modal-overlay {{ display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; }}
 .modal-overlay.show {{ display: flex; opacity: 1; background: rgba(0,0,0,0.75); }}
 .modal-wrapper {{ position: relative; border-radius: 22px; padding: 3px; max-width: 506px; width: 100%; overflow: hidden; }}
-.modal-wrapper::before {{ content: ''; position: absolute; inset: -6px; border-radius: 23px; background: conic-gradient(
+.modal-wrapper::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 22px; background: conic-gradient(
     from var(--gradient-angle),
     #5dade2,
     #a855f7,
@@ -1207,7 +1207,6 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
     #34d399,
     #5dade2
 ); animation: rotateGradient 3s linear infinite; z-index: 0; }}
-.modal-wrapper::after {{ content: ''; position: absolute; inset: 3px; border-radius: 20px; background: #0f0f1a; z-index: 0; }}
 @keyframes rotateGradient {{ to {{ --gradient-angle: 360deg; }} }}
 @property --gradient-angle {{
   syntax: '<angle>';

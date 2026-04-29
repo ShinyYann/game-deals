@@ -1053,6 +1053,7 @@ def generate_html():
                         </div>
                         <div class="card-price">
                             <span class="current-price">{price}</span>{cn_tag}
+                            <span class="plat-tag">{icon}</span>
                         </div>
                         <div class="card-rating">{rating}</div>
                     </div>
@@ -1207,6 +1208,7 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .cn-tag {{ font-size: 12px; color: #e8b84b; margin-left: 8px; }}
 .top5 {{ margin-top: 28px; }}
 .top5 h2 {{ font-size: 18px; margin-bottom: 12px; }}
+.plat-tag {{ display: inline-block; margin-left: 6px; font-size: 12px; vertical-align: middle; }}
 .top-list {{ display: flex; flex-direction: column; gap: 8px; }}
 .top-item {{ background: #1a1a2e; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 8px; font-size: 14px; }}
 .top-icon {{ font-size: 16px; }}

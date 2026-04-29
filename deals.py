@@ -1140,6 +1140,11 @@ body.tab-mods {{ background: linear-gradient(160deg, #0f0f1a 0%, #2a1a10 50%, #0
   50% {{ left: 100%; }}
   100% {{ left: 100%; }}
 }}
+.tab-content-fade {{ animation: tabFlipIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; transform-origin: top center; perspective: 800px; }}
+@keyframes tabFlipIn {{
+  0% {{ opacity: 0; transform: rotateX(-12deg) scale(0.95) translateY(-10px); }}
+  100% {{ opacity: 1; transform: rotateX(0deg) scale(1) translateY(0); }}
+}}
 .tab-bar {{ display: flex; gap: 4px; margin-bottom: 0; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }}
 .tab-btn {{ flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }}
 .tab-btn.active {{ background: #1a1a2e; color: #e8e8f0; }}
@@ -1379,6 +1384,11 @@ function switchTab(name) {{
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
+    // 3D flip animation
+    var content = document.getElementById('tab-' + name);
+    content.classList.remove('tab-content-fade');
+    void content.offsetWidth; // reflow
+    content.classList.add('tab-content-fade');
     // Tab accent + body background
     document.querySelector('.tab-accent').className = 'tab-accent ' + name;
     document.body.className = 'tab-' + name;

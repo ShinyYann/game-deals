@@ -678,7 +678,7 @@ def parse_steam():
     games = []
     specials = data.get('specials', {}).get('items', [])
     if isinstance(specials, list):
-        for item in specials[:25]:
+        for item in specials[:100]:
             g = parse_steam_item(item)
             if g: games.append(g)
     return games
@@ -699,7 +699,7 @@ def parse_steam_item(item):
 
 def parse_switch():
     """Get Switch deals from Nintendo Japan eShop."""
-    url = "https://search.nintendo.jp/nintendo_soft/search.json?q=&opt_sshow=1&limit=50"
+    url = "https://search.nintendo.jp/nintendo_soft/search.json?q=&opt_sshow=1&limit=100"
     raw = fetch(url)
     if not raw: return []
     try:
@@ -974,9 +974,9 @@ def generate_html():
     mods_html += cached_mod_results
     mods_html += '</div></section></div></div>'
     for label, items, icon, raw_label, section_id in [
-        ("PSN 港服特惠", psn_items[:15], "🔵", "PSN", "disc-psn"),
-        ("Steam 国服特惠", steam_items[:15], "🟢", "Steam", "disc-steam"),
-        ("Switch 日服特惠", switch_items[:15], "🟡", "Switch", "disc-switch"),
+        ("PSN 港服特惠", psn_items[:100], "🔵", "PSN", "disc-psn"),
+        ("Steam 国服特惠", steam_items[:100], "🟢", "Steam", "disc-steam"),
+        ("Switch 日服特惠", switch_items[:100], "🟡", "Switch", "disc-switch"),
     ]:
         if not items:
             continue

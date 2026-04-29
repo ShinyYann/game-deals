@@ -755,6 +755,31 @@ def parse_switch():
             })
     return games
 
+# ─── Game news feed ───────────────────────────────────────────────
+def fetch_news():
+    """Fetch latest game news from IGN China RSS."""
+    raw = fetch("https://www.ign.com.cn/feed.xml", timeout=10)
+    if not raw: return []
+    import xml.etree.ElementTree as ET
+    news = []
+    try:
+        root = ET.fromstring(raw)
+        ns = {'atom': 'http://www.w3.org/2005/Atom'}
+        for item in list(root.iter('item'))[:8]:
+            title = item.findtext('title', '')
+            link = item.findtext('link', '')
+            desc = item.findtext('description', '')
+            pubdate = item.findtext('pubDate', '')
+            # Strip HTML from desc
+            desc = re.sub(r'<[^>]+>', '', desc).strip()
+            if not title: continue
+            # Format date
+            d = pubdate[:16] if pubdate else ''
+            news.append({'title': title, 'url': link, 'desc': desc[:100], 'date': d})
+    except Exception as e:
+        print(f"  ⚠ News parse error: {e}")
+    return news
+
 # ─── HTML generation ───────────────────────────────────────────────
 def pre_search_mods():
     """Pre-cache mod search results using DuckDuckGo."""
@@ -808,6 +833,7 @@ def generate_html():
     steam = parse_steam()
     switch = parse_switch()
     psnine = parse_psnine()
+    news = fetch_news()
 
     # Build image lookup from all game data
     game_images = {}
@@ -1148,6 +1174,21 @@ def generate_html():
 
     # Build tab content for each section
 
+    news_html = ''
+    if news:
+        news_items = ''.join(
+            f'<a class="news-item" href="{n["url"]}" target="_blank" rel="noopener">'
+            f'<span class="news-title">{n["title"]}</span>'
+            f'<span class="news-desc">{n["desc"]}</span>'
+            f'</a>'
+            for n in news
+        )
+        news_html = f'''
+<div class="news-section">
+    <h2 class="news-heading">📰 游戏快讯 · IGN中国</h2>
+    <div class="news-list">{news_items}</div>
+</div>'''
+
     html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1265,6 +1306,13 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .p9-item-texts {{ width: 100%; }}
 .p9-title {{ font-size: 13px; font-weight: 600; color: #e8e8f0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }}
 .p9-meta {{ font-size: 11px; color: #888; margin-top: 2px; }}
+.news-section {{ margin-top: 32px; padding: 16px; background: rgba(26,26,46,0.6); border-radius: 12px; }}
+.news-heading {{ font-size: 16px; margin-bottom: 12px; color: #5dade2; }}
+.news-list {{ display: flex; flex-direction: column; gap: 8px; }}
+.news-item {{ display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: rgba(15,15,26,0.5); border-radius: 8px; text-decoration: none; transition: background 0.2s; }}
+.news-item:active {{ background: rgba(42,42,62,0.6); }}
+.news-title {{ font-size: 13px; font-weight: 600; color: #e8e8f0; line-height: 1.3; }}
+.news-desc {{ font-size: 11px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 .footer {{ text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }}
 /* Search */
 .p9-search-box {{ display: flex; gap: 8px; margin-bottom: 16px; }}
@@ -1347,6 +1395,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 {top5}
 {cards}
+{news_html}
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 

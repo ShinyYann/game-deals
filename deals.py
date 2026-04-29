@@ -1129,11 +1129,17 @@ body.tab-trophy {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a1030 50%, 
 body.tab-discounts {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a2a10 50%, #0f0f1a 100%); }}
 body.tab-psnine {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a1a30 50%, #0f0f1a 100%); }}
 body.tab-mods {{ background: linear-gradient(160deg, #0f0f1a 0%, #2a1a10 50%, #0f0f1a 100%); }}
-.tab-accent {{ height: 3px; border-radius: 3px; margin-bottom: 12px; transition: background 0.5s ease; }}
+.tab-accent {{ height: 3px; border-radius: 3px; margin-bottom: 12px; position: relative; overflow: hidden; transition: background 0.5s ease; }}
 .tab-accent.trophy {{ background: linear-gradient(90deg, #a855f7, #7c3aed); }}
 .tab-accent.discounts {{ background: linear-gradient(90deg, #34d399, #059669); }}
 .tab-accent.psnine {{ background: linear-gradient(90deg, #5dade2, #3b82f6); }}
 .tab-accent.mods {{ background: linear-gradient(90deg, #f97316, #ea580c); }}
+.tab-accent::after {{ content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 3s ease-in-out infinite; }}
+@keyframes shimmer {{
+  0% {{ left: -100%; }}
+  50% {{ left: 100%; }}
+  100% {{ left: 100%; }}
+}}
 .tab-bar {{ display: flex; gap: 4px; margin-bottom: 0; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }}
 .tab-btn {{ flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }}
 .tab-btn.active {{ background: #1a1a2e; color: #e8e8f0; }}

@@ -12,7 +12,9 @@ body { background:linear-gradient(160deg, #0f0f1a 0%, #2a1a10 50%, #0f0f1a 100%)
 .back-btn:hover { background:#3a3a5e; color:#fff; }
 .platform { margin-bottom:20px; }
 .platform h2 { font-size:16px; font-weight:600; margin-bottom:4px; color:#e8e8f0; }
-.accent { height:3px; border-radius:3px; background:linear-gradient(90deg,#f97316,#ea580c); margin-bottom:10px; }
+.accent { height:3px; border-radius:3px; background:linear-gradient(90deg,#f97316,#ea580c); position:relative; overflow:hidden; margin-bottom:10px; }
+.accent::after { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent); animation:shimmer 3s ease-in-out infinite; }
+@keyframes shimmer { 0%{left:-100%} 50%{left:100%} 100%{left:100%} }
 .game-list { display:flex; flex-direction:column; gap:8px; }
 .game-card { background:#1a1a2e; border-radius:12px; overflow:hidden; transition:transform 0.15s; }
 .game-card:active { transform:scale(0.98); }

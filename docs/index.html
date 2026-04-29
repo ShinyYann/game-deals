@@ -126,7 +126,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 19:16</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 19:24</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -614,7 +614,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://image.api.playstation.com/trophy/np/NPWR25088_00_006841AC0C54A402B362ABB17C77C0881412A9FC69/2B31B69F4A987A544969399583A67C4A144290B0.PNG" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">2026.4.22-2026.5.6 PSN港服商店 新史低游戏</span>
-                <span class="p9-meta">✎ wanshuai · 1213844分</span>
+                <span class="p9-meta">✎ wanshuai · 1213852分</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39083" class="p9-item" target="_blank" rel="noopener">
@@ -678,7 +678,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 </div>
 
 <div id="tab-mods" class="tab-content" style="display:none"><div class="sub-tab-bar p9-section-bar"><button class="sub-tab-btn active" onclick="switchModSubTab('mod-hot', this)">🔥 热门 Mod</button><button class="sub-tab-btn" onclick="switchModSubTab('mod-search', this)">🔍 搜 Mod</button></div><div id="mod-hot" class="mod-section" style="display:block"><section class="platform"><h2>🔥 精选热门 Mod</h2><div class="game-list">
-        <a href="https://www.nexusmods.com/skyrimspecialedition" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+        <a href="https://mod.3dmgame.com/skyrimspecialedition" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
             <div class="game-card-inner">
                 <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/489830/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
                 <div class="card-right">
@@ -691,7 +691,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 </div>
             </div>
         </a>
-        <a href="https://www.nexusmods.com/cyberpunk2077" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
+        <a href="https://mod.3dmgame.com/cyberpunk2077" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
             <div class="game-card-inner">
                 <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
                 <div class="card-right">
@@ -775,7 +775,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="card-right">
                     <div class="card-header">
                         <span class="game-name">塞尔达 旷野之息 Mod</span>
-                        <span class="discount-badge disc-low">M站</span>
+                        <span class="discount-badge disc-low">3DM</span>
                     </div>
                     <div style="font-size:12px;color:#888;margin-top:4px">The Legend of Zelda: Breath of the Wild</div>
                     <div class="card-rating">60帧解锁+画质增强+性能优化 (Cemu)</div>
@@ -827,121 +827,33 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="card-right">
                     <div class="card-header">
                         <span class="game-name">Factorio 大型Mod</span>
-                        <span class="discount-badge disc-low">M站</span>
+                        <span class="discount-badge disc-low">3DM</span>
                     </div>
                     <div style="font-size:12px;color:#888;margin-top:4px">Factorio</div>
                     <div class="card-rating">Space Exploration / Krastorio 2 / AngelBob</div>
                 </div>
             </div>
         </a></div></section></div><div id="mod-search" class="mod-section" style="display:none"><section class="platform"><h2>🔍 搜索 PC Mod（点击跳转原站）</h2><div style="margin-bottom:12px"><div class="p9-search-box">
-        <input type="text" id="mod-search-input" class="p9-search-input" placeholder="中文/英文搜 Mod…" onkeydown="if(event.key==='Enter') modSearchRedirect()">
+        <input type="text" id="mod-search-input" class="p9-search-input" placeholder="搜中文 Mod（3DM站）…" onkeydown="if(event.key==='Enter') modSearchRedirect()">
         <button class="p9-search-btn" onclick="modSearchRedirect()">🔍 搜</button>
     </div>
     <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
-        <button class="sub-tab-btn" onclick="modSearchRedirectKW('画质增强', 'cyberpunk2077')">🎨 画质</button>
-        <button class="sub-tab-btn" onclick="modSearchRedirectKW('武器', 'cyberpunk2077')">⚔️ 武器</button>
-        <button class="sub-tab-btn" onclick="modSearchRedirectKW('人物外观', 'skyrimspecialedition')">👤 外观</button>
-        <button class="sub-tab-btn" onclick="modSearchRedirectKW('UI', 'skyrimspecialedition')">🖥️ UI</button>
-        <button class="sub-tab-btn" onclick="modSearchRedirectKW('地图', 'eldenring')">🗺️ 地图</button>
-        <button class="sub-tab-btn" onclick="modSearchRedirectKW('战斗', 'eldenring')">⚡ 战斗</button>
-        <button class="sub-tab-btn" onclick="modSearchRedirectKW('联机', 'eldenring')">👥 联机</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('画质', '赛博朋克2077')">🎨 画质</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('武器服装', '艾尔登法环')">⚔️ 武器</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('人物外观', '上古卷轴5')">👤 外观</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('UI界面', '博德之门3')">🖥️ UI</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('地图材质', '艾尔登法环')">🗺️ 地图</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('战斗', '艾尔登法环')">⚡ 战斗</button>
+        <button class="sub-tab-btn" onclick="modSearchRedirectKW('联机', '艾尔登法环')">👥 联机</button>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('cyberpunk2077')">🌆 Cyberpunk</button>
-        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('skyrimspecialedition')">🏔️ Skyrim</button>
-        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('baldursgate3')">🎲 BG3</button>
-        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('eldenring')">⚫ 老头环</button>
-        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('stardewvalley')">🌾 星露谷</button>
-        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('blackmythwukong')">🐵 黑神话</button>
-    </div><div id="mod-cache-results" style="display:block"><div id="rc-画质-cyberpunk2077" class="mod-cache-group" style="display:none"><section class="platform"><h2>🎨 画质 Mod — Cyberpunk 2077</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-武器-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚔️ 武器 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-人物外观-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>👤 外观 Mod — Skyrim SE</h2><div class="game-list">
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/155925" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Skyrim Special Edition Nexus - Mods and Community</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/114342" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Faithful Faces - NPC Overhaul with SMP Hair Physic</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/10508" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">A Change of Face (Face Sculptor's Racemenu) - Nexu</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/97946" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Additional Dremora Faces at Skyrim Special Edition</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/witcher3/mods/9219" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Dynamic Appearances Project at The Witcher 3 Nexus</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/cyberpunk2077/mods/24747" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Appearance Menu Mod - Traditional Chinese - Nexus </span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a></div></section></div><div id="rc-UI-baldursgate3" class="mod-cache-group" style="display:none"><section class="platform"><h2>🖥️ UI Mod — Baldur's Gate 3</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-地图-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>🗺️ 地图 Mod — Skyrim SE</h2><div class="game-list">
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/28349" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Enhanced Solitude Docks - Nexus Mods</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/97490" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">JaySerpa's Small Mods and Resources (Mostly for GT</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a></div></section></div><div id="rc-战斗-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚡ 战斗 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-联机-stardewvalley" class="mod-cache-group" style="display:none"><section class="platform"><h2>👥 联机 Mod — Stardew Valley</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div></div></div></section></div></div>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('赛博朋克2077 MOD')">🌆 赛博朋克</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('上古卷轴5 MOD')">🏔️ 老滚5</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('博德之门3 MOD')">🎲 博德3</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('艾尔登法环 MOD')">⚫ 老头环</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('星露谷物语 MOD')">🌾 星露谷</button>
+        <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('黑神话悟空 MOD')">🐵 黑神话</button>
+    </div><div id="mod-cache-results" style="display:block"><div id="rc-画质-cyberpunk2077" class="mod-cache-group" style="display:none"><section class="platform"><h2>🎨 画质 Mod — Cyberpunk 2077</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-武器-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚔️ 武器 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-人物外观-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>👤 外观 Mod — Skyrim SE</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-UI-baldursgate3" class="mod-cache-group" style="display:none"><section class="platform"><h2>🖥️ UI Mod — Baldur's Gate 3</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-地图-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>🗺️ 地图 Mod — Skyrim SE</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-战斗-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚡ 战斗 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-联机-stardewvalley" class="mod-cache-group" style="display:none"><section class="platform"><h2>👥 联机 Mod — Stardew Valley</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div></div></div></section></div></div>
 
 <div id="tab-trophy" class="tab-content">
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -1150,7 +1062,7 @@ function setModSearchGame(game) {
 function modSearchRedirect() {
     var q = document.getElementById('mod-search-input').value.trim();
     if (!q) return;
-    window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(q), '_blank');
+    window.open('https://mod.3dmgame.com/search/?keyword=' + encodeURIComponent(q), '_blank');
 }
 
 function modSearchRedirectKW(kw, game) {
@@ -1164,12 +1076,12 @@ function modSearchRedirectKW(kw, game) {
         el.style.display = 'block';
         document.getElementById('mod-cache-results').style.display = 'block';
     } else {
-        window.open('https://www.nexusmods.com/search/?search=' + encodeURIComponent(kw + ' ' + game), '_blank');
+        window.open('https://mod.3dmgame.com/search/?keyword=' + encodeURIComponent(kw + ' ' + game), '_blank');
     }
 }
 
 function modSearchRedirectGame(game) {
-    window.open('https://www.nexusmods.com/' + game + '/mods/', '_blank');
+    window.open('https://mod.3dmgame.com/search/?keyword=' + encodeURIComponent(game), '_blank');
 }
 </script>
 </body>

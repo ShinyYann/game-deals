@@ -853,7 +853,7 @@ def generate_html():
         return short_name(t if t else n)
 
     def platform_icon(plat):
-        return {'PSN': '<span style="color:#1da1f2">PSN</span>', 'Steam': '<span style="color:#66c0f4">Steam</span>', 'Switch': '<span style="color:#e60012">Switch</span>'}.get(plat, '🎮')
+        return {'PSN': '<span style="color:#1da1f2">PSN</span>', 'Steam': '<span style="color:#4ade80">Steam</span>', 'Switch': '<span style="color:#e60012">Switch</span>'}.get(plat, '🎮')
 
     # Build more flexible image lookup from all platform data
     img_lookup = {}

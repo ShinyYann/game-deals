@@ -837,7 +837,7 @@ def generate_html():
         return short_name(t if t else n)
 
     def platform_icon(plat):
-        return {'PSN': '🔵', 'Steam': '🟢', 'Switch': '🟡'}.get(plat, '🎮')
+        return {'PSN': '<span style="color:#1da1f2">PSN</span>', 'Steam': '<span style="color:#66c0f4">Steam</span>', 'Switch': '<span style="color:#e60012">Switch</span>'}.get(plat, '🎮')
 
     # Build more flexible image lookup from all platform data
     img_lookup = {}
@@ -1307,7 +1307,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <button class="sub-tab-btn active" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
-<button class="sub-tab-btn" onclick="switchSubTab('disc-top5', this)">🎯 本期值买</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-top5', this)">🎯 本期值得买</button>
 </div>
 {cards}
 {top5}

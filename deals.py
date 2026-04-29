@@ -764,7 +764,6 @@ def fetch_news():
     news = []
     try:
         root = ET.fromstring(raw)
-        ns = {'atom': 'http://www.w3.org/2005/Atom'}
         for item in list(root.iter('item'))[:8]:
             title = item.findtext('title', '')
             link = item.findtext('link', '')
@@ -773,9 +772,17 @@ def fetch_news():
             # Strip HTML from desc
             desc = re.sub(r'<[^>]+>', '', desc).strip()
             if not title: continue
+            # Get image from enclosure
+            img = ''
+            enc = item.find('enclosure')
+            if enc is not None:
+                img = enc.get('url', '')
+                # Fix relative URLs
+                if img and not img.startswith('http'):
+                    img = 'https://www.ign.com.cn' + img
             # Format date
             d = pubdate[:16] if pubdate else ''
-            news.append({'title': title, 'url': link, 'desc': desc[:100], 'date': d})
+            news.append({'title': title, 'url': link, 'desc': desc[:100], 'date': d, 'img': img})
     except Exception as e:
         print(f"  ⚠ News parse error: {e}")
     return news
@@ -1176,17 +1183,24 @@ def generate_html():
 
     news_html = ''
     if news:
+        def news_img(n):
+            if n.get('img'):
+                return f'<img src="{n["img"]}" loading="lazy">'
+            return '<div class="news-img-fallback">📰</div>'
         news_items = ''.join(
-            f'<a class="news-item" href="{n["url"]}" target="_blank" rel="noopener">'
+            f'<a class="news-card" href="{n["url"]}" target="_blank" rel="noopener">'
+            f'<div class="news-img">{news_img(n)}</div>'
+            f'<div class="news-body">'
             f'<span class="news-title">{n["title"]}</span>'
             f'<span class="news-desc">{n["desc"]}</span>'
+            f'</div>'
             f'</a>'
             for n in news
         )
         news_html = f'''
 <div class="news-section">
     <h2 class="news-heading">📰 游戏快讯 · IGN中国</h2>
-    <div class="news-list">{news_items}</div>
+    <div class="news-grid">{news_items}</div>
 </div>'''
 
     html = f'''<!DOCTYPE html>
@@ -1203,6 +1217,7 @@ body.tab-trophy::before {{ background-image: url('https://shared.akamai.steamsta
 body.tab-discounts::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg'); }}
 body.tab-psnine::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg'); }}
 body.tab-mods::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1085660/header.jpg'); }}
+body.tab-news::before {{ background-image: url('https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/header.jpg'); }}
 @keyframes bgBreathe {{
   0% {{ transform: scale(1) translate(0, 0); }}
   50% {{ transform: scale(1.05) translate(-1%, -1%); }}
@@ -1213,6 +1228,7 @@ body.tab-mods::before {{ background-image: url('https://shared.akamai.steamstati
 .tab-accent.discounts {{ background: linear-gradient(90deg, #34d399, #059669); }}
 .tab-accent.psnine {{ background: linear-gradient(90deg, #5dade2, #3b82f6); }}
 .tab-accent.mods {{ background: linear-gradient(90deg, #f97316, #ea580c); }}
+.tab-accent.news {{ background: linear-gradient(90deg, #5dade2, #38bdf8); }}
 .tab-accent::after {{ content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 3s ease-in-out infinite; }}
 @keyframes shimmer {{
   0% {{ left: -100%; }}
@@ -1306,12 +1322,16 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .p9-item-texts {{ width: 100%; }}
 .p9-title {{ font-size: 13px; font-weight: 600; color: #e8e8f0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }}
 .p9-meta {{ font-size: 11px; color: #888; margin-top: 2px; }}
-.news-section {{ margin-top: 32px; padding: 16px; background: rgba(26,26,46,0.6); border-radius: 12px; }}
+.news-section {{ margin-top: 0; padding: 0; }}
 .news-heading {{ font-size: 16px; margin-bottom: 12px; color: #5dade2; }}
-.news-list {{ display: flex; flex-direction: column; gap: 8px; }}
-.news-item {{ display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: rgba(15,15,26,0.5); border-radius: 8px; text-decoration: none; transition: background 0.2s; }}
-.news-item:active {{ background: rgba(42,42,62,0.6); }}
-.news-title {{ font-size: 13px; font-weight: 600; color: #e8e8f0; line-height: 1.3; }}
+.news-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }}
+.news-card {{ display: flex; flex-direction: column; gap: 0; background: rgba(26,26,46,0.5); border-radius: 10px; overflow: hidden; text-decoration: none; transition: background 0.2s, transform 0.2s; }}
+.news-card:active {{ background: rgba(42,42,62,0.6); transform: scale(0.98); }}
+.news-img {{ width: 100%; height: 100px; overflow: hidden; background: #1a1a2e; }}
+.news-img img {{ width: 100%; height: 100%; object-fit: cover; }}
+.news-img-fallback {{ width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #444; }}
+.news-body {{ padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; flex: 1; }}
+.news-title {{ font-size: 12px; font-weight: 600; color: #e8e8f0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }}
 .news-desc {{ font-size: 11px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 .footer {{ text-align: center; color: #666; font-size: 12px; padding: 24px 0 16px; }}
 /* Search */
@@ -1378,6 +1398,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
+<button class="tab-btn" onclick="switchTab('news')">📰 快讯</button>
 <a href="mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn">🎮 Mod</button></a>
 </div>
 <div class="tab-accent trophy" id="tab-accent"></div>
@@ -1395,6 +1416,10 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 {top5}
 {cards}
+<div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
+</div>
+
+<div id="tab-news" class="tab-content" style="display:none">
 {news_html}
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>

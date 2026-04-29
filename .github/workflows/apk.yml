@@ -21,7 +21,10 @@ jobs:
           echo "$HOME/android/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$HOME/android/platform-tools" >> $GITHUB_PATH
       - name: Prepare project
-        run: python3 prepare_apk.py
+        run: |
+          which python3
+          ls -la prepare_apk.py
+          python3 prepare_apk.py
       - name: Gradle wrapper
         run: |
           cd android

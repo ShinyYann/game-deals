@@ -827,8 +827,13 @@ def generate_html():
             r = rating_text(n)
             mc = rating_score(n)
             d = disc_pct(g['discount'])
-            # 综合得分 = MC分(0-100) + 折扣附加(最多10分) + 中文支持加分
-            score = mc + min(d, 10) + (5 if cn_bonus and g.get('has_cn', False) else 0)
+            if mc:
+                # 有评分：MC分(0-100)为主 + 折扣最多加10分
+                score = mc + min(d, 10)
+            else:
+                # 没评分：纯折扣力度 + 价格倒挂(低价游戏额外加分)
+                score = d + max(0, 15 - price_num(g['price']) / 10)
+            score += 5 if cn_bonus and g.get('has_cn', False) else 0
             p = price_num(g['price'])
             result.append((score, n, g, r, d, p))
         result.sort(key=lambda x: -x[0])

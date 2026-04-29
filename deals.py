@@ -1027,7 +1027,7 @@ def generate_html():
 
     top5 = '<div id="disc-top5" class="disc-section" style="display:block"><section class="platform"><h2>🎯 本期值得买</h2><div class="game-list">'
     used = set()
-    medals = ['🏆 神之作', '💎 必收藏', '🔥 口碑王', '⭐ 超好评', '🎯 不容错']
+    medals = ['🏆 捡漏神作', '💎 折扣必入', '🔥 闭眼买', '⭐ 值哭了', '🎯 早买早爽']
     count = 0
     for s, n, g, r, d, p, plat in all_items:
         if count >= 20: break

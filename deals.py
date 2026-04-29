@@ -929,6 +929,19 @@ def generate_html():
     news = fetch_news()
     steam_achs = fetch_all_steam_achievements()
 
+    # Translate Steam game names to Chinese
+    steam_game_cn = {
+        'Cyberpunk 2077': '赛博朋克2077',
+        "Sid Meier's Civilization VI": '文明VI',
+        'Where Winds Meet': '燕云十六声',
+        'Wallpaper Engine：壁纸引擎': 'Wallpaper Engine',
+        'The Escapists 2': '逃脱者2',
+    }
+    for g in steam_achs:
+        cn = steam_game_cn.get(g['name'])
+        if cn:
+            g['name'] = cn
+
     # Build image lookup from all game data
     game_images = {}
     for game_list in [psn, steam, switch]:
@@ -1327,8 +1340,8 @@ def generate_html():
         total_t = sum(g['total'] for g in steam_achs)
         steam_achs_html = (
             f'<div class="steam-profile-card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(26,26,46,0.6);border-radius:12px;margin-bottom:12px;">'
-            f'<div style="font-size:40px;">👤</div>'
-            f'<div><div style="font-size:16px;font-weight:700;color:#e8e8f0;">Yann</div>'
+            f'<img src="https://avatars.fastly.steamstatic.com/e01d7e465fd6594723c9e5f401ab366aab8888a6.jpg" style="width:40px;height:40px;border-radius:50%;">>'
+            f'<div><div style="font-size:16px;font-weight:700;color:#e8e8f0;">Yann✨</div>'
             f'<div style="font-size:12px;color:#888;">Steam · 加入于 July 2015 · {total_u}/{total_t} 成就</div>'
             f'</div></div>{game_cards}'
         )

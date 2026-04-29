@@ -1040,6 +1040,7 @@ def generate_html():
         disc_cls = "disc-high" if d >= 50 else ("disc-mid" if d >= 30 else "disc-low")
         rating = (r[:15] if r else "") or ""
         medal_html = f'<span class="medal medal-{count+1}">{medals[count]}</span>' if count < 5 else ''
+        crown = '<div class="crown">👑</div>' if count < 3 else ''
         cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if plat == "Switch" and g.get('has_cn', False) else ""
         card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.parentElement.style.display=\'none\'">' if g.get('img') else ''
         desc, tags, bvid = game_detail(display)
@@ -1047,7 +1048,7 @@ def generate_html():
         bvid_attr = f'data-bvid="{bvid}"' if bvid else ''
         top5 += f'''<div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"{desc_attr} {tags_attr} {bvid_attr}>
                 <div class="game-card-inner">
-                    <div class="card-left">{card_img}</div>
+                    <div class="card-left">{crown}{card_img}</div>
                     <div class="card-right">
                         <div class="card-header">
                             {medal_html}
@@ -1223,6 +1224,9 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 @keyframes medalGlow3 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(239,68,68,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(239,68,68,0.8); }} }}
 @keyframes medalGlow4 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(52,211,153,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(52,211,153,0.8); }} }}
 @keyframes medalGlow5 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(56,189,248,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(56,189,248,0.8); }} }}
+.crown {{ position: absolute; top: -4px; left: -4px; font-size: 20px; z-index: 2; filter: drop-shadow(0 0 4px rgba(245,158,11,0.6)); animation: crownBounce 2s ease-in-out infinite; }}
+.card-left {{ position: relative; }}
+@keyframes crownBounce {{ 0%,100% {{ transform: translateY(0) rotate(-5deg); }} 50% {{ transform: translateY(-3px) rotate(5deg); }} }}
 .top-list {{ display: flex; flex-direction: column; gap: 8px; }}
 .top-item {{ background: #1a1a2e; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 8px; font-size: 14px; }}
 .top-icon {{ font-size: 16px; }}

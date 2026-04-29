@@ -1561,6 +1561,28 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .modal-bilibili {{ display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: linear-gradient(135deg, #fb7299, #fc8fa7); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.25s ease; }}
 .modal-bilibili:hover {{ background: linear-gradient(135deg, #fc8fab, #ff9db8); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(251, 114, 153, 0.3); }}
 </style>
+<!-- Google Translate - 浮动翻译按钮 -->
+<style>
+.goog-te-gadget-simple {{
+    background: #1a1a2e !important;
+    border: 1px solid #34d399 !important;
+    border-radius: 20px !important;
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+}}
+.goog-te-gadget-simple .goog-te-menu-value {{
+    color: #e8e8f0 !important;
+}}
+.goog-te-gadget-simple .goog-te-menu-value span {{
+    color: #34d399 !important;
+}}
+.goog-te-banner-frame.skiptranslate {{
+    display: none !important;
+}}
+body {{
+    top: 0 !important;
+}}
+</style>
 <script>
 if ('serviceWorker' in navigator) {{
   navigator.serviceWorker.register('sw.js');
@@ -1973,6 +1995,18 @@ function modSearchRedirectGame(game) {{
     window.open('https://www.nexusmods.com/' + game + '/mods/', '_blank');
 }}
 </script>
+<div id="google_translate_element" style="position:fixed;bottom:16px;right:16px;z-index:9999;"></div>
+<script>
+function googleTranslateElementInit() {{
+    new google.translate.TranslateElement({{
+        pageLanguage: 'zh-CN',
+        includedLanguages: 'zh-TW,en,ja,ko,fr,de,es',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+    }}, 'google_translate_element');
+}}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>'''
     return html

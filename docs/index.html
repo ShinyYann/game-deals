@@ -163,7 +163,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-30 00:55</p>
+<p class="last-update">🔄 上次更新: 2026-04-30 00:56</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -806,10 +806,12 @@ function spawnParticles() {
         p.className = 'particle';
         p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
+        p.style.top = Math.random() * 100 + '%';
         p.style.fontSize = (14 + Math.random() * 20) + 'px';
         p.style.color = colors[i % colors.length];
-        p.style.animationDuration = (12 + Math.random() * 18) + 's';
-        p.style.animationDelay = (Math.random() * 10) + 's';
+        p.style.animationDuration = (15 + Math.random() * 20) + 's';
+        p.style.animationDelay = (Math.random() * 5) + 's';
+        p.style.opacity = '0';
         if (i >= 15) {
             p.style.animationDirection = 'reverse';
         }

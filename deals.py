@@ -1403,10 +1403,12 @@ function spawnParticles() {{
         p.className = 'particle';
         p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
+        p.style.top = Math.random() * 100 + '%';
         p.style.fontSize = (14 + Math.random() * 20) + 'px';
         p.style.color = colors[i % colors.length];
-        p.style.animationDuration = (12 + Math.random() * 18) + 's';
-        p.style.animationDelay = (Math.random() * 10) + 's';
+        p.style.animationDuration = (15 + Math.random() * 20) + 's';
+        p.style.animationDelay = (Math.random() * 5) + 's';
+        p.style.opacity = '0';
         if (i >= 15) {{
             p.style.animationDirection = 'reverse';
         }}

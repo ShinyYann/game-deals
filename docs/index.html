@@ -79,16 +79,8 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 /* Game detail modal */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease, background 0.25s ease; }
 .modal-overlay.show { display: flex !important; opacity: 1; background: rgba(0,0,0,0.75); }
-.modal { background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 3px solid #5dade2; animation: borderGlow 3s linear infinite; }
+.modal { background: linear-gradient(145deg, #1f1f35, #18182a); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; position: relative; transform: translateY(30px) scale(0.95); opacity: 0; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
 .modal-overlay.show .modal { transform: translateY(0) scale(1); opacity: 1; }
-@keyframes borderGlow {
-  15% { border-color: #a855f7; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(168, 85, 247, 0.25); }
-  30% { border-color: #fb7299; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(251, 114, 153, 0.25); }
-  45% { border-color: #fbbf24; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(251, 191, 36, 0.25); }
-  60% { border-color: #34d399; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(52, 211, 153, 0.25); }
-  75% { border-color: #5dade2; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(93, 173, 226, 0.25); }
-  90% { border-color: #a855f7; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 15px 2px rgba(168, 85, 247, 0.25); }
-}
 .modal-overlay.show .modal { transform: translateY(0) scale(1); opacity: 1; }
 .modal::-webkit-scrollbar { width: 4px; }
 .modal::-webkit-scrollbar-thumb { background: #3a3a5e; border-radius: 4px; }
@@ -126,7 +118,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 19:10</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 19:12</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -614,7 +606,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                 <div class="p9-item-inner"><div class="p9-thumb"><img src="https://image.api.playstation.com/trophy/np/NPWR25088_00_006841AC0C54A402B362ABB17C77C0881412A9FC69/2B31B69F4A987A544969399583A67C4A144290B0.PNG" class="p9-thumb-img" onerror="this.parentElement.style.display='none'"></div>
                 <div class="p9-item-texts">
                 <span class="p9-title">2026.4.22-2026.5.6 PSN港服商店 新史低游戏</span>
-                <span class="p9-meta">✎ wanshuai · 1213837分</span>
+                <span class="p9-meta">✎ wanshuai · 1213840分</span>
                 </div></div>
             </a>
             <a href="https://www.psnine.com/topic/39083" class="p9-item" target="_blank" rel="noopener">
@@ -853,139 +845,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
         <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('eldenring')">⚫ 老头环</button>
         <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('stardewvalley')">🌾 星露谷</button>
         <button class="p9-search-btn" style="font-size:12px;padding:6px 10px" onclick="modSearchRedirectGame('blackmythwukong')">🐵 黑神话</button>
-    </div><div id="mod-cache-results" style="display:block"><div id="rc-画质-cyberpunk2077" class="mod-cache-group" style="display:none"><section class="platform"><h2>🎨 画质 Mod — Cyberpunk 2077</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-武器-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚔️ 武器 Mod — Elden Ring</h2><div class="game-list">
-            <a href="https://www.nexusmods.com/eldenring/mods/6138" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Gamma's Unbound Weapons for ER 1.13.2 (New moveset</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/eldenring/mods/8103" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Weapons from the Forge - Roaring Forge Modpack - N</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/eldenring/mods/1631" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Elden Ring Gun Mod Pack - Nexus Mods</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/games/eldenring/mods" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Elden Ring Mods - Nexus Mods</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/eldenring/mods/5207" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Bloodborne Inspired Overhaul at Elden Ring Nexus -</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/eldenring/mods/6095" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Soul Weapon Transformations at Elden Ring Nexus - </span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a></div></section></div><div id="rc-人物外观-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>👤 外观 Mod — Skyrim SE</h2><div class="game-list">
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/114342" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Faithful Faces - NPC Overhaul with SMP Hair Physic</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/155925" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Skyrim Special Edition Nexus - Mods and Community</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/97946" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Additional Dremora Faces at Skyrim Special Edition</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/10508" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">A Change of Face (Face Sculptor's Racemenu) - Nexu</span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/skyrimspecialedition/mods/25450" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Male Npc Overhaul at Skyrim Special Edition Nexus </span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a>
-            <a href="https://www.nexusmods.com/newvegas/mods/54460" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
-                <div class="game-card-inner">
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name" style="font-size:13px">Fallout Character Overhaul at Fallout New Vegas - </span>
-                            <span class="discount-badge disc-low" style="font-size:10px">🧩 Nexus</span>
-                        </div>
-                        
-                    </div>
-                </div>
-            </a></div></section></div><div id="rc-UI-baldursgate3" class="mod-cache-group" style="display:none"><section class="platform"><h2>🖥️ UI Mod — Baldur's Gate 3</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-地图-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>🗺️ 地图 Mod — Skyrim SE</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-战斗-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚡ 战斗 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-联机-stardewvalley" class="mod-cache-group" style="display:none"><section class="platform"><h2>👥 联机 Mod — Stardew Valley</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div></div></div></section></div></div>
+    </div><div id="mod-cache-results" style="display:block"><div id="rc-画质-cyberpunk2077" class="mod-cache-group" style="display:none"><section class="platform"><h2>🎨 画质 Mod — Cyberpunk 2077</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-武器-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚔️ 武器 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-人物外观-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>👤 外观 Mod — Skyrim SE</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-UI-baldursgate3" class="mod-cache-group" style="display:none"><section class="platform"><h2>🖥️ UI Mod — Baldur's Gate 3</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-地图-skyrimspecialedition" class="mod-cache-group" style="display:none"><section class="platform"><h2>🗺️ 地图 Mod — Skyrim SE</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-战斗-eldenring" class="mod-cache-group" style="display:none"><section class="platform"><h2>⚡ 战斗 Mod — Elden Ring</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div><div id="rc-联机-stardewvalley" class="mod-cache-group" style="display:none"><section class="platform"><h2>👥 联机 Mod — Stardew Valley</h2><div class="game-list"><div style="text-align:center;padding:16px;color:#666">暂无缓存结果</div></div></section></div></div></div></section></div></div>
 </div>
 <div id="tab-trophy" class="tab-content">
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -997,7 +857,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 <button class="trophy-btn" onclick="trophySearch()">🔍</button>
 </div>
 <div id="trophy-frame" style="display:none; margin-top:12px; max-width:500px; margin-left:auto; margin-right:auto; border-radius:14px; line-height:0; display:none;">
-<div style="padding:4px; border-radius:14px; background:linear-gradient(135deg, #ff0066, #ff6600, #ffcc00, #33cc33, #00ccff, #6633ff, #ff33cc, #ff0066); background-size:200% 200%; animation:spinBorder 3s ease infinite;">
+<div style="padding:2px; border-radius:14px; background:linear-gradient(135deg, #ff0066, #ff6600, #ffcc00, #33cc33, #00ccff, #6633ff, #ff33cc, #ff0066); background-size:200% 200%; animation:spinBorder 3s ease infinite;">
 <iframe id="trophy-iframe" style="width:100%;height:800px;border:none;border-radius:12px;background:#1a1a2e;display:block; transform:scale(0.85); transform-origin:top left; margin-bottom:-120px; margin-right:-75px;"></iframe>
 <iframe id="trophy-iframe" style="width:100%;height:600px;max-width:500px;border:none;border-radius:12px;background:#1a1a2e;display:block;margin:0 auto;"></iframe>
 </div>

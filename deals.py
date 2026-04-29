@@ -576,9 +576,14 @@ function loadSavedTrophy() {{
     var saved = localStorage.getItem('trophy_id');
     if (saved) {{
         document.getElementById('trophy-input').value = saved;
-        trophySearch();
+        document.getElementById('trophy-frame').style.display = 'block';
+        document.getElementById('trophy-iframe').src = 'https://www.psnine.com/psnid/' + encodeURIComponent(saved);
     }}
 }}
+
+window.onload = function() {{
+    loadSavedTrophy();
+}};
 
 function switchTab(name) {{
     var btns = document.querySelectorAll('.tab-btn');

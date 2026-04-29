@@ -56,7 +56,7 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 <body>
 <h1>🎮 本周游戏折扣精选</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 12:50</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 12:51</p>
 
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
@@ -405,9 +405,14 @@ function loadSavedTrophy() {
     var saved = localStorage.getItem('trophy_id');
     if (saved) {
         document.getElementById('trophy-input').value = saved;
-        trophySearch();
+        document.getElementById('trophy-frame').style.display = 'block';
+        document.getElementById('trophy-iframe').src = 'https://www.psnine.com/psnid/' + encodeURIComponent(saved);
     }
 }
+
+window.onload = function() {
+    loadSavedTrophy();
+};
 
 function switchTab(name) {
     var btns = document.querySelectorAll('.tab-btn');

@@ -811,11 +811,12 @@ def generate_html():
         for g in games:
             n = clean_name(g['name'])
             if not n or n in seen: continue
+            if not disc_pct(g['discount']): continue  # 不打折的过滤掉
             seen.add(n)
             r = rating_text(n)
             d = disc_pct(g['discount']) + (5 if cn_bonus and g.get('has_cn', False) else 0)
             p = price_num(g['price'])
-            result.append((d + (10 if r else 0), n, g, r, d, p))
+            result.append((d, n, g, r, d, p))
         result.sort(key=lambda x: -x[0])
         return result
 
@@ -1021,11 +1022,11 @@ def generate_html():
             </div>'''
         cards += '</section></div>'
 
-    top5 = '<div id="disc-top5" class="disc-section"><section class="platform"><h2>🔥 综合推荐 TOP 5</h2><div class="game-list">'
+    top5 = '<div id="disc-top5" class="disc-section"><section class="platform"><h2>🔥 综合推荐 TOP</h2><div class="game-list">'
     used = set()
     count = 0
     for s, n, g, r, d, p, plat in all_items:
-        if count >= 5: break
+        if count >= 20: break
         if n in used: continue
         used.add(n)
         display = trans_short(n)

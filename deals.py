@@ -1124,8 +1124,17 @@ def generate_html():
 <title>Yann 的小站</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f0f1a; color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; }}
-.tab-bar {{ display: flex; gap: 4px; margin-bottom: 8px; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(160deg, #0f0f1a 0%, #161630 50%, #0f0f1a 100%); color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; transition: background 0.8s ease; }}
+body.tab-trophy {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a1030 50%, #0f0f1a 100%); }}
+body.tab-discounts {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a2a10 50%, #0f0f1a 100%); }}
+body.tab-psnine {{ background: linear-gradient(160deg, #0f0f1a 0%, #1a1a30 50%, #0f0f1a 100%); }}
+body.tab-mods {{ background: linear-gradient(160deg, #0f0f1a 0%, #2a1a10 50%, #0f0f1a 100%); }}
+.tab-accent {{ height: 3px; border-radius: 3px; margin-bottom: 12px; transition: background 0.5s ease; }}
+.tab-accent.trophy {{ background: linear-gradient(90deg, #a855f7, #7c3aed); }}
+.tab-accent.discounts {{ background: linear-gradient(90deg, #34d399, #059669); }}
+.tab-accent.psnine {{ background: linear-gradient(90deg, #5dade2, #3b82f6); }}
+.tab-accent.mods {{ background: linear-gradient(90deg, #f97316, #ea580c); }}
+.tab-bar {{ display: flex; gap: 4px; margin-bottom: 0; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }}
 .tab-btn {{ flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }}
 .tab-btn.active {{ background: #1a1a2e; color: #e8e8f0; }}
 .tab-btn:active {{ background: #2a2a3e; }}
@@ -1241,6 +1250,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
 <a href="mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn">🎮 Mod</button></a>
 </div>
+<div class="tab-accent trophy" id="tab-accent"></div>
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
@@ -1363,8 +1373,10 @@ function switchTab(name) {{
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     document.getElementById('tab-' + name).style.display = 'block';
     event.target.classList.add('active');
+    // Tab accent + body background
+    document.querySelector('.tab-accent').className = 'tab-accent ' + name;
+    document.body.className = 'tab-' + name;
     if (name === 'psnine') {{
-        setTimeout(function(){{  }}, 300);
         // Show first P9 sub-tab by default
         var sections = document.querySelectorAll('#tab-psnine .p9-section');
         var sbtns = document.querySelectorAll('#tab-psnine .p9-section-bar .sub-tab-btn');

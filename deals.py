@@ -1025,7 +1025,7 @@ def generate_html():
             </div>'''
         cards += '</section></div>'
 
-    top5 = '<div id="disc-top5" class="disc-section"><section class="platform"><h2>🔥 综合推荐 TOP</h2><div class="game-list">'
+    top5 = '<div id="disc-top5" class="disc-section"><section class="platform"><h2>🎯 本期值得买</h2><div class="game-list">'
     used = set()
     count = 0
     for s, n, g, r, d, p, plat in all_items:
@@ -1305,7 +1305,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <button class="sub-tab-btn active" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
-<button class="sub-tab-btn" onclick="switchSubTab('disc-top5', this)">🔥 Top5</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-top5', this)">🎯 本期值买</button>
 </div>
 {cards}
 {top5}

@@ -447,6 +447,17 @@ def rating_text(name):
             return text
     return ''
 
+def rating_score(name):
+    """提取 MC 分数做基准分，0-100。无数据返回 0."""
+    import re
+    n = name.lower().strip()
+    for key, text in RATINGS.items():
+        if key in n or n in key:
+            m = re.search(r'MC(\d+)', text)
+            if m:
+                return int(m.group(1))
+    return 0
+
 def clean_name(name):
     name = re.sub(r'\s*\(.*?\)', '', name)
     name = re.sub(r'\s*(PS4|PS5|PS4 & PS5)\s*', '', name)
@@ -814,10 +825,10 @@ def generate_html():
             if not disc_pct(g['discount']): continue  # 不打折的过滤掉
             seen.add(n)
             r = rating_text(n)
-            stars = r.count('⭐')
+            mc = rating_score(n)
             d = disc_pct(g['discount'])
-            # 综合得分 = 口碑为主(每⭐=20分,满⭐=100) + 折扣附加(最多10分) + 中文支持加分
-            score = stars * 20 + min(d, 10) + (5 if cn_bonus and g.get('has_cn', False) else 0)
+            # 综合得分 = MC分(0-100) + 折扣附加(最多10分) + 中文支持加分
+            score = mc + min(d, 10) + (5 if cn_bonus and g.get('has_cn', False) else 0)
             p = price_num(g['price'])
             result.append((score, n, g, r, d, p))
         result.sort(key=lambda x: -x[0])

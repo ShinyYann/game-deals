@@ -1147,24 +1147,24 @@ body.tab-mods::before {{ background-image: url('https://media1.giphy.com/media/U
 .particle.sparkle {{ animation: particleSparkle linear infinite; }}
 .particle.wander {{ animation: particleWander ease-in-out infinite; }}
 @keyframes particleFloat {{
-  0% {{ transform: translateY(105vh) rotate(0deg); opacity: 0; }}
-  5% {{ opacity: 0.8; }}
-  80% {{ opacity: 0.6; }}
-  100% {{ transform: translateY(-5vh) rotate(480deg); opacity: 0; }}
+  0% {{ transform: translateY(-5vh) rotate(0deg); opacity: 0; }}
+  10% {{ opacity: 0.8; }}
+  50% {{ opacity: 0.6; }}
+  100% {{ transform: translateY(105vh) rotate(480deg); opacity: 0; }}
 }}
 @keyframes particleSparkle {{
-  0% {{ transform: translateY(100vh) scale(0.3); opacity: 0; }}
+  0% {{ transform: translateY(-5vh) scale(0.3); opacity: 0; }}
   20% {{ opacity: 1; transform: scale(1.2); }}
   40% {{ opacity: 0.3; transform: scale(0.6); }}
   60% {{ opacity: 1; transform: scale(1); }}
   80% {{ opacity: 0.5; }}
-  100% {{ transform: translateY(-10vh) scale(0.3); opacity: 0; }}
+  100% {{ transform: translateY(100vh) scale(0.3); opacity: 0; }}
 }}
 @keyframes particleWander {{
-  0% {{ transform: translateY(100vh) translateX(0); opacity: 0; }}
+  0% {{ transform: translateY(-5vh) translateX(0); opacity: 0; }}
   10% {{ opacity: 0.4; }}
   50% {{ transform: translateY(50vh) translateX(20px) rotate(180deg); opacity: 0.3; }}
-  100% {{ transform: translateY(-10vh) translateX(-10px) rotate(360deg); opacity: 0; }}
+  100% {{ transform: translateY(105vh) translateX(-10px) rotate(360deg); opacity: 0; }}
 }}
 .tab-content-fade {{ animation: tabFlipIn 0.3s cubic-bezier(0.05, 0.7, 0.1, 1) forwards; }}
 @keyframes tabFlipIn {{

@@ -1266,7 +1266,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <button class="sub-tab-btn" onclick="switchP9SubTab('p9-low', this)">💸 新史低</button>
 <button class="sub-tab-btn" onclick="switchP9SubTab('p9-guide', this)">🏆 白金攻略</button>
 </div>
-<div id="p9-results">
+<div id="p9-results" style="max-width:560px;margin:0 auto;">
 <div id="p9-default-content">
 {p9_sections}
 </div>

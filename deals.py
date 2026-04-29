@@ -974,9 +974,9 @@ def generate_html():
     mods_html += cached_mod_results
     mods_html += '</div></section></div></div>'
     for label, items, icon, raw_label, section_id in [
-        ("PSN 港服特惠", psn_items[:8], "🔵", "PSN", "disc-psn"),
-        ("Steam 国服特惠", steam_items[:8], "🟢", "Steam", "disc-steam"),
-        ("Switch 日服特惠", switch_items[:8], "🟡", "Switch", "disc-switch"),
+        ("PSN 港服特惠", psn_items[:15], "🔵", "PSN", "disc-psn"),
+        ("Steam 国服特惠", steam_items[:15], "🟢", "Steam", "disc-steam"),
+        ("Switch 日服特惠", switch_items[:15], "🟡", "Switch", "disc-switch"),
     ]:
         if not items:
             continue

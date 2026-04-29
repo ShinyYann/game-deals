@@ -545,10 +545,13 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 </div>
 
 <div id="tab-trophy" class="tab-content" style="display:none">
-<div class="trophy-intro" style="color:#888;font-size:13px;margin-bottom:12px;">输入 PSN 用户名，查看奖杯主页</div>
+<div class="trophy-intro" style="color:#888;font-size:13px;margin-bottom:12px;">输入 PSN 用户名查看奖杯</div>
 <div class="p9-search-box">
-<input type="text" id="trophy-input" class="p9-search-input" placeholder="例如 ShinyYann…" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
+<input type="text" id="trophy-input" class="p9-search-input" placeholder="例如 wanshuai12138…" onkeydown="if(event.key===&apos;Enter&apos;) trophySearch()">
 <button class="p9-search-btn" onclick="trophySearch()">🏆 查看奖杯</button>
+</div>
+<div id="trophy-frame" style="display:none; margin-top:12px;">
+<iframe id="trophy-iframe" style="width:100%;height:800px;border:none;border-radius:12px;background:#1a1a2e;"></iframe>
 </div>
 </div>
 
@@ -564,7 +567,10 @@ function p9Search() {{
 function trophySearch() {{
     var q = document.getElementById('trophy-input').value.trim();
     if (!q) return;
-    window.open('https://www.psnine.com/psnid/' + encodeURIComponent(q), '_blank');
+    var frame = document.getElementById('trophy-frame');
+    var iframe = document.getElementById('trophy-iframe');
+    iframe.src = 'https://www.psnine.com/psnid/' + encodeURIComponent(q);
+    frame.style.display = 'block';
 }}
 
 function switchTab(name) {{

@@ -1025,8 +1025,9 @@ def generate_html():
             </div>'''
         cards += '</section></div>'
 
-    top5 = '<div id="disc-top5" class="disc-section"><section class="platform"><h2>🎯 本期值得买</h2><div class="game-list">'
+    top5 = '<div id="disc-top5" class="disc-section" style="display:block"><section class="platform"><h2>🎯 本期值得买</h2><div class="game-list">'
     used = set()
+    medals = ['🏆 神之作', '💎 必收藏', '🔥 口碑王', '⭐ 超好评', '🎯 不容错']
     count = 0
     for s, n, g, r, d, p, plat in all_items:
         if count >= 20: break
@@ -1038,6 +1039,7 @@ def generate_html():
         disc_s = g['discount']
         disc_cls = "disc-high" if d >= 50 else ("disc-mid" if d >= 30 else "disc-low")
         rating = (r[:15] if r else "") or ""
+        medal_html = f'<span class="medal medal-{count+1}">{medals[count]}</span>' if count < 5 else ''
         cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if plat == "Switch" and g.get('has_cn', False) else ""
         card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.parentElement.style.display=\'none\'">' if g.get('img') else ''
         desc, tags, bvid = game_detail(display)
@@ -1048,6 +1050,7 @@ def generate_html():
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">
                         <div class="card-header">
+                            {medal_html}
                             <span class="game-name">{display}</span>
                             <span class="discount-badge {disc_cls}">{disc_s}</span>
                         </div>
@@ -1209,6 +1212,17 @@ h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
 .top5 {{ margin-top: 28px; }}
 .top5 h2 {{ font-size: 18px; margin-bottom: 12px; }}
 .plat-tag {{ display: inline-block; margin-left: 6px; font-size: 12px; vertical-align: middle; }}
+.medal {{ display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }}
+.medal-1 {{ background: linear-gradient(90deg, #f59e0b, #f97316); color: #1a1a2e; animation: medalGlow1 3s ease-in-out infinite; }}
+.medal-2 {{ background: linear-gradient(90deg, #a855f7, #6366f1); color: #fff; animation: medalGlow2 3s ease-in-out infinite; }}
+.medal-3 {{ background: linear-gradient(90deg, #ef4444, #f97316); color: #fff; animation: medalGlow3 3s ease-in-out infinite; }}
+.medal-4 {{ background: linear-gradient(90deg, #34d399, #059669); color: #fff; animation: medalGlow4 3s ease-in-out infinite; }}
+.medal-5 {{ background: linear-gradient(90deg, #38bdf8, #818cf8); color: #fff; animation: medalGlow5 3s ease-in-out infinite; }}
+@keyframes medalGlow1 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(245,158,11,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(245,158,11,0.8); }} }}
+@keyframes medalGlow2 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(168,85,247,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(168,85,247,0.8); }} }}
+@keyframes medalGlow3 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(239,68,68,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(239,68,68,0.8); }} }}
+@keyframes medalGlow4 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(52,211,153,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(52,211,153,0.8); }} }}
+@keyframes medalGlow5 {{ 0%,100% {{ box-shadow: 0 0 6px rgba(56,189,248,0.4); }} 50% {{ box-shadow: 0 0 14px rgba(56,189,248,0.8); }} }}
 .top-list {{ display: flex; flex-direction: column; gap: 8px; }}
 .top-item {{ background: #1a1a2e; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 8px; font-size: 14px; }}
 .top-icon {{ font-size: 16px; }}
@@ -1304,13 +1318,13 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
-<button class="sub-tab-btn active" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
+<button class="sub-tab-btn active" onclick="switchSubTab('disc-top5', this)">🎯 本期值得买</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
-<button class="sub-tab-btn" onclick="switchSubTab('disc-top5', this)">🎯 本期值得买</button>
 </div>
-{cards}
 {top5}
+{cards}
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 

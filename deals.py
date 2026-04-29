@@ -464,16 +464,6 @@ def generate_html():
         p9_sections += '</div></section>'
 
     # Build tab content for each section
-    tab_discounts = f'''<div class="tab-content" id="tab-discounts">
-{cards}
-</div>'''
-    tab_p9 = f'''<div class="tab-content" id="tab-psnine" style="display:none">
-<div class="p9-search-box">
-<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名找白金攻略…" onkeydown="if(event.key==='Enter') p9Search()">
-<button class="p9-search-btn" onclick="p9Search()">🔍 搜索</button>
-</div>
-{p9_sections}
-</div>'''
 
     html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -546,6 +536,10 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 </div>
 
 <div id="tab-psnine" class="tab-content" style="display:none">
+<div class="p9-search-box">
+<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名找白金攻略…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
+<button class="p9-search-btn" onclick="p9Search()">🔍 搜索</button>
+</div>
 {p9_sections}
 </div>
 

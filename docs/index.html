@@ -56,7 +56,7 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 <body>
 <h1>🎮 本周游戏折扣精选</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 12:02</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 12:06</p>
 
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
@@ -309,6 +309,10 @@ h1 { text-align: center; font-size: 24px; padding: 16px 0 4px; }
 </div>
 
 <div id="tab-psnine" class="tab-content" style="display:none">
+<div class="p9-search-box">
+<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名找白金攻略…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
+<button class="p9-search-btn" onclick="p9Search()">🔍 搜索</button>
+</div>
 <section class="platform"><h2>📦 P9 入库/会免信息</h2><div class="p9-list">
             <a href="https://www.psnine.com/topic/39091" class="p9-item" target="_blank" rel="noopener">
                 <span class="p9-title">2026年4月港服PLUS二三档新增及退库游戏目录(4月21日提供)暨抽奖活动开奖</span>

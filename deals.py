@@ -470,14 +470,13 @@ def generate_html():
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f0f1a; color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; }}
-h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
-.subtitle {{ text-align: center; color: #888; font-size: 13px; margin-bottom: 20px; }}
-.last-update {{ text-align: center; color: #555; font-size: 11px; margin-bottom: 20px; }}
-/* Tabs */
-.tab-bar {{ display: flex; gap: 8px; margin-bottom: 16px; position: sticky; top: 0; background: #0f0f1a; padding: 8px 0; z-index: 10; }}
-.tab-btn {{ flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; background: #1a1a2e; color: #888; transition: all 0.2s; }}
-.tab-btn.active {{ background: #2a2a4e; color: #e8e8f0; }}
-.tab-btn:active {{ background: #3a3a5e; }}
+.tab-bar {{ display: flex; gap: 4px; margin-bottom: 8px; position: sticky; top: 0; background: #0f0f1a; padding: 6px 0; z-index: 10; }}
+.tab-btn {{ flex: 1; padding: 6px 0; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }}
+.tab-btn.active {{ background: #1a1a2e; color: #e8e8f0; }}
+.tab-btn:active {{ background: #2a2a3e; }}
+h1 {{ text-align: center; font-size: 20px; padding: 8px 0; }}
+.subtitle {{ text-align: center; color: #888; font-size: 13px; margin-bottom: 16px; }}
+.last-update {{ text-align: center; color: #555; font-size: 11px; margin-bottom: 12px; }}
 /* Discounts */
 .platform {{ margin-bottom: 24px; }}
 .platform h2 {{ font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a2a3e; }}
@@ -523,15 +522,15 @@ h1 {{ text-align: center; font-size: 24px; padding: 16px 0 4px; }}
 </style>
 </head>
 <body>
-<h1>🎮 Yann 的小站</h1>
-<p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: {ts}</p>
-
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
-<button class="tab-btn" onclick="switchTab('trophy')">🏆 奖杯查询</button>
+<button class="tab-btn" onclick="switchTab('trophy')">🏆 奖杯</button>
 </div>
+
+<h1>🎮 Yann 的小站</h1>
+<p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
+<p class="last-update">🔄 上次更新: {ts}</p>
 
 <div id="tab-discounts" class="tab-content">
 {cards}

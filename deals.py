@@ -1239,7 +1239,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
 <button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
 <button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
-<a href="/mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn">🎮 Mod</button></a>
+<a href="mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn">🎮 Mod</button></a>
 </div>
 
 <h1>🎮 Yann 的小站</h1>

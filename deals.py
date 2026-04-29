@@ -1396,7 +1396,7 @@ window.onload = function() {{
 
 function spawnParticles() {{
     var container = document.getElementById('particles');
-    var shapes = ['✕','◯','△','□','✦','⬡','♢','⏣','⊞','⊡','▽','◇'];
+    var shapes = ['Y','a','n','n','Y','a','n','n','Y','a','n','n'];
     var colors = ['rgba(168,85,247,0.3)','rgba(52,211,153,0.25)','rgba(93,173,226,0.25)','rgba(249,115,22,0.25)','rgba(251,191,36,0.3)','rgba(236,72,153,0.2)'];
     for (var i = 0; i < 30; i++) {{
         var p = document.createElement('div');

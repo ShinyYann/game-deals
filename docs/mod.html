@@ -7,7 +7,8 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:linear-gradient(160deg, #0f0f1a 0%, #2a1a10 50%, #0f0f1a 100%); color:#d0d0e0; font-family:-apple-system,BlinkMacSystemFont,sans-serif; min-height:100vh; position:relative; }
-body::before { content:''; position:fixed; inset:0; z-index:-1; background-image:url('https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&h=900&fit=crop'); background-size:cover; background-position:center; opacity:0.08; pointer-events:none; }
+body::before { content:''; position:fixed; inset:-10px; z-index:-1; background-image:url('https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=1600&h=900&fit=crop'); background-size:cover; background-position:center; opacity:0.08; pointer-events:none; animation:bgBreathe 20s ease-in-out infinite alternate; }
+@keyframes bgBreathe { 0%{transform:scale(1) translate(0,0)} 50%{transform:scale(1.05) translate(-1%,-1%)} 100%{transform:scale(1) translate(0,0)} }
 .container { max-width:600px; margin:0 auto; padding:10px; }
 .back-btn { padding:6px 14px; background:#2a2a44; color:#aaa; border-radius:8px; text-decoration:none; font-size:13px; flex-shrink:0; }
 .back-btn:hover { background:#3a3a5e; color:#fff; }

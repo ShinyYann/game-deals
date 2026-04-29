@@ -1153,9 +1153,9 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 </div>
 
 <div id="tab-psnine" class="tab-content" style="display:none">
-<div class="p9-search-box">
-<input type="text" id="p9-search-input" class="p9-search-input" placeholder="搜游戏名直达P9游戏区…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
-<button class="p9-search-btn" onclick="p9Search()">🔍 直达游戏</button>
+<div style="display:flex; justify-content:flex-end; align-items:center; gap:6px; margin-bottom:8px;">
+<input type="text" id="p9-search-input" style="width:180px;padding:6px 10px;border:1px solid #2a2a3e;border-radius:8px;font-size:13px;background:#1a1a2e;color:#e8e8f0;outline:none;" placeholder="搜游戏名直达P9…" onkeydown="if(event.key===&apos;Enter&apos;) p9Search()">
+<button style="padding:6px 10px;border:none;border-radius:8px;font-size:13px;background:#2a2a4e;color:#e8e8f0;cursor:pointer;" onclick="p9Search()">🔍</button>
 </div>
 <div class="sub-tab-bar p9-section-bar">
 <button class="sub-tab-btn active" onclick="switchP9SubTab('p9-game', this)">📦 入库/会免</button>

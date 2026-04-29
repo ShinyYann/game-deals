@@ -974,6 +974,13 @@ function switchTab(name) {
         for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
     }
     if (name === 'trophy') { loadSavedTrophy(); }
+    if (name === 'discounts') {
+        // Show first sub-tab by default
+        var sections = document.querySelectorAll('#tab-discounts .disc-section');
+        var sbtns = document.querySelectorAll('#tab-discounts .sub-tab-btn');
+        for (var i = 0; i < sections.length; i++) sections[i].style.display = i === 0 ? 'block' : 'none';
+        for (var i = 0; i < sbtns.length; i++) sbtns[i].classList.toggle('active', i === 0);
+    }
     if (name === 'mods') {
         var sections = document.querySelectorAll('#tab-mods .mod-section');
         var sbtns = document.querySelectorAll('#tab-mods .p9-section-bar .sub-tab-btn');

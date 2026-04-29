@@ -1413,7 +1413,7 @@ function spawnParticles() {{
         p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
         p.style.top = Math.random() * 100 + '%';
-        p.style.fontSize = (14 + Math.random() * 20) + 'px';
+        p.style.fontSize = (10 + Math.random() * 10) + 'px';
         p.style.color = colors[i % colors.length];
         p.style.animationDuration = (15 + Math.random() * 20) + 's';
         p.style.animationDelay = (Math.random() * 5) + 's';
@@ -1433,7 +1433,7 @@ function spawnParticles() {{
             p.textContent = shapes[j % shapes.length];
             p.style.left = Math.random() * 100 + '%';
             p.style.top = Math.random() * 100 + '%';
-            p.style.fontSize = (14 + Math.random() * 20) + 'px';
+            p.style.fontSize = (10 + Math.random() * 10) + 'px';
             p.style.color = colors[j % colors.length];
             p.style.animationDuration = (15 + Math.random() * 20) + 's';
             p.style.animationDelay = '0s';

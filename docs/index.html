@@ -126,7 +126,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 
 <h1>🎮 Yann 的小站</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 日服 — 每日自动更新</p>
-<p class="last-update">🔄 上次更新: 2026-04-29 21:59</p>
+<p class="last-update">🔄 上次更新: 2026-04-29 22:01</p>
 
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
@@ -301,6 +301,21 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                     </div>
                 </div>
             </div>
+            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="开放世界赛车游戏标杆。在广阔的风景中自由驰骋，参与各类赛事。画面精美、手感出色、车辆海量。地平线嘉年华氛围让人放松。" data-tags="赛车竞速|MC92 最佳赛车|开放世界赛车|系列常青树" >
+                <div class="game-card-inner">
+                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1551360/header.jpg?t=1746471508" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">Forza Horizon 5</span>
+                            <span class="discount-badge disc-high">-50%</span>
+                        </div>
+                        <div class="card-price">
+                            <span class="current-price">¥99</span>
+                        </div>
+                        <div class="card-rating">⭐⭐⭐⭐ MC89 机械兽开放世界</div>
+                    </div>
+                </div>
+            </div>
             <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"data-desc="开放世界科幻RPG。在夜之城扮演雇佣兵V追寻永生。初期优化翻车，但经DLC「往日之影」与2.0大更新后彻底翻身——沉浸感爆棚的赛博朋克世界，剧情深刻，战斗爽快。" data-tags="开放世界RPG|MC86 已修复|DLC口碑极佳|2024年最佳翻身作" >
                 <div class="game-card-inner">
                     <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2138330/bdbeea292270b8cd9dde1f2044a411624db58657/header.jpg?t=1768305060" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
@@ -356,21 +371,6 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
                         </div>
                         <div class="card-price">
                             <span class="current-price">¥38</span>
-                        </div>
-                        <div class="card-rating"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer"  >
-                <div class="game-card-inner">
-                    <div class="card-left"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3412900/d0c2cb1fd69c94e72d3e5a25f1c0fbba779201ff/header_alt_assets_1.jpg?t=1777406620" class="game-thumb" onerror="this.parentElement.style.display='none'"></div>
-                    <div class="card-right">
-                        <div class="card-header">
-                            <span class="game-name">The Three Kingdoms: Rebirth</span>
-                            <span class="discount-badge disc-low">-15%</span>
-                        </div>
-                        <div class="card-price">
-                            <span class="current-price">¥49</span>
                         </div>
                         <div class="card-rating"></div>
                     </div>
@@ -835,7 +835,7 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
             </div>
         </a></div></section></div><div id="mod-search" class="mod-section" style="display:none"><div id="mod-results" style="border-radius:14px;overflow:hidden;"><iframe id="mod-results-iframe" style="width:100%;height:80vh;border:none;border-radius:12px;" src="https://mod.3dmgame.com/"></iframe></div></div></div>
 
-<div id="tab-trophy" class="tab-content">
+<div id="tab-trophy" class="tab-content" style="overflow:hidden;">
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
 <div style="flex:1;"></div>
 <button class="trophy-btn-toggle" id="trophy-toggle" onclick="toggleTrophyBar()">🔍</button>

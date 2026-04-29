@@ -1269,7 +1269,7 @@ select {{ appearance: none; -webkit-appearance: none; background-image: url("dat
 .modal-bilibili:hover {{ background: linear-gradient(135deg, #fc8fab, #ff9db8); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(251, 114, 153, 0.3); }}
 </style>
 </head>
-<body>
+<body class="tab-trophy">
 <div class="particles" id="particles"></div>
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>

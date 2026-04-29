@@ -1149,11 +1149,18 @@ body.tab-mods::before {{ background-image: url('https://shared.akamai.steamstati
 /* 粒子背景 */
 .particles {{ position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }}
 .particle {{ position: absolute; pointer-events: none; animation: particleFloat linear infinite; font-size: 14px; }}
+.particle.text-particle {{ animation: particleFloat linear infinite, textGlow 3s ease-in-out infinite alternate; }}
 @keyframes particleFloat {{
   0% {{ transform: translateY(-5vh) rotate(0deg); opacity: 0; }}
-  20% {{ opacity: 0.7; transform: translateY(10vh); }}
-  80% {{ opacity: 0.5; transform: translateY(80vh); }}
+  20% {{ opacity: 0.7; transform: translateY(10vh) rotate(60deg); }}
+  80% {{ opacity: 0.5; transform: translateY(80vh) rotate(300deg); }}
   100% {{ transform: translateY(105vh) rotate(360deg); opacity: 0; }}
+}}
+@keyframes textGlow {{
+  0% {{ color: #a855f7; text-shadow: 0 0 4px rgba(168,85,247,0.5); }}
+  33% {{ color: #f97316; text-shadow: 0 0 4px rgba(249,115,22,0.5); }}
+  66% {{ color: #22d3ee; text-shadow: 0 0 4px rgba(34,211,238,0.5); }}
+  100% {{ color: #a855f7; text-shadow: 0 0 4px rgba(168,85,247,0.5); }}
 }}
 .tab-content-fade {{ animation: tabFlipIn 0.3s cubic-bezier(0.05, 0.7, 0.1, 1) forwards; }}
 @keyframes tabFlipIn {{
@@ -1401,7 +1408,8 @@ function spawnParticles() {{
     // 首屏立即显示一批 - 无延迟、随机初始透明度
     for (var i = 0; i < 30; i++) {{
         var p = document.createElement('div');
-        p.className = 'particle';
+        var isText = shapes[i % shapes.length] === 'Yann';
+        p.className = 'particle' + (isText ? ' text-particle' : '');
         p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
         p.style.top = Math.random() * 100 + '%';
@@ -1420,7 +1428,8 @@ function spawnParticles() {{
     setInterval(function() {{
         for (var j = 0; j < 10; j++) {{
             var p = document.createElement('div');
-            p.className = 'particle';
+            var isText = shapes[j % shapes.length] === 'Yann';
+            p.className = 'particle' + (isText ? ' text-particle' : '');
             p.textContent = shapes[j % shapes.length];
             p.style.left = Math.random() * 100 + '%';
             p.style.top = Math.random() * 100 + '%';

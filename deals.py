@@ -932,7 +932,7 @@ def generate_html():
         mods_html += f'''
         <a href="{m["link"]}" target="_blank" rel="noopener" class="game-card" style="text-decoration:none;color:inherit">
             <div class="game-card-inner">
-                <div class="card-left"><img src="{m["img"]}" class="game-thumb" onerror="this.style.display=\'none\'"></div>
+                <div class="card-left"><img src="{m["img"]}" class="game-thumb" onerror="this.parentElement.style.display=\'none\'"></div>
                 <div class="card-right">
                     <div class="card-header">
                         <span class="game-name">{m["name"]}</span>
@@ -991,7 +991,7 @@ def generate_html():
             rating = r or ""
             disc_cls = "disc-high" if dc >= 50 else ("disc-mid" if dc >= 30 else "disc-low")
             cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
-            card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
+            card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.parentElement.style.display=\'none\'">' if g.get('img') else ''
             cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if raw_label == "Switch" and g.get('has_cn', False) else ""
             desc, tags, bvid = game_detail(display_name)
             desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
@@ -1029,7 +1029,7 @@ def generate_html():
         disc_cls = "disc-high" if d >= 50 else ("disc-mid" if d >= 30 else "disc-low")
         rating = (r[:15] if r else "") or ""
         cn_tag = ' <span class="cn-tag">🇨🇳 中文</span>' if plat == "Switch" and g.get('has_cn', False) else ""
-        card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.style.display=\'none\'">' if g.get('img') else ''
+        card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.parentElement.style.display=\'none\'">' if g.get('img') else ''
         desc, tags, bvid = game_detail(display)
         desc_attr = f'data-desc="{html_mod.escape(desc)}"' if desc else ''
         bvid_attr = f'data-bvid="{bvid}"' if bvid else ''

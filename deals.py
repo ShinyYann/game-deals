@@ -1126,10 +1126,10 @@ def generate_html():
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(160deg, #0f0f1a 0%, #161630 50%, #0f0f1a 100%); color: #e8e8f0; padding: 16px; max-width: 800px; margin: 0 auto; transition: background 0.8s ease; position: relative; }}
 body::before {{ content: ''; position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; opacity: 0.12; transition: opacity 0.8s ease; pointer-events: none; }}
-body.tab-trophy::before {{ background-image: url('https://media2.giphy.com/media/XreQmk7ETCMak/giphy.gif'); }}
-body.tab-discounts::before {{ background-image: url('https://media0.giphy.com/media/lPzIEpMCf9jeE/giphy.gif'); }}
-body.tab-psnine::before {{ background-image: url('https://media1.giphy.com/media/UoqE0lfG7vmZG/giphy.gif'); }}
-body.tab-mods::before {{ background-image: url('https://media2.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif'); }}
+body.tab-trophy::before {{ background-image: url('https://media3.giphy.com/media/26AHONQ79Fm0LKyWc/giphy.gif'); }}
+body.tab-discounts::before {{ background-image: url('https://media4.giphy.com/media/l0HlOBofxL2Kd0G2M/giphy.gif'); }}
+body.tab-psnine::before {{ background-image: url('https://media0.giphy.com/media/26gsl7Q6tkHhyL3mo/giphy.gif'); }}
+body.tab-mods::before {{ background-image: url('https://media1.giphy.com/media/UYBD1rMsdYuCQ/giphy.gif'); }}
 .tab-accent {{ height: 3px; border-radius: 3px; margin-bottom: 12px; position: relative; overflow: hidden; transition: background 0.5s ease; }}
 .tab-accent.trophy {{ background: linear-gradient(90deg, #a855f7, #7c3aed); }}
 .tab-accent.discounts {{ background: linear-gradient(90deg, #34d399, #059669); }}

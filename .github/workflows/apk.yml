@@ -56,15 +56,20 @@ jobs:
       - name: 📤 Prepare APK
         run: |
           mkdir -p release
-          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk 2>/dev/null || \
-          cp build/app/outputs/flutter-apk/app-*-debug.apk release/TrophyRoom.apk 2>/dev/null || \
-          echo "APK not found at expected path"
-          echo "Build dir contents:" && find build -name "*.apk" 2>/dev/null | head -10
-          echo "APK_SIZE=$(stat -c%s release/TrophyRoom.apk 2>/dev/null || echo 0)" >> $GITHUB_ENV
-          echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+          APK_PATH=$(find build -name "*.apk" 2>/dev/null | head -1)
+          if [ -n "$APK_PATH" ]; then
+            cp "$APK_PATH" release/TrophyRoom.apk
+            ls -la release/
+            APK_SIZE=$(stat -f%z release/TrophyRoom.apk 2>/dev/null || stat -c%s release/TrophyRoom.apk 2>/dev/null)
+            echo "APK_SIZE=$APK_SIZE" >> $GITHUB_ENV
+            echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+          else
+            echo "No APK found!" >&2
+            find build -name "*.apk" 2>/dev/null
+            echo "APK_SIZE=0" >> $GITHUB_ENV
+          fi
 
       - name: 🚀 Create Release
-        if: env.APK_SIZE != '0'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
@@ -73,8 +78,7 @@ jobs:
             🏆 **TrophyRoom** 自动构建
             
             - 版本: v${{ github.run_number }}
-            - 日期: ${{ env.BUILD_DATE }}
-            - 大小: ${{ env.APK_SIZE }} bytes
+            - 日期: $(date '+%Y-%m-%d %H:%M')
             
             > 可直接 sideload 安装到安卓设备
           files: trophyroom-app/release/TrophyRoom.apk

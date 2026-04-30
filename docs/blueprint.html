@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrophyRoom 蓝图 · 奖杯屋</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{--bg:#0a0a12;--surface:#12121f;--card:#1a1a2e;--border:#2a2a3e;--text:#e8e8f0;--text2:#999;--accent1:#a855f7;--accent2:#34d399;--accent3:#f97316;--accent4:#5dade2;--gold:#fbbf24}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(168,85,247,0.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(52,211,153,0.08) 0%,transparent 50%),radial-gradient(ellipse at 50% 80%,rgba(249,115,22,0.06) 0%,transparent 50%);pointer-events:none}
+#particles-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.hero *{position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);border-radius:100px;font-size:13px;font-weight:600;color:var(--accent1);margin-bottom:24px;animation:fadeSlideUp .8s ease both}
+.hero-title{font-size:clamp(48px,10vw,96px);font-weight:900;line-height:1;margin-bottom:16px;background:linear-gradient(135deg,#a855f7,#34d399,#f97316,#5dade2);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradientFlow 8s ease infinite,fadeSlideUp .8s ease .1s both}
+.hero-sub{font-size:clamp(18px,3vw,28px);font-weight:600;color:var(--text2);margin-bottom:8px;animation:fadeSlideUp .8s ease .2s both}
+.hero-quote{font-size:clamp(16px,2vw,22px);font-style:italic;color:var(--gold);margin-bottom:48px;animation:fadeSlideUp .8s ease .3s both}
+.hero-quote::before{content:'\201c'}.hero-quote::after{content:'\201d'}
+.hero-meta{display:flex;gap:32px;flex-wrap:wrap;justify-content:center;animation:fadeSlideUp .8s ease .4s both}
+.hero-meta-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.hero-meta-num{font-size:32px;font-weight:800;color:var(--text)}
+.hero-meta-label{font-size:12px;color:var(--text2);letter-spacing:1px;text-transform:uppercase}
+.scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text2);font-size:12px;letter-spacing:2px;animation:bounce 2s ease infinite}
+.scroll-hint-arrow{width:20px;height:20px;border-right:2px solid var(--text2);border-bottom:2px solid var(--text2);transform:rotate(45deg)}
+.section{max-width:960px;margin:0 auto;padding:80px 24px}
+.section-header{text-align:center;margin-bottom:48px}
+.section-tag{display:inline-block;padding:4px 16px;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.section-tag.o{background:rgba(168,85,247,0.12);color:var(--accent1);border:1px solid rgba(168,85,247,0.2)}
+.section-tag.f{background:rgba(52,211,153,0.12);color:var(--accent2);border:1px solid rgba(52,211,153,0.2)}
+.section-tag.v{background:rgba(249,115,22,0.12);color:var(--accent3);border:1px solid rgba(249,115,22,0.2)}
+.section-tag.t{background:rgba(93,173,226,0.12);color:var(--accent4);border:1px solid rgba(93,173,226,0.2)}
+.section-title{font-size:clamp(28px,5vw,44px);font-weight:800;margin-bottom:12px}
+.section-desc{font-size:16px;color:var(--text2);max-width:640px;margin:0 auto;line-height:1.7}
+.origin-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.origin-card{background:var(--card);border-radius:16px;padding:28px;border:1px solid var(--border);transition:all .3s ease;position:relative;overflow:hidden}
+.origin-card:hover{border-color:rgba(168,85,247,0.3);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.origin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0}
+.origin-card:nth-child(1)::before{background:linear-gradient(90deg,var(--accent1),var(--accent3))}
+.origin-card:nth-child(2)::before{background:linear-gradient(90deg,var(--accent2),var(--accent4))}
+.origin-card:nth-child(3)::before{background:linear-gradient(90deg,var(--accent3),var(--gold))}
+.origin-card:nth-child(4)::before{background:linear-gradient(90deg,var(--accent4),var(--accent1))}
+.origin-quote{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:12px;color:var(--text)}
+.origin-quote .h1{color:var(--accent1)}.origin-quote .h2{color:var(--accent2)}
+.origin-quote .h3{color:var(--accent3)}.origin-quote .h4{color:var(--accent4)}
+.origin-result{font-size:14px;color:var(--text2);line-height:1.5}
+.idea-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border-radius:16px;overflow:hidden;border:1px solid var(--border);margin-top:32px}
+.idea-table th{background:#1f1f35;padding:14px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)}
+.idea-table td{padding:14px 18px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.idea-table tr:last-child td{border-bottom:none}
+.idea-table tr:hover td{background:rgba(168,85,247,0.04)}
+.idea-tag{display:inline-block;padding:2px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.idea-tag.go{background:rgba(52,211,153,0.15);color:var(--accent2)}
+.idea-tag.cut{background:rgba(239,68,68,0.15);color:#ef4444}
+.feature-tree{background:var(--card);border-radius:16px;padding:32px;border:1px solid var(--border);font-family:'SF Mono','Fira Code',monospace;font-size:14px;line-height:2;white-space:pre-wrap;overflow-x:auto}
+.feature-tree .tr{color:var(--gold);font-weight:700}
+.feature-tree .l1{color:var(--accent1)}.feature-tree .l2{color:var(--accent4)}
+.feature-tree .l3{color:var(--text2)}.feature-tree .done{color:var(--accent2)}
+.vfx-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.vfx-card{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);transition:all .25s ease}
+.vfx-card:hover{border-color:var(--accent3);transform:translateY(-2px)}
+.vfx-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.vfx-num{font-size:24px;font-weight:800;color:var(--accent3);opacity:.4}
+.vfx-status{font-size:11px;padding:2px 10px;border-radius:6px;font-weight:600}
+.vfx-status.ing{background:rgba(249,115,22,0.12);color:var(--accent3)}
+.vfx-name{font-size:15px;font-weight:700;margin-bottom:6px}
+.vfx-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.vfx-pl{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding:4px 0;border-bottom:1px solid var(--border)}
+.vfx-pl.p1{color:var(--accent1)}.vfx-pl.p2{color:var(--accent2)}
+.vfx-pl.p3{color:var(--accent3)}.vfx-pl.p4{color:var(--accent4)}
+.vfx-section{margin-bottom:48px}
+.tech-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.tech-card{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);text-align:center;transition:all .25s ease}
+.tech-card:hover{border-color:var(--accent4)}
+.tech-icon{font-size:32px;margin-bottom:8px}
+.tech-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.tech-desc{font-size:12px;color:var(--text2)}
+.footer{text-align:center;padding:48px 24px;border-top:1px solid var(--border);margin-top:40px}
+.footer-quote{font-size:18px;font-style:italic;color:var(--text2);margin-bottom:12px}
+.footer-by{font-size:13px;color:var(--text2)}
+.footer-by strong{color:var(--accent1)}
+@keyframes gradientFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.reveal{opacity:0;transform:translateY(30px);transition:all .6s cubic-bezier(0.22,1,0.36,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+@media(max-width:600px){.hero{min-height:80vh;padding:32px 20px}.origin-grid{grid-template-columns:1fr}.feature-tree{padding:20px;font-size:12px}.vfx-grid{grid-template-columns:1fr}.hero-meta{gap:16px}}
+</style>
+</head>
+<body>
+<canvas id="particles-canvas"></canvas>
+<section class="hero">
+  <div class="hero-badge">🏆 项目蓝图 v1.0</div>
+  <h1 class="hero-title">TrophyRoom</h1>
+  <p class="hero-sub">奖杯屋</p>
+  <p class="hero-quote">你说的这些我都要，目标就是最强</p>
+  <p style="color:var(--text2);font-size:14px;animation:fadeSlideUp .8s ease .35s both">Yann · 2026-05-01 04:07</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">5</span><span class="hero-meta-label">核心功能</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">13</span><span class="hero-meta-label">特效升级</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">4</span><span class="hero-meta-label">专属攻略站</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">∞</span><span class="hero-meta-label">持续进化</span></div>
+  </div>
+  <div class="scroll-hint"><span>向下滚动</span><div class="scroll-hint-arrow"></div></div>
+</section>
+
+<section class="section">
+  <div class="section-header reveal">
+    <div class="section-tag o">✨ 起源</div>
+    <h2 class="section-title">灵感的火花</h2>
+    <p class="section-desc">2026-05-01 凌晨，Yann 和 King 碰撞出一整晚的想法。</p>
+  </div>
+  <div class="origin-grid">
+    <div class="origin-card reveal"><div class="origin-quote"><span class="h1">"我对特效需求很高，专业游戏特效级是我的期望"</span></div><div class="origin-result">→ 因此有了 Phase 1-4 特效升级路线图</div></div>
+    <div class="origin-card reveal"><div class="origin-quote"><span class="h2">"我要不同人使用时登录不同账号，我要和我的朋友们使用"</span></div><div class="origin-result">→ 因此有了多账号系统，每人独立数据</div></div>
+    <div class="origin-card reveal"><div class="origin-quote"><span class="h3">"我还是一个资深宝可梦玩家，我想为个别游戏定制专属攻略站"</span></div><div class="origin-result">→ 因此有了宝可梦殿堂 + 更多专属攻略站</div></div>
+    <div class="origin-card reveal"><div class="origin-quote"><span class="h4">"我希望你能不断蹦出想法，我们可以通过不断的碰撞擦出新的火花"</span></div><div class="origin-result">→ TrophyRoom 永不完工，持续进化</div></div>
+  </div>
+  <h3 style="margin-top:48px;margin-bottom:16px;font-size:20px;font-weight:700" class="reveal">King 抛出的第 1 波想法</h3>
+  <table class="idea-table reveal">
+    <thead><tr><th>#</th><th>点子</th><th>状态</th><th>对应功能</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:700">1</td><td>🏆 私人奖杯墙 — PSN+Steam 成就做成 3D 陈列柜</td><td><span class="idea-tag go">已收录</span></td><td style="color:var(--text2)">3D 奖杯陈列室</td></tr>
+      <tr><td>2</td><td>🧠 "这游戏值得买吗？" — 输入游戏名出购买决策卡</td><td><span class="idea-tag go">已收录</span></td><td style="color:var(--text2)">游戏参谋</td></tr>
+      <tr><td>3</td><td>📊 游戏时间线 — 每月/年终自动生成游戏人生信息图</td><td><span class="idea-tag go">已收录</span></td><td style="color:var(--text2)">游戏时间线</td></tr>
+      <tr><td>4</td><td>🏅 白金劲敌榜 — 和朋友比谁白金多</td><td><span class="idea-tag cut">已砍</span></td><td style="color:#ef4444">不社交</td></tr>
+      <tr><td>5</td><td>🎲 游戏盲盒 — "今天玩什么？"从库里抽一个</td><td><span class="idea-tag go">已收录</span></td><td style="color:var(--text2)">游戏盲盒</td></tr>
+      <tr><td>6</td><td>📖 口袋游戏百科 — 离线也能查游戏信息</td><td><span class="idea-tag go">已收录</span></td><td style="color:var(--text2)">口袋百科</td></tr>
+      <tr><td>7</td><td>✅ 必玩清单 — "这辈子一定要玩"的 bucket list</td><td><span class="idea-tag go">已收录</span></td><td style="color:var(--text2)">必玩清单</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="section">
+  <div class="section-header reveal">
+    <div class="section-tag f">🎯 核心功能</div>
+    <h2 class="section-title">完整功能树</h2>
+    <p class="section-desc">已定稿的 V1 功能集。砍掉了所有社交互动，保留纯粹的个人游戏工具定位。</p>
+  </div>
+  <div class="feature-tree reveal">
+<span class="tr">🏆 TrophyRoom</span>
+├── <span class="l1">🏆 个人奖杯墙</span>
+│   ├── <span class="l2">3D 奖杯陈列室</span><span class="l3"> (WebGL/CSS 3D)</span>
+│   ├── <span class="l2">PSN 奖杯 + Steam 成就</span><span class="l3"> 统一展示</span>
+│   ├── <span class="l2">白金/全成就计数</span>
+│   └── <span class="l2">奖杯解锁时间线</span>
+│
+├── <span class="l1">👤 多账号系统</span>
+│   ├── <span class="l2">注册/登录</span><span class="l3"> (邀请制)</span>
+│   ├── <span class="l2">每人独立数据隔离</span>
+│   ├── <span class="l2">在线成员头像条</span><span class="l3"> (仅此而已)</span>
+│   └── <span class="l2">每个人看到自己的数据</span>
+│
+├── <span class="l1">📊 游戏时间线</span>
+│   ├── <span class="l2">每月自动生成</span>
+│   ├── <span class="l2">跨平台统一</span><span class="l3"> (PSN + Steam)</span>
+│   └── <span class="l2">年终信息图回顾</span>
+│
+├── <span class="l1">🧠 游戏参谋</span>
+│   ├── <span class="l2">当前价格 + 史低对比</span>
+│   ├── <span class="l2">Metacritic + 评分整合</span>
+│   └── <span class="l2">🔴别买 / 🟡等打折 / 🟢直接入</span>
+│
+├── <span class="l1">🎲 游戏盲盒</span>
+│   ├── <span class="l2">库里没通关的随机抽</span>
+│   ├── <span class="l2">附带推荐理由</span>
+│   └── <span class="l2">按类型/时长筛选</span>
+│
+├── <span class="l1">📖 口袋百科</span><span class="l3"> (离线可查)</span>
+│
+├── <span class="l1">✅ 必玩清单</span><span class="l3"> (bucket list)</span>
+│
+├── <span class="done">🎮 折扣聚合</span><span class="l3"> (已有)</span>
+│
+├── <span class="l1">🎯 游戏专属攻略站</span>
+│   ├── <span class="l1">🐉 宝可梦殿堂</span>
+│   │   ├── <span class="l2">个人图鉴进度追踪</span>
+│   │   ├── <span class="l2">队伍陈列柜</span>
+│   │   ├── <span class="l2">闪符计时器</span>
+│   │   ├── <span class="l2">配队推荐生成器</span>
+│   │   └── <span class="l2">闪光价值排行</span>
+│   ├── <span class="l1">🌿 黑神话悟空</span><span class="l3"> 精魄/葫芦收集</span>
+│   ├── <span class="l1">🗡️ 艾尔登法环</span><span class="l3"> 追忆Boss/流派卡</span>
+│   └── <span class="l1">🐾 怪猎荒野</span><span class="l3"> 大小金冠/武器统计</span>
+│
+└── <span class="l1">🎨 视觉引擎</span><span class="l3"> (VFX Roadmap)</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header reveal">
+    <div class="section-tag v">🎨 视觉引擎</div>
+    <h2 class="section-title">特效升级路线图</h2>
+    <p class="section-desc">专业游戏级别 UI 特效。不做花架子，每一个特效都有"哇塞"感。</p>
+  </div>
+  <div class="vfx-section reveal">
+    <div class="vfx-pl p1">🔴 Phase 1 · 视觉冲击</div>
+    <div class="vfx-grid">
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">01</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🃏 卡片 3D 悬浮</div><div class="vfx-desc">鼠标划过游戏卡片像 UI 面板一样 3D 倾斜，跟随视角</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">02</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🌟 鼠标跟随光晕</div><div class="vfx-desc">整个界面有动态光斑/射线跟随鼠标位置移动</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">03</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">✨ 粒子系统升级</div><div class="vfx-desc">从简单文字飘动升级为能量粒子/星尘/星云系统</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">04</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">📦 卡片入场序列</div><div class="vfx-desc">数据加载时卡片逐个弹出，像打牌一样有节奏登场</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">05</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🌈 Tab 转场特效</div><div class="vfx-desc">类似《命运2》的棱镜翻页/片状过渡，非简单淡入</div></div>
+    </div>
+  </div>
+  <div class="vfx-section reveal">
+    <div class="vfx-pl p2">🟢 Phase 2 · 材质与氛围</div>
+    <div class="vfx-grid">
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">06</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">💎 玻璃态 UI 面板</div><div class="vfx-desc">磨砂玻璃 backdrop-filter，毛玻璃卡片面板</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">07</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🌊 流体渐变背景</div><div class="vfx-desc">背景像液态金属/极光般缓慢流动，Tab 切换变色</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">08</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🔥 霓虹发光边框</div><div class="vfx-desc">游戏 UI 风格的扫描线发光边框，动态闪烁</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">09</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🌓 动态光影</div><div class="vfx-desc">界面光照随时间/操作变化</div></div>
+    </div>
+  </div>
+  <div class="vfx-section reveal">
+    <div class="vfx-pl p3">🟠 Phase 3 · 交互与反馈</div>
+    <div class="vfx-grid">
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">10</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🔊 声效反馈</div><div class="vfx-desc">点击/切换/弹窗的轻量音效反馈</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">11</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">🌀 涡旋加载动画</div><div class="vfx-desc">数据加载时游戏风格能量漩涡，非转圈</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">12</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">💥 弹窗入场特效</div><div class="vfx-desc">粒子爆散/能量冲击式入场，非简单弹出</div></div>
+      <div class="vfx-card"><div class="vfx-card-header"><span class="vfx-num">13</span><span class="vfx-status ing">待做</span></div><div class="vfx-name">📊 数据动效</div><div class="vfx-desc">价格数字跳动、进度条流光、星星闪耀</div></div>
+    </div>
+  </div>
+  <div class="vfx-section reveal">
+    <div class="vfx-pl p4">🔵 Phase 4 · 持续打磨</div>
+    <p style="color:var(--text2);font-size:14px;line-height:1.8">根据 Yann 实际体验反馈持续优化 · 关注性能，确保手机/低配设备流畅 · 不堆砌特效，每个效果有意义、有节奏</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header reveal">
+    <div class="section-tag t">⚙️ 技术栈</div>
+    <h2 class="section-title">底层架构</h2>
+    <p class="section-desc">轻量、免费、零运维。每人独立数据，邀请制注册。</p>
+  </div>
+  <div class="tech-grid">
+    <div class="tech-card reveal"><div class="tech-icon">⚡</div><div class="tech-name">Supabase</div><div class="tech-desc">后端·免费版·零运维</div></div>
+    <div class="tech-card reveal"><div class="tech-icon">📱</div><div class="tech-name">Flutter</div><div class="tech-desc">前端·原生安卓 APK</div></div>
+    <div class="tech-card reveal"><div class="tech-icon">🐍</div><div class="tech-name">Python</div><div class="tech-desc">数据抓取·GitHub Actions</div></div>
+    <div class="tech-card reveal"><div class="tech-icon">🗄️</div><div class="tech-name">JSON</div><div class="tech-desc">数据格式·离线缓存</div></div>
+    <div class="tech-card reveal"><div class="tech-icon">🔐</div><div class="tech-name">邀请制</div><div class="tech-desc">账号注册·数据隔离</div></div>
+    <div class="tech-card reveal"><div class="tech-icon">🔄</div><div class="tech-name">Actions</div><div class="tech-desc">每日抓取·自动部署</div></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p class="footer-quote">"我希望你能不断蹦出想法，我们可以通过不断的碰撞擦出新的火花"</p>
+  <p class="footer-by">Made with 🔥 by <strong>King 👑</strong> for <strong>Yann</strong> · 2026-05-01</p>
+</footer>
+
+<script>
+const c=document.getElementById('particles-canvas'),x=c.getContext('2d');
+let W,H;
+function r(){W=c.width=innerWidth;H=c.height=innerHeight}
+r();addEventListener('resize',r);
+const p=[];
+for(let i=0;i<100;i++)p.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*2+.5,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,o:Math.random()*.5+.1,h:Math.random()*60+260});
+let mx=W/2,my=H/2;
+addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+function a(){
+  x.clearRect(0,0,W,H);
+  for(let i=0;i<p.length;i++){
+    let pt=p[i];
+    pt.x+=pt.vx;pt.y+=pt.vy;
+    if(pt.x<0||pt.x>W)pt.vx*=-1;
+    if(pt.y<0||pt.y>H)pt.vy*=-1;
+    x.beginPath();x.arc(pt.x,pt.y,pt.s,0,Math.PI*2);
+    x.fillStyle='hsla('+pt.h+',70%,60%,'+pt.o+')';x.fill();
+    for(let j=i+1;j<p.length;j++){
+      let d=Math.hypot(pt.x-p[j].x,pt.y-p[j].y);
+      if(d<120){x.beginPath();x.moveTo(pt.x,pt.y);x.lineTo(p[j].x,p[j].y);x.strokeStyle='rgba(168,85,247,'+(.06*(1-d/120))+')';x.lineWidth=.5;x.stroke()}
+    }
+    let d=Math.hypot(pt.x-mx,pt.y-my);
+    if(d<200){x.beginPath();x.moveTo(pt.x,pt.y);x.lineTo(mx,my);x.strokeStyle='rgba(168,85,247,'+(.03*(1-d/200))+')';x.lineWidth=.5;x.stroke()}
+  }
+  requestAnimationFrame(a)
+}
+a();
+document.querySelectorAll('.reveal').forEach(el => {
+  new IntersectionObserver(e=>{e.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add('visible')})},{threshold:.1}).observe(el)
+})
+</script>
+</body>
+</html>

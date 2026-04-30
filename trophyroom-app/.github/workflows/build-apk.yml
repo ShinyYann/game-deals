@@ -3,8 +3,6 @@ name: Build TrophyRoom APK
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'trophyroom-app/**'
   workflow_dispatch:
 
 permissions:
@@ -14,10 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    defaults:
-      run:
-        working-directory: trophyroom-app
-
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -60,5 +54,5 @@ jobs:
             - 大小: ${{ env.APK_SIZE }} bytes
             
             > 可直接 sideload 安装到安卓设备
-          files: trophyroom-app/release/TrophyRoom.apk
+          files: release/TrophyRoom.apk
           make_latest: true

@@ -13,10 +13,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: trophyroom-app
 
     steps:
       - name: 📥 Checkout
@@ -35,44 +31,33 @@ jobs:
           cache: true
 
       - name: 📦 Install dependencies
+        working-directory: trophyroom-app
         run: flutter pub get
 
       - name: 🔧 Setup Gradle wrapper
+        working-directory: trophyroom-app
         run: |
           chmod +x android/gradlew
-          # Download Gradle wrapper jar if missing
           if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "Downloading gradle-wrapper.jar..."
-            curl -sL "https://github.com/gradle/gradle/raw/v8.3.0/gradle/wrapper/gradle-wrapper.jar" -o android/gradle/wrapper/gradle-wrapper.jar || \
-            curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar" -o android/gradle/wrapper/gradle-wrapper.jar
+            curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar" \
+              -o android/gradle/wrapper/gradle-wrapper.jar
           fi
 
-      - name: 🔨 Check Flutter doctor
-        run: flutter doctor -v
-
-      - name: 🔨 Build APK (debug)
-        run: flutter build apk --debug 2>&1 | tail -100
+      - name: 🔨 Build APK
+        working-directory: trophyroom-app
+        run: flutter build apk --debug
 
       - name: 📤 Prepare APK
         run: |
           mkdir -p release
-          # APK should be at build/app/outputs/flutter-apk/app-debug.apk
-          echo "Current dir: $(pwd)"
-          ls -la build/app/outputs/flutter-apk/ 2>/dev/null || echo "No build dir"
-          if [ -f build/app/outputs/flutter-apk/app-debug.apk ]; then
-            cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
-            ls -la release/
-            echo "APK_SIZE=$(wc -c < release/TrophyRoom.apk | tr -d ' ')" >> $GITHUB_ENV
-            echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+          APK_PATH="trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk"
+          if [ -f "$APK_PATH" ]; then
+            cp "$APK_PATH" release/TrophyRoom.apk
+            echo "APK ready: $(ls -lh release/TrophyRoom.apk)"
           else
-            APK_PATH=$(find . -name "*.apk" 2>/dev/null | head -1)
-            if [ -n "$APK_PATH" ]; then
-              cp "$APK_PATH" release/TrophyRoom.apk
-              echo "APK_SIZE=$(wc -c < release/TrophyRoom.apk | tr -d ' ')" >> $GITHUB_ENV
-            else
-              echo "No APK found at all!" >&2
-              echo "APK_SIZE=0" >> $GITHUB_ENV
-            fi
+            echo "APK not found at $APK_PATH" >&2
+            find . -name "*.apk" 2>/dev/null
+            exit 1
           fi
 
       - name: 🚀 Create Release
@@ -82,10 +67,10 @@ jobs:
           name: "TrophyRoom v${{ github.run_number }}"
           body: |
             🏆 **TrophyRoom** 自动构建
-            
+
             - 版本: v${{ github.run_number }}
-            - 日期: $(date '+%Y-%m-%d %H:%M')
-            
+            - Flutter 原生 APK
+
             > 可直接 sideload 安装到安卓设备
-          files: trophyroom-app/release/TrophyRoom.apk
+          files: release/TrophyRoom.apk
           make_latest: true

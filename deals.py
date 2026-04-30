@@ -626,6 +626,64 @@ def extract_p9_items(soup):
     
     return items
 
+def parse_p9_new_lows():
+    """Parse P9 new low price posts (港服) and extract game details."""
+    html = fetch("https://www.psnine.com/")
+    if not html:
+        return []
+    soup = BeautifulSoup(html, 'html.parser')
+    # Find 港服+新史低 topic links
+    low_links = []
+    for div in soup.find_all('div', class_='ml64'):
+        title_div = div.find('div', class_='title')
+        if not title_div:
+            continue
+        a = title_div.find('a')
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        link = a.get('href', '')
+        if '港服' in title and '新史低' in title and '/topic/' in link:
+            if not link.startswith('http'):
+                link = 'https://www.psnine.com' + link
+            low_links.append(link)
+    if not low_links:
+        return []
+    
+    games = []
+    for topic_url in low_links[:1]:  # only the most recent post
+        html = fetch(topic_url)
+        if not html:
+            continue
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        seen = set()
+        # Only get links that have text (not icon links)
+        for a in soup.find_all('a', href=re.compile(r'/psngame/\d+')):
+            name = a.get_text(strip=True)
+            if not name or name in seen:
+                continue
+            # Skip empty/icon-only links
+            if len(name) < 2:
+                continue
+            
+            # P9 format: game link is inside a table row; find price in the row
+            row = a.find_parent('tr')
+            if not row:
+                continue
+            
+            row_text = row.get_text()
+            m = re.search(r'HK\$([0-9.]+)', row_text)
+            if not m:
+                continue
+            
+            seen.add(name)
+            price = f'HK${m.group(1)}'
+            games.append({'name': name, 'price': price, 'img': '', 'discount': '新史低'})
+    
+    print(f"[P9新史低] parsed {len(games)} games from {len(low_links)} topics")
+    return games
+
 def parse_psnine():
     """Get PSNine latest posts."""
     html = fetch("https://www.psnine.com/")
@@ -1184,6 +1242,38 @@ def generate_html():
             </div>'''
         cards += '</section></div>'
 
+    # ─── P9 港服新史低 ─────────────────────────────────────
+    p9_new_lows = parse_p9_new_lows()
+    p9_low_html = ''
+    if p9_new_lows:
+        p9_low_html = '<div id="disc-p9low" class="disc-section"><section class="platform"><h2>💸 P9 港服新史低</h2><div class="game-list">'
+        for g in p9_new_lows[:30]:
+            display_name = g['name']
+            price = g['price']
+            card_img = ''
+            if g.get('img'):
+                card_img = f'<img src="{g["img"]}" class="game-thumb">'
+            # Try to find cover from existing lookup
+            if not g.get('img'):
+                cname = clean_name(g['name']).lower()
+                if cname in img_lookup:
+                    card_img = f'<img src="{img_lookup[cname]}" class="game-thumb">'
+            p9_low_html += f'''
+            <div class="game-card">
+                <div class="game-card-inner">
+                    <div class="card-left">{card_img}</div>
+                    <div class="card-right">
+                        <div class="card-header">
+                            <span class="game-name">{display_name}</span>
+                            <span class="discount-badge disc-high">新史低</span>
+                        </div>
+                        <div class="card-price">{price}</div>
+                        <div class="card-rating">via P9</div>
+                    </div>
+                </div>
+            </div>'''
+        p9_low_html += '</section></div>'
+
     top5 = '<div id="disc-top5" class="disc-section" style="display:block"><section class="platform"><h2>🎯 本期值得买</h2><div class="game-list">'
     used = set()
     medals = ['🏆 捡漏神作', '💎 折扣必入', '🔥 闭眼买', '⭐ 值哭了', '🎯 早买早爽']
@@ -1618,11 +1708,13 @@ if ('serviceWorker' in navigator) {{
 <div class="sub-tab-bar">
 <button class="sub-tab-btn active" onclick="switchSubTab('disc-top5', this)">🎯 本期值得买</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-p9low', this)">💸 新史低</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
 <button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
 </div>
 {top5}
 {cards}
+{p9_low_html}
 <div class="footer">💬 对 King 说「最近什么游戏值得买」自动获取 · 数据来源多家平台</div>
 </div>
 

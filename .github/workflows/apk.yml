@@ -13,36 +13,47 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cirruslabs/flutter:latest
+    
+    defaults:
+      run:
+        working-directory: trophyroom-app
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 📦 Get dependencies
-        run: |
-          cd trophyroom-app
-          flutter pub get
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: 🔨 Build APK
+      - name: 🎯 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Install dependencies
+        run: flutter pub get
+
+      - name: 🔧 Setup Gradle wrapper
         run: |
-          cd trophyroom-app
-          flutter build apk --debug
+          chmod +x android/gradlew
+          if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar" \
+              -o android/gradle/wrapper/gradle-wrapper.jar
+          fi
+
+      - name: 🔨 Build APK (debug)
+        run: flutter build apk --debug
 
       - name: 📤 Prepare APK
         run: |
           mkdir -p release
-          APK_SRC="trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk"
-          echo "Checking for APK at: $APK_SRC"
-          ls -la "$APK_SRC" 2>/dev/null || find trophyroom-app -name "*.apk" 2>/dev/null | head -5
-          if [ -f "$APK_SRC" ]; then
-            cp "$APK_SRC" release/TrophyRoom.apk
-            echo "✅ APK ready: $(ls -lh release/TrophyRoom.apk)"
-          else
-            echo "❌ APK not found" >&2
-            exit 1
-          fi
+          # APK is in trophyroom-app/build/... but we're already in trophyroom-app/
+          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
+          echo "APK_SIZE=$(wc -c < release/TrophyRoom.apk | tr -d ' ')" >> $GITHUB_ENV
 
       - name: 🚀 Create Release
         uses: softprops/action-gh-release@v2
@@ -50,7 +61,8 @@ jobs:
           tag_name: v${{ github.run_number }}
           name: "TrophyRoom v${{ github.run_number }}"
           body: |
-            🏆 **TrophyRoom** v${{ github.run_number }}
+            🏆 TrophyRoom v${{ github.run_number }}
+            
             Flutter 原生 APK
-          files: release/TrophyRoom.apk
+          files: trophyroom-app/release/TrophyRoom.apk
           make_latest: true

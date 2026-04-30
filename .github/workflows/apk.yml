@@ -36,30 +36,27 @@ jobs:
       - name: 📦 Get packages
         run: flutter pub get
 
-      - name: 📦 Get Gradle wrapper
+      - name: 🔨 Build APK
+        run: flutter build apk --debug > build_output.log 2>&1 || echo "BUILD_FAILED=1" >> $GITHUB_ENV
+
+      - name: 📄 Upload build logs (if failed)
+        if: env.BUILD_FAILED == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: trophyroom-app/build_output.log
+
+      - name: 📤 Prepare APK
         run: |
-          ls -la android/gradle/wrapper/
-          flutter build apk --debug 2>&1 | head -50
+          mkdir -p release
+          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk && echo "OK" || echo "APK_MISSING=1" >> $GITHUB_ENV
 
-      - name: Pre-cache Gradle
-        run: |
-          cd android
-          ./gradlew --version 2>&1 | tail -5
-
-      - name: Build APK
-        run: flutter build apk --debug
-
-      - name: Prepare APK for release
-        run: |
-          mkdir -p ${{ github.workspace }}/release
-          cp build/app/outputs/flutter-apk/app-debug.apk ${{ github.workspace }}/release/TrophyRoom.apk
-          ls -la ${{ github.workspace }}/release/
-
-      - name: Create Release
+      - name: 🚀 Create Release
+        if: env.APK_MISSING != '1'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: TrophyRoom v${{ github.run_number }}
           body: 🏆 TrophyRoom APK
-          files: release/TrophyRoom.apk
+          files: ${{ github.workspace }}/trophyroom-app/release/TrophyRoom.apk
           make_latest: true

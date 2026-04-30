@@ -536,7 +536,7 @@ def fetch_p9_topic_thumbnail(url):
     """Fetch the first relevant game image from a P9 topic page."""
     html = fetch(url)
     if not html: return ''
-    soup = BeautifulSoup(html, 'lxml')
+    soup = BeautifulSoup(html, 'html.parser')
     candidates = []
     for img in soup.find_all('img'):
         src = (img.get('src', '') or '').strip()
@@ -630,29 +630,39 @@ def parse_psnine():
     """Get PSNine latest posts."""
     html = fetch("https://www.psnine.com/")
     if not html:
+        print("[P9] Failed to fetch psnine.com")
         return {'gamelist': [], 'new_lows': [], 'guides': []}
     
-    soup = BeautifulSoup(html, 'lxml')
+    # Use html.parser for better cross-platform compatibility than lxml
+    soup = BeautifulSoup(html, 'html.parser')
     all_items = extract_p9_items(soup)
     
     result = {'gamelist': [], 'new_lows': [], 'guides': []}
+    title_lower = ""  # track last title for debug
     
     for item in all_items:
         title = item['title']
-        tags_str = ' '.join(item['tags']).lower()
+        title_lc = title.lower()
         
-        # Categorize
-        is_gamelist = any(k in tags_str or k in title for k in ['gamelist', '入库', '二三档', '二档', '三档', 'plus', '会员'])
-        is_new_low = any(k in title or k in tags_str for k in ['新史低', '史低', 'new low', 'newlow'])
-        is_guide = any(k in tags_str or k in title for k in ['guide', '白金攻略', '攻略', '指南'])
+        # Categorize by title keywords only
+        is_new_low = any(k in title for k in ['新史低', '史低'])
+        is_gamelist = any(k in title for k in ['入库', '会免', 'PLUS', 'Plus', '二三档', '二档', '三档'])
+        is_guide = any(k in title for k in ['白金攻略', '攻略', '指南'])
         
         if is_new_low:
             result['new_lows'].append(item)
-        elif is_gamelist and ('入库' in title or '二档' in title or '三档' in title or 'PLUS' in title or 'PLUS' in title or '会免' in title):
+        elif is_gamelist and any(k in title for k in ['入库', '会免', 'PLUS', '二档', '三档']):
             result['gamelist'].append(item)
-        elif is_guide and ('白金' in title or '攻略' in title or '指南' in title):
+        elif is_guide:
             result['guides'].append(item)
+        
+        # Debug: log uncategorized items to understand classification gaps
+        if not is_new_low and not is_gamelist and not is_guide and len(title) > 10:
+            if title_lower != title:
+                print(f"[P9] Uncategorized: {title[:50]}")
+                title_lower = title
     
+    print(f"[P9] gamelist={len(result['gamelist'])} new_lows={len(result['new_lows'])} guides={len(result['guides'])} (total items={len(all_items)})")
     return result
 
 # ─── Data sources ───────────────────────────────────────────────────

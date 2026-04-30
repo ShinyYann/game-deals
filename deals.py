@@ -706,7 +706,8 @@ def parse_p9_new_lows():
                 continue
             name = name_a.get_text(strip=True)
             if not name or len(name) < 2 or name in seen:
-                continue
+                # Allow duplicates with different prices (same game, different versions)
+                pass
             
             seen.add(name)
             
@@ -1320,7 +1321,7 @@ def generate_html():
         first_game = p9_new_lows[0]
         period_title = first_game.get('period', '港服新史低')
         p9_low_html = f'<div id="disc-p9low" class="disc-section"><section class="platform"><h2>💸 {period_title}</h2><div class="game-list">'
-        for g in p9_new_lows[:100]:
+        for g in p9_new_lows:
             display_name = g['name']
             card_img = ''
             # Try img_lookup first (from PSN/Steam/Switch data covers)

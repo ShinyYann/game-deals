@@ -1,3 +1,4 @@
+
 name: Build TrophyRoom APK
 
 on:
@@ -31,8 +32,8 @@ jobs:
       - name: 🎯 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.16.0'
           channel: 'stable'
-          cache: true
 
       - name: 📦 Install dependencies
         run: flutter pub get
@@ -51,11 +52,12 @@ jobs:
       - name: 📤 Prepare APK
         run: |
           mkdir -p release
-          # APK is in trophyroom-app/build/... but we're already in trophyroom-app/
           cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
           echo "APK_SIZE=$(wc -c < release/TrophyRoom.apk | tr -d ' ')" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
 
       - name: 🚀 Create Release
+        if: ${{ env.APK_SIZE != '0' && env.APK_SIZE != '' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}

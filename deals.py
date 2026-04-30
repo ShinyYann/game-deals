@@ -679,7 +679,14 @@ def parse_p9_new_lows():
             
             seen.add(name)
             price = f'HK${m.group(1)}'
-            games.append({'name': name, 'price': price, 'img': '', 'discount': '新史低'})
+            
+            # Get trophy icon as fallback image
+            img_src = ''
+            img = a.find('img')
+            if img:
+                img_src = img.get('src', '')
+            
+            games.append({'name': name, 'price': price, 'img': img_src, 'discount': '新史低'})
     
     print(f"[P9新史低] parsed {len(games)} games from {len(low_links)} topics")
     return games
@@ -1247,17 +1254,23 @@ def generate_html():
     p9_low_html = ''
     if p9_new_lows:
         p9_low_html = '<div id="disc-p9low" class="disc-section"><section class="platform"><h2>💸 P9 港服新史低</h2><div class="game-list">'
-        for g in p9_new_lows[:30]:
+        for g in p9_new_lows[:100]:
             display_name = g['name']
             price = g['price']
             card_img = ''
-            if g.get('img'):
+            # Try img_lookup first (from PSN/Steam/Switch data)
+            cname = clean_name(g['name']).lower()
+            if cname in img_lookup:
+                card_img = f'<img src="{img_lookup[cname]}" class="game-thumb">'
+            else:
+                # Try fuzzy match: check each key in img_lookup
+                for key, src in img_lookup.items():
+                    if key in cname or cname in key:
+                        card_img = f'<img src="{src}" class="game-thumb">'
+                        break
+            # Fallback: use P9 trophy icon
+            if not card_img and g.get('img'):
                 card_img = f'<img src="{g["img"]}" class="game-thumb">'
-            # Try to find cover from existing lookup
-            if not g.get('img'):
-                cname = clean_name(g['name']).lower()
-                if cname in img_lookup:
-                    card_img = f'<img src="{img_lookup[cname]}" class="game-thumb">'
             p9_low_html += f'''
             <div class="game-card">
                 <div class="game-card-inner">

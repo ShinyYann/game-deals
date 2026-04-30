@@ -1343,7 +1343,7 @@ def generate_html():
             player_html = f' <span style="color:#888;font-size:11px">{g["player_count"]}</span>' if g.get('player_count') else ''
             
             p9_low_html += f'''
-            <div class="game-card">
+            <div class="game-card" onclick="showGameModal(this)" style="cursor:pointer">
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">

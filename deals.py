@@ -627,7 +627,8 @@ def extract_p9_items(soup):
     return items
 
 def parse_p9_new_lows():
-    """Parse P9 new low price posts (港服) and extract game details."""
+    """Parse P9 new low price posts (港服) and extract game details.
+    Returns list of dicts with: name, price, img, rating, deadline, discount, platform."""
     html = fetch("https://www.psnine.com/")
     if not html:
         return []
@@ -657,38 +658,89 @@ def parse_p9_new_lows():
             continue
         soup = BeautifulSoup(html, 'html.parser')
         
+        # Find the table containing game entries
+        pt = None
+        for table in soup.find_all('table'):
+            if table.find('a', href=re.compile(r'/psngame/\d+')):
+                pt = table
+                break
+        if not pt:
+            continue
+        
         seen = set()
-        # Only get links that have text (not icon links)
-        for a in soup.find_all('a', href=re.compile(r'/psngame/\d+')):
-            name = a.get_text(strip=True)
-            if not name or name in seen:
-                continue
-            # Skip empty/icon-only links
-            if len(name) < 2:
+        for row in pt.find_all('tr'):
+            cells = row.find_all('td')
+            if len(cells) < 2:
                 continue
             
-            # P9 format: game link is inside a table row; find price in the row
-            row = a.find_parent('tr')
-            if not row:
-                continue
-            
-            row_text = row.get_text()
-            m = re.search(r'HK\$([0-9.]+)', row_text)
-            if not m:
-                continue
-            
-            seen.add(name)
-            price = f'HK${m.group(1)}'
-            
-            # Get trophy icon as fallback image
+            # Cell 0: image
             img_src = ''
-            img = a.find('img')
+            img = cells[0].find('img')
             if img:
                 img_src = img.get('src', '')
             
-            games.append({'name': name, 'price': price, 'img': img_src, 'discount': '新史低'})
+            # Cell 1: game info
+            cell_text = cells[1].get_text(strip=True)
+            
+            # Extract platform
+            platform = ''
+            if 'PS5' in cell_text:
+                platform = 'PS5'
+            elif 'PS4' in cell_text:
+                platform = 'PS4'
+            
+            # Extract game name (from the <a> tag)
+            name_a = cells[1].find('a', href=re.compile(r'/psngame/\d+'))
+            if not name_a:
+                continue
+            name = name_a.get_text(strip=True)
+            if not name or len(name) < 2 or name in seen:
+                continue
+            
+            seen.add(name)
+            
+            # Extract rating (⭐N.NN)
+            rating = ''
+            rm = re.search(r'⭐([0-9.]+)', cell_text)
+            if rm:
+                rating = '⭐' + rm.group(1)
+            
+            # Extract price and deadline
+            price = ''
+            deadline = ''
+            pm = re.search(r'HK\$([0-9.]+)', cell_text)
+            if pm:
+                price = f'HK${pm.group(1)}'
+                # Deadline is after the price text, look for 截止
+                price_end = pm.end()
+                rest = cell_text[price_end:]
+                dm = re.search(r'截止\s*(\S+)', rest)
+                if dm:
+                    deadline = dm.group(1)
+            
+            # Extract player count as rating detail
+            player_count = ''
+            pcm = re.search(r'\(([0-9.]+万)\)', cell_text)
+            if pcm:
+                player_count = pcm.group(1) + '万玩家'
+            
+            games.append({
+                'name': name,
+                'price': price,
+                'img': img_src,
+                'discount': '新史低',
+                'rating': rating,
+                'deadline': deadline,
+                'platform': platform,
+                'player_count': player_count,
+            })
     
-    print(f"[P9新史低] parsed {len(games)} games from {len(low_links)} topics")
+    # Remove 万 duplicate in player_count
+    for g in games:
+        if g.get('player_count') and g['player_count'].endswith('万万玩家'):
+            g['player_count'] = g['player_count'].replace('万万', '万')
+    
+    print(f"[P9新史低] parsed {len(games)} games")
     return games
 
 def parse_psnine():
@@ -1256,32 +1308,36 @@ def generate_html():
         p9_low_html = '<div id="disc-p9low" class="disc-section"><section class="platform"><h2>💸 P9 港服新史低</h2><div class="game-list">'
         for g in p9_new_lows[:100]:
             display_name = g['name']
-            price = g['price']
             card_img = ''
-            # Try img_lookup first (from PSN/Steam/Switch data)
+            # Try img_lookup first (from PSN/Steam/Switch data covers)
             cname = clean_name(g['name']).lower()
             if cname in img_lookup:
                 card_img = f'<img src="{img_lookup[cname]}" class="game-thumb">'
             else:
-                # Try fuzzy match: check each key in img_lookup
                 for key, src in img_lookup.items():
                     if key in cname or cname in key:
                         card_img = f'<img src="{src}" class="game-thumb">'
                         break
             # Fallback: use P9 trophy icon
             if not card_img and g.get('img'):
-                card_img = f'<img src="{g["img"]}" class="game-thumb">'
+                card_img = f'<img src="{g["img"]}" class="game-thumb" onerror="this.parentElement.style.display=\'none\'">'
+            
+            plat_tag = f' <span class="plat-tag" style="color:#1da1f2;font-size:11px">{g["platform"]}</span>' if g.get('platform') else ''
+            rating_html = f'<span style="color:#ffb347;font-size:12px">{g["rating"]}</span>' if g.get('rating') else ''
+            deadline_html = f' <span style="color:#ff6b6b;font-size:11px">⏰ {g["deadline"]}</span>' if g.get('deadline') else ''
+            player_html = f' <span style="color:#888;font-size:11px">{g["player_count"]}</span>' if g.get('player_count') else ''
+            
             p9_low_html += f'''
             <div class="game-card">
                 <div class="game-card-inner">
                     <div class="card-left">{card_img}</div>
                     <div class="card-right">
                         <div class="card-header">
-                            <span class="game-name">{display_name}</span>
+                            <span class="game-name">{display_name}{plat_tag}</span>
                             <span class="discount-badge disc-high">新史低</span>
                         </div>
-                        <div class="card-price">{price}</div>
-                        <div class="card-rating">via P9</div>
+                        <div class="card-price">{g["price"]}{deadline_html}</div>
+                        <div class="card-rating">{rating_html}{player_html}</div>
                     </div>
                 </div>
             </div>'''

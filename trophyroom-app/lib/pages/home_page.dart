@@ -343,7 +343,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         color: accent,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        fontFeatures: [const FontFeature.tabularFigures()],
                       ),
                     ),
                     const SizedBox(height: 2),

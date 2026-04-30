@@ -13,49 +13,34 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cirruslabs/flutter:latest
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: ☕ Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: 🎯 Setup Flutter
-        id: flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: 📦 Install dependencies
-        run: cd trophyroom-app && flutter pub get
-
-      - name: 🔧 Setup Gradle wrapper
+      - name: 📦 Get dependencies
         run: |
           cd trophyroom-app
-          chmod +x android/gradlew
-          if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar" \
-              -o android/gradle/wrapper/gradle-wrapper.jar
-          fi
-          flutter doctor
+          flutter pub get
 
       - name: 🔨 Build APK
-        run: cd trophyroom-app && flutter build apk --debug
+        run: |
+          cd trophyroom-app
+          flutter build apk --debug
 
       - name: 📤 Prepare APK
         run: |
           mkdir -p release
-          if [ -f "trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk" ]; then
-            cp trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
-            echo "APK size: $(ls -lh release/TrophyRoom.apk | awk '{print $5}')"
+          APK_SRC="trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk"
+          echo "Checking for APK at: $APK_SRC"
+          ls -la "$APK_SRC" 2>/dev/null || find trophyroom-app -name "*.apk" 2>/dev/null | head -5
+          if [ -f "$APK_SRC" ]; then
+            cp "$APK_SRC" release/TrophyRoom.apk
+            echo "✅ APK ready: $(ls -lh release/TrophyRoom.apk)"
           else
-            echo "APK not found" >&2
-            find trophyroom-app -name "*.apk" 2>/dev/null | head -5
+            echo "❌ APK not found" >&2
             exit 1
           fi
 
@@ -66,7 +51,6 @@ jobs:
           name: "TrophyRoom v${{ github.run_number }}"
           body: |
             🏆 **TrophyRoom** v${{ github.run_number }}
-            
-            Flutter 原生 APK — 可直接 sideload 安装
+            Flutter 原生 APK
           files: release/TrophyRoom.apk
           make_latest: true

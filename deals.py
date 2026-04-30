@@ -1305,8 +1305,8 @@ def generate_html():
 
     mods_html = '<div id="tab-mods" class="tab-content" style="display:none">'
     mods_html += '<div class="sub-tab-bar p9-section-bar">'
-    mods_html += '<button class="sub-tab-btn active" onclick="switchModSubTab(\'mod-hot\', this)">🔥 热门 Mod</button>'
-    mods_html += '<button class="sub-tab-btn" onclick="switchModSubTab(\'mod-search\', this)">🔍 搜 Mod</button>'
+    mods_html += '<button class="sub-tab-btn active" onclick="switchModSubTab(\'mod-hot\', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-star"/></svg> 热门 Mod</button>'
+    mods_html += '<button class="sub-tab-btn" onclick="switchModSubTab(\'mod-search\', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-search"/></svg> 搜 Mod</button>'
     mods_html += '</div>'
 
     # Hot mods section
@@ -1858,15 +1858,16 @@ if ('serviceWorker' in navigator) {{
   navigator.serviceWorker.register('sw.js');
 }}
 </script>
+<link rel="stylesheet" href="icons.svg">
 </head>
 <body class="tab-trophy">
 <div class="particles" id="particles"></div>
 <div class="tab-bar">
-<button class="tab-btn active" onclick="switchTab('trophy')">🏆 奖杯</button>
-<button class="tab-btn" onclick="switchTab('discounts')">🎯 折扣</button>
-<button class="tab-btn" onclick="switchTab('psnine')">💬 P9 社区</button>
-<button class="tab-btn" onclick="switchTab('news')">📰 快讯</button>
-<a href="mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn">🎮 Mod</button></a>
+<button class="tab-btn active" onclick="switchTab('trophy')"><svg class="icon" width="16" height="16"><use href="icons.svg#icon-trophy"/></svg> 奖杯</button>
+<button class="tab-btn" onclick="switchTab('discounts')"><svg class="icon" width="16" height="16"><use href="icons.svg#icon-discount"/></svg> 折扣</button>
+<button class="tab-btn" onclick="switchTab('psnine')"><svg class="icon" width="16" height="16"><use href="icons.svg#icon-psn"/></svg> P9 社区</button>
+<button class="tab-btn" onclick="switchTab('news')"><svg class="icon" width="16" height="16"><use href="icons.svg#icon-news"/></svg> 快讯</button>
+<a href="mod.html" target="_self" style="flex:1;text-decoration:none;display:block;"><button class="tab-btn"><svg class="icon" width="16" height="16"><use href="icons.svg#icon-mod"/></svg> Mod</button></a>
 </div>
 <div class="tab-accent trophy" id="tab-accent"></div>
 
@@ -1877,10 +1878,10 @@ if ('serviceWorker' in navigator) {{
 <div id="tab-discounts" class="tab-content" style="display:none">
 <div class="sub-tab-bar">
 <button class="sub-tab-btn active" onclick="switchSubTab('disc-top5', this)">🎯 本期值得买</button>
-<button class="sub-tab-btn" onclick="switchSubTab('disc-psn', this)">🔵 PSN</button>
-<button class="sub-tab-btn" onclick="switchSubTab('disc-p9low', this)">💸 新史低</button>
-<button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)">🟢 Steam</button>
-<button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)">🟡 Switch</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-psn', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-psn"/></svg> PSN</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-p9low', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-discount"/></svg> 新史低</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-steam', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-steam"/></svg> Steam</button>
+<button class="sub-tab-btn" onclick="switchSubTab('disc-switch', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-switch"/></svg> Switch</button>
 </div>
 {top5}
 {cards}
@@ -1899,9 +1900,9 @@ if ('serviceWorker' in navigator) {{
 <button style="padding:6px 10px;border:none;border-radius:8px;font-size:13px;background:#2a2a4e;color:#e8e8f0;cursor:pointer;" onclick="p9Search()">🔍</button>
 </div>
 <div class="sub-tab-bar p9-section-bar">
-<button class="sub-tab-btn active" onclick="switchP9SubTab('p9-game', this)">📦 入库/会免</button>
-<button class="sub-tab-btn" onclick="switchP9SubTab('p9-low', this)">💸 新史低</button>
-<button class="sub-tab-btn" onclick="switchP9SubTab('p9-guide', this)">🏆 白金攻略</button>
+<button class="sub-tab-btn active" onclick="switchP9SubTab('p9-game', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-trophy"/></svg> 入库/会免</button>
+<button class="sub-tab-btn" onclick="switchP9SubTab('p9-low', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-discount"/></svg> 新史低</button>
+<button class="sub-tab-btn" onclick="switchP9SubTab('p9-guide', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-trophy"/></svg> 白金攻略</button>
 </div>
 <div id="p9-results" style="max-width:560px;margin:0 auto;">
 <div id="p9-default-content">
@@ -1913,8 +1914,8 @@ if ('serviceWorker' in navigator) {{
 
 <div id="tab-trophy" class="tab-content">
 <div class="sub-tab-bar">
-<button class="sub-tab-btn active" onclick="switchTrophySubTab('trophy-psn', this)">🏆 PSN 奖杯</button>
-<button class="sub-tab-btn" onclick="switchTrophySubTab('trophy-steam', this)">🎮 Steam 成就</button>
+<button class="sub-tab-btn active" onclick="switchTrophySubTab('trophy-psn', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-psn"/></svg> PSN 奖杯</button>
+<button class="sub-tab-btn" onclick="switchTrophySubTab('trophy-steam', this)"><svg class="icon" width="14" height="14"><use href="icons.svg#icon-steam"/></svg> Steam 成就</button>
 </div>
 
 <div id="trophy-psn" class="sub-tab-content">

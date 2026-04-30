@@ -1,0 +1,16 @@
+# Flutter
+pubspec.lock
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/doc/api/
+
+# Android
+*.iml
+.idea/
+.gradle/
+local.properties
+*.apk
+*.aab

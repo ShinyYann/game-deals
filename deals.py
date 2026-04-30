@@ -797,47 +797,80 @@ def parse_psnine():
 
 # ─── Data sources ───────────────────────────────────────────────────
 def parse_psn():
-    # 多页面抓取 PS5 + PS4 折扣
-    urls = [
+    # 多页面抓取 PS5 + PS4 折扣 — 翻页抓全
+    # PSN API 每页 20-40 条，翻 10 页大概覆盖全部
+    base_urls = [
+        "https://store.playstation.com/zh-hant-hk/pages/browse/1?category=all_ps5_discounts&sort=discount_rate&page={page}",
+        "https://store.playstation.com/zh-hant-hk/pages/browse/1?category=all_ps4_discounts&sort=discount_rate&page={page}",
         "https://store.playstation.com/zh-hant-hk/pages/deals",
-        "https://store.playstation.com/zh-hant-hk/pages/browse/1?category=all_ps4_discounts&sort=discount_rate&page=1",
-        "https://store.playstation.com/zh-hant-hk/pages/browse/1?category=all_ps5_discounts&sort=discount_rate&page=1",
     ]
     games = []
-    for url in urls:
-        html = fetch(url)
-        if not html: continue
-        soup = BeautifulSoup(html, 'lxml')
-        for tile in soup.find_all('div', class_=lambda c: c and 'psw-product-tile' in c):
-            nt = tile.find('span', {'data-qa': re.compile(r'product-name')})
-            if not nt: continue
-            name = nt.get_text(strip=True)
-            if not name or len(name) > 80: continue
-            tt = tile.find('span', {'data-qa': re.compile(r'product-type')})
-            if tt and tt.get_text(strip=True) in ['物品', '武器', '服裝', '追加內容', '章節']:
-                continue
-            dt = tile.find('span', {'data-qa': re.compile(r'discount-badge')})
-            disc = dt.get_text(strip=True) if dt else ''
-            pt = tile.find('span', {'data-qa': re.compile(r'price#display-price')})
-            price = pt.get_text(strip=True) if pt else ''
-            st = tile.find('s', {'data-qa': re.compile(r'price#price-strikethrough')})
-            orig = st.get_text(strip=True) if st else ''
-            img = tile.find('img')
-            img_url = img.get('src', '') if img else ''
-            if img_url:
-                img_url = img_url.split('?')[0] + '?w=240'
-            games.append({'name': name.strip(), 'price': price.strip(), 'discount': disc.strip(), 'original_price': orig.strip(), 'img': img_url})
+    seen = set()
+    for base in base_urls:
+        for page in range(1, 12):  # up to 11 pages to catch all
+            url = base.format(page=page) if '{page}' in base else base
+            if page > 1 and '{page}' not in base:
+                continue  # non-paginated URL, only fetch once
+            html = fetch(url)
+            if not html: continue
+            soup = BeautifulSoup(html, 'lxml')
+            tiles = soup.find_all('div', class_=lambda c: c and 'psw-product-tile' in c)
+            if not tiles:
+                break  # no more products
+            for tile in tiles:
+                nt = tile.find('span', {'data-qa': re.compile(r'product-name')})
+                if not nt: continue
+                name = nt.get_text(strip=True)
+                if not name or len(name) > 80: continue
+                if name in seen: continue
+                seen.add(name)
+                tt = tile.find('span', {'data-qa': re.compile(r'product-type')})
+                if tt and tt.get_text(strip=True) in ['物品', '武器', '服裝', '追加內容', '章節']:
+                    continue
+                dt = tile.find('span', {'data-qa': re.compile(r'discount-badge')})
+                disc = dt.get_text(strip=True) if dt else ''
+                pt = tile.find('span', {'data-qa': re.compile(r'price#display-price')})
+                price = pt.get_text(strip=True) if pt else ''
+                st = tile.find('s', {'data-qa': re.compile(r'price#price-strikethrough')})
+                orig = st.get_text(strip=True) if st else ''
+                img = tile.find('img')
+                img_url = img.get('src', '') if img else ''
+                if img_url:
+                    img_url = img_url.split('?')[0] + '?w=240'
+                games.append({'name': name.strip(), 'price': price.strip(), 'discount': disc.strip(), 'original_price': orig.strip(), 'img': img_url})
+            if len(tiles) < 10:
+                break  # last page
     return games
 
 def parse_steam():
-    data = fetch_json("https://store.steampowered.com/api/featuredcategories?cc=cn&l=zh")
-    if not data: return []
+    # 全量抓取 Steam 国服打折 — 通过搜索接口翻页
     games = []
-    specials = data.get('specials', {}).get('items', [])
-    if isinstance(specials, list):
-        for item in specials[:100]:
-            g = parse_steam_item(item)
-            if g: games.append(g)
+    seen = set()
+    for page in range(0, 20):  # up to 20 pages, ~500 games
+        url = f"https://store.steampowered.com/search/?specials=1&cc=cn&l=schinese&page={page+1}"
+        html = fetch(url)
+        if not html: break
+        soup = BeautifulSoup(html, 'lxml')
+        items = soup.select('a.search_result_row')
+        if not items: break
+        for item in items:
+            name = item.find('span', class_='title')
+            if not name: continue
+            name = name.get_text(strip=True)
+            if not name or name in seen or len(name) < 2: continue
+            seen.add(name)
+            price = item.find('div', class_='discount_final_price')
+            price = price.get_text(strip=True) if price else ''
+            disc = item.find('div', class_='discount_pct')
+            disc = disc.get_text(strip=True) if disc else ''
+            orig = item.find('div', class_='discount_original_price')
+            orig = orig.get_text(strip=True) if orig else ''
+            img = item.find('img')
+            img_url = img.get('src', '') if img else ''
+            release = item.find('div', class_='search_released')
+            release = release.get_text(strip=True) if release else ''
+            games.append({'name': name.strip(), 'price': price.strip(), 'discount': disc.strip(), 'original_price': orig.strip(), 'img': img_url, 'release': release})
+        time.sleep(0.3)  # be gentle to Steam
     return games
 
 def parse_steam_item(item):
@@ -855,44 +888,97 @@ def parse_steam_item(item):
     }
 
 def parse_switch():
-    """Get Switch deals from Nintendo HK eShop."""
+    """Get Switch deals from Nintendo HK eShop — full pagination."""
     import re
     games = []
-    urls = [
-        "https://store.nintendo.com.hk/digital-games",
-        "https://store.nintendo.com.hk/games/all-released-games",
-    ]
-    for url in urls:
-        raw = fetch(url)
-        if not raw: continue
-        items_raw = re.findall(r'<li class="[^"]*product[^"]*"[^>]*>.*?</li>', raw, re.DOTALL)
-        for item_html in items_raw:
-            # 只有打折的才要
-            if 'price-label' not in item_html and 'old-price' not in item_html:
-                continue
-            name_m = re.search(r'class="product-item-link"[^>]*>([^<]+)<', item_html)
-            if not name_m: continue
-            name = name_m.group(1).strip()
-            if not name: continue
-            price_m = re.search(r'data-price-amount="([^"]+)"\s+data-price-type="finalPrice"', item_html)
-            price = price_m.group(1) if price_m else '0'
-            old_m = re.search(r'data-price-amount="([^"]+)"\s+data-price-type="oldPrice"', item_html)
-            old_price = old_m.group(1) if old_m else price
-            img_m = re.search(r'<img[^>]*src="([^"]+)"[^>]*>', item_html)
-            img_url = img_m.group(1) if img_m else ''
-            if float(old_price) > 0:
-                disc_pct = f'{- ((1 - float(price)/float(old_price)) * 100):.0f}%'
+    seen = set()
+    
+    # Try API first
+    api_url = "https://store.nintendo.com.hk/api/v2/products"
+    params = "filter%5Bcategory%5D=all&filter%5Bplatform%5D=switch&page%5Bnumber%5D=1&page%5Bsize%5D=50&sort=discount_rate"
+    data = fetch_json(f"{api_url}?{params}")
+    if data and data.get('data'):
+        total_pages = data.get('meta', {}).get('page', {}).get('total_pages', 1)
+        for page in range(1, min(total_pages + 1, 20)):
+            if page > 1:
+                html_or_json = fetch(f"{api_url}?filter%5Bcategory%5D=all&filter%5Bplatform%5D=switch&page%5Bnumber%5D={page}&page%5Bsize%5D=50&sort=discount_rate")
             else:
+                html_or_json = None  # already have it
+            
+            if page > 1:
+                if not html_or_json: break
+                d2 = json.loads(html_or_json) if isinstance(html_or_json, str) else None
+                if not d2 or not d2.get('data'): break
+                products = d2['data']
+            else:
+                products = data['data']
+            
+            for p in products:
+                attrs = p.get('attributes', {})
+                name = attrs.get('name', '')
+                if not name or name in seen: continue
+                seen.add(name)
+                price = attrs.get('formatted_price', '') or ''
+                old_price = attrs.get('formatted_original_price', '') or ''
+                if not old_price: continue
                 disc_pct = ''
-            has_cn = bool(re.search(r'[\u4e00-\u9fff]', name))
-            games.append({
-                'name': name,
-                'price': f'HK${price}' if price else '',
-                'discount': disc_pct,
-                'original_price': f'HK${old_price}' if old_price else '',
-                'has_cn': has_cn,
-                'img': img_url
-            })
+                if old_price and price:
+                    try:
+                        p_val = float(price.replace('HK$', '').replace(',', ''))
+                        o_val = float(old_price.replace('HK$', '').replace(',', ''))
+                        if o_val > 0:
+                            disc_pct = f'-{(1 - p_val/o_val)*100:.0f}%'
+                    except: pass
+                img = attrs.get('image', '') or ''
+                has_cn = bool(re.search(r'[\u4e00-\u9fff]', name))
+                games.append({
+                    'name': name,
+                    'price': f'HK${price}' if 'HK$' not in price else price,
+                    'discount': disc_pct,
+                    'original_price': f'HK${old_price}' if 'HK$' not in old_price else old_price,
+                    'has_cn': has_cn,
+                    'img': img
+                })
+            time.sleep(0.3)
+    else:
+        # Fallback: scrape from HTML pages
+        for page in range(1, 8):
+            url = f"https://store.nintendo.com.hk/games/all-released-games?p={page}"
+            raw = fetch(url)
+            if not raw: continue
+            # Nintendo HK uses standard product listing
+            # Extract JSON-LD or product data
+            items = re.findall(r'<li class="[^"]*product[^"]*"[^>]*>.*?</li>', raw, re.DOTALL)
+            if not items:
+                # Try another pattern
+                items = re.findall(r'class="product-item[^"]*"[^>]*>.*?</a>\s*</div>\s*</div>\s*</li>', raw, re.DOTALL)
+            if not items:
+                break  # no more pages
+            for item_html in items:
+                if 'price-label' not in item_html and 'old-price' not in item_html:
+                    continue
+                name_m = re.search(r'class="product-item-link"[^>]*>([^<]+)<', item_html)
+                if not name_m: continue
+                name = name_m.group(1).strip()
+                if not name or name in seen: continue
+                seen.add(name)
+                price_m = re.search(r'data-price-amount="([^"]+)"\s+data-price-type="finalPrice"', item_html)
+                price = price_m.group(1) if price_m else '0'
+                old_m = re.search(r'data-price-amount="([^"]+)"\s+data-price-type="oldPrice"', item_html)
+                old_price = old_m.group(1) if old_m else price
+                img_m = re.search(r'<img[^>]*src="([^"]+)"[^>]*>', item_html)
+                img_url = img_m.group(1) if img_m else ''
+                if float(old_price) > 0:
+                    disc_pct = f'{- ((1 - float(price)/float(old_price)) * 100):.0f}%'
+                else:
+                    disc_pct = ''
+                has_cn = bool(re.search(r'[\u4e00-\u9fff]', name))
+                games.append({
+                    'name': name, 'price': f'HK${price}' if price else '',
+                    'discount': disc_pct, 'original_price': f'HK${old_price}' if old_price else '',
+                    'has_cn': has_cn, 'img': img_url
+                })
+            time.sleep(0.5)
     return games
 
 # ─── Game news feed ───────────────────────────────────────────────

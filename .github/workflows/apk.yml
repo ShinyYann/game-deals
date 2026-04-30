@@ -1,48 +1,64 @@
-name: Build APK
+name: Build TrophyRoom APK
+
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'trophyroom-app/**'
+  workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: trophyroom-app
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Install SDK
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🎯 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+
+      - name: 📦 Install dependencies
+        run: flutter pub get
+
+      - name: 🔨 Build APK
+        run: flutter build apk --debug
+
+      - name: 📤 Prepare APK
         run: |
-          mkdir -p $HOME/android/cmdline-tools
-          cd $HOME/android
-          curl -sLo cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q cmdline-tools.zip -d cmdline-tools
-          mv cmdline-tools/cmdline-tools cmdline-tools/latest 2>/dev/null || true
-          yes | sdkmanager --sdk_root=$HOME/android "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
-          echo "ANDROID_HOME=$HOME/android" >> $GITHUB_ENV
-          echo "$HOME/android/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$HOME/android/platform-tools" >> $GITHUB_PATH
-      - name: Prepare project
-        run: |
-          which python3
-          ls -la prepare_apk.py
-          python3 prepare_apk.py
-      - name: Gradle wrapper
-        run: |
-          cd android
-          curl -sL -o gradlew https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradlew
-          chmod +x gradlew
-      - name: Build APK
-        run: cd android && ./gradlew assembleDebug --no-daemon
-        env:
-          ANDROID_HOME: /home/runner/android
-      - name: Prepare Release
-        run: |
-          find android -name "*.apk" 2>/dev/null
-          cp android/app/build/outputs/apk/debug/app-debug.apk Yann小站.apk 2>/dev/null || echo "No APK found"
-      - name: Create Release
+          mkdir -p release
+          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
+          echo "APK_SIZE=$(stat -c%s release/TrophyRoom.apk)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+
+      - name: 🚀 Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          name: "Yann小站 v${{ github.run_number }}"
-          body: "📱 自动构建 APK"
-          files: Yann小站.apk
+          name: "TrophyRoom v${{ github.run_number }}"
+          body: |
+            🏆 **TrophyRoom** 自动构建
+            
+            - 版本: v${{ github.run_number }}
+            - 日期: ${{ env.BUILD_DATE }}
+            - 大小: ${{ env.APK_SIZE }} bytes
+            
+            > 可直接 sideload 安装到安卓设备
+          files: trophyroom-app/release/TrophyRoom.apk
           make_latest: true

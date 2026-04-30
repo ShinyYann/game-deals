@@ -29,3 +29,9 @@ jobs:
           git add docs/index.html
           git diff --quiet && git diff --staged --quiet || git commit -m 'update deals'
           git push
+
+      - name: 同步到 Gitee
+        run: |
+          git remote add gitee https://yann8888:${{ secrets.GITEE_TOKEN }}@gitee.com/yann8888/game-deals.git
+          git push gitee main
+          git remote remove gitee

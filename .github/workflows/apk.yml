@@ -25,38 +25,37 @@ jobs:
           java-version: '17'
 
       - name: 🎯 Setup Flutter
+        id: flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
       - name: 📦 Install dependencies
-        working-directory: trophyroom-app
-        run: flutter pub get
+        run: cd trophyroom-app && flutter pub get
 
       - name: 🔧 Setup Gradle wrapper
-        working-directory: trophyroom-app
         run: |
+          cd trophyroom-app
           chmod +x android/gradlew
           if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
             curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar" \
               -o android/gradle/wrapper/gradle-wrapper.jar
           fi
+          flutter doctor
 
       - name: 🔨 Build APK
-        working-directory: trophyroom-app
-        run: flutter build apk --debug
+        run: cd trophyroom-app && flutter build apk --debug
 
       - name: 📤 Prepare APK
         run: |
           mkdir -p release
-          APK_PATH="trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk"
-          if [ -f "$APK_PATH" ]; then
-            cp "$APK_PATH" release/TrophyRoom.apk
-            echo "APK ready: $(ls -lh release/TrophyRoom.apk)"
+          if [ -f "trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk" ]; then
+            cp trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
+            echo "APK size: $(ls -lh release/TrophyRoom.apk | awk '{print $5}')"
           else
-            echo "APK not found at $APK_PATH" >&2
-            find . -name "*.apk" 2>/dev/null
+            echo "APK not found" >&2
+            find trophyroom-app -name "*.apk" 2>/dev/null | head -5
             exit 1
           fi
 
@@ -66,11 +65,8 @@ jobs:
           tag_name: v${{ github.run_number }}
           name: "TrophyRoom v${{ github.run_number }}"
           body: |
-            🏆 **TrophyRoom** 自动构建
-
-            - 版本: v${{ github.run_number }}
-            - Flutter 原生 APK
-
-            > 可直接 sideload 安装到安卓设备
+            🏆 **TrophyRoom** v${{ github.run_number }}
+            
+            Flutter 原生 APK — 可直接 sideload 安装
           files: release/TrophyRoom.apk
           make_latest: true

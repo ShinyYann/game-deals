@@ -652,11 +652,22 @@ def parse_p9_new_lows():
         return []
     
     games = []
+    period_title = ''
     for topic_url in low_links[:1]:  # only the most recent post
         html = fetch(topic_url)
         if not html:
             continue
         soup = BeautifulSoup(html, 'html.parser')
+        
+        # Get post title for period display
+        title_tag = soup.find('title')
+        if title_tag:
+            period_title = title_tag.get_text(strip=True).replace('\n', '').strip()
+            # Remove common suffix
+            for suffix in [' - PSNine', ' | PSNine', ' - P9', ' | P9']:
+                if period_title.endswith(suffix):
+                    period_title = period_title[:-len(suffix)]
+                    break
         
         # Find the table containing game entries
         pt = None
@@ -733,6 +744,7 @@ def parse_p9_new_lows():
                 'deadline': deadline,
                 'platform': platform,
                 'player_count': player_count,
+                'period': period_title,
             })
     
     # Remove 万 duplicate in player_count
@@ -1305,7 +1317,9 @@ def generate_html():
     p9_new_lows = parse_p9_new_lows()
     p9_low_html = ''
     if p9_new_lows:
-        p9_low_html = '<div id="disc-p9low" class="disc-section"><section class="platform"><h2>💸 P9 港服新史低</h2><div class="game-list">'
+        first_game = p9_new_lows[0]
+        period_title = first_game.get('period', '港服新史低')
+        p9_low_html = f'<div id="disc-p9low" class="disc-section"><section class="platform"><h2>💸 {period_title}</h2><div class="game-list">'
         for g in p9_new_lows[:100]:
             display_name = g['name']
             card_img = ''

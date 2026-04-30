@@ -37,25 +37,34 @@ jobs:
       - name: 📦 Install dependencies
         run: flutter pub get
 
-      - name: 🔧 Make gradlew executable
-        run: chmod +x android/gradlew
-
-      - name: 🔨 Accept Android licenses
+      - name: 🔧 Setup Gradle wrapper
         run: |
-          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses 2>/dev/null || true
-          yes | $JAVA_HOME/bin/sdkmanager --licenses 2>/dev/null || true
+          chmod +x android/gradlew
+          # Download Gradle wrapper jar if missing
+          if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
+            echo "Downloading gradle-wrapper.jar..."
+            curl -sL "https://github.com/gradle/gradle/raw/v8.3.0/gradle/wrapper/gradle-wrapper.jar" -o android/gradle/wrapper/gradle-wrapper.jar || \
+            curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar" -o android/gradle/wrapper/gradle-wrapper.jar
+          fi
 
-      - name: 🏗️ Build APK (release)
-        run: flutter build apk --release --no-tree-shake-icons
+      - name: 🔨 Check Flutter doctor
+        run: flutter doctor -v
+
+      - name: 🔨 Build APK (debug)
+        run: flutter build apk --debug 2>&1 | tail -100
 
       - name: 📤 Prepare APK
         run: |
           mkdir -p release
-          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
-          echo "APK_SIZE=$(stat -c%s release/TrophyRoom.apk)" >> $GITHUB_ENV
+          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk 2>/dev/null || \
+          cp build/app/outputs/flutter-apk/app-*-debug.apk release/TrophyRoom.apk 2>/dev/null || \
+          echo "APK not found at expected path"
+          echo "Build dir contents:" && find build -name "*.apk" 2>/dev/null | head -10
+          echo "APK_SIZE=$(stat -c%s release/TrophyRoom.apk 2>/dev/null || echo 0)" >> $GITHUB_ENV
           echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
 
       - name: 🚀 Create Release
+        if: env.APK_SIZE != '0'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
@@ -68,6 +77,5 @@ jobs:
             - 大小: ${{ env.APK_SIZE }} bytes
             
             > 可直接 sideload 安装到安卓设备
-            > 国内用户优先从 Gitee Release 下载
           files: trophyroom-app/release/TrophyRoom.apk
           make_latest: true

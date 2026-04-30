@@ -1,4 +1,3 @@
-
 name: Build TrophyRoom APK
 
 on:
@@ -14,7 +13,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     defaults:
       run:
         working-directory: trophyroom-app
@@ -23,7 +21,7 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: ☕ Setup Java
+      - name: ☕ Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -35,36 +33,33 @@ jobs:
           flutter-version: '3.16.0'
           channel: 'stable'
 
-      - name: 📦 Install dependencies
+      - name: 📦 Get packages
         run: flutter pub get
 
-      - name: 🔧 Setup Gradle wrapper
+      - name: 📦 Get Gradle wrapper
         run: |
-          chmod +x android/gradlew
-          if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar" \
-              -o android/gradle/wrapper/gradle-wrapper.jar
-          fi
+          ls -la android/gradle/wrapper/
+          flutter build apk --debug 2>&1 | head -50
 
-      - name: 🔨 Build APK (debug)
+      - name: Pre-cache Gradle
+        run: |
+          cd android
+          ./gradlew --version 2>&1 | tail -5
+
+      - name: Build APK
         run: flutter build apk --debug
 
-      - name: 📤 Prepare APK
+      - name: Prepare APK for release
         run: |
-          mkdir -p release
-          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
-          echo "APK_SIZE=$(wc -c < release/TrophyRoom.apk | tr -d ' ')" >> $GITHUB_ENV
-          echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+          mkdir -p ${{ github.workspace }}/release
+          cp build/app/outputs/flutter-apk/app-debug.apk ${{ github.workspace }}/release/TrophyRoom.apk
+          ls -la ${{ github.workspace }}/release/
 
-      - name: 🚀 Create Release
-        if: ${{ env.APK_SIZE != '0' && env.APK_SIZE != '' }}
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          name: "TrophyRoom v${{ github.run_number }}"
-          body: |
-            🏆 TrophyRoom v${{ github.run_number }}
-            
-            Flutter 原生 APK
-          files: trophyroom-app/release/TrophyRoom.apk
+          name: TrophyRoom v${{ github.run_number }}
+          body: 🏆 TrophyRoom APK
+          files: release/TrophyRoom.apk
           make_latest: true

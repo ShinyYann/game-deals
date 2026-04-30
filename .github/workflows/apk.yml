@@ -13,9 +13,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: trophyroom-app
 
     steps:
       - name: 📥 Checkout
@@ -34,29 +31,24 @@ jobs:
           channel: 'stable'
 
       - name: 📦 Get packages
+        working-directory: trophyroom-app
         run: flutter pub get
 
       - name: 🔨 Build APK
-        run: flutter build apk --debug > build_output.log 2>&1 || echo "BUILD_FAILED=1" >> $GITHUB_ENV
+        working-directory: trophyroom-app
+        run: flutter build apk --debug
 
-      - name: 📄 Upload build logs (if failed)
-        if: env.BUILD_FAILED == '1'
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: trophyroom-app/build_output.log
-
-      - name: 📤 Prepare APK
+      - name: 📤 Move APK to root
         run: |
           mkdir -p release
-          cp build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk && echo "OK" || echo "APK_MISSING=1" >> $GITHUB_ENV
+          cp trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
+          ls -lh release/
 
       - name: 🚀 Create Release
-        if: env.APK_MISSING != '1'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: TrophyRoom v${{ github.run_number }}
           body: 🏆 TrophyRoom APK
-          files: ${{ github.workspace }}/trophyroom-app/release/TrophyRoom.apk
+          files: release/TrophyRoom.apk
           make_latest: true

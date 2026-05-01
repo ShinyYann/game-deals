@@ -1,0 +1,1 @@
+# NetTest ProGuard rules

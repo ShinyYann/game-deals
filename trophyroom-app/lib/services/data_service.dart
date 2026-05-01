@@ -1,117 +1,161 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 class DataService {
-  static const String _giteeBase =
-      'https://gitee.com/yann8888/game-deals/raw/main';
-  static const String _githubBase =
-      'https://raw.githubusercontent.com/ShinyYann/trophyroom/main';
+  static const String _htmlUrl =
+      'https://shinyyann.github.io/trophyroom/';
 
-  String get baseUrl => _giteeBase;
+  String get baseUrl => _htmlUrl;
 
-  /// Fetch JSON using dart:io HttpClient (bypasses Flutter http package)
-  Future<Map<String, dynamic>> fetchStats() async {
-    try {
-      final url = '$baseUrl/docs/data/stats.json';
-      final body = await _httpGet(url);
-      if (body != null) {
-        return json.decode(body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('fetchStats error: $e');
+  /// Fetch deals from the HTML page (parsed in Flutter/Dart)
+  Future<List<Map<String, dynamic>>> fetchDeals({String platform = 'all'}) async {
+    final html = await _fetchHtml();
+    if (html == null) return [];
+
+    final deals = <Map<String, dynamic>>[];
+    
+    // Parse game cards from HTML data attributes
+    final cardPattern = RegExp(
+      r'<div\s+class="game-card"[^>]*data-title="([^"]*)"'
+      r'\s+data-desc="([^"]*)"'
+      r'\s+data-url="([^"]*)"'
+      r'\s+data-price="([^"]*)"'
+      r'\s+data-oldprice="([^"]*)"'
+      r'\s+data-discount="([^"]*)"'
+      r'\s+data-platform="([^"]*)"'
+      r'\s+data-img="([^"]*)"'
+      r'\s+data-tags="([^"]*)"'
+      r'\s+data-rating="([^"]*)"'
+      r'[^>]*>',
+      caseSensitive: false,
+    );
+
+    for (final match in cardPattern.allMatches(html)) {
+      final title = _unescape(match.group(1) ?? '');
+      final desc = _unescape(match.group(2) ?? '');
+      final url = _unescape(match.group(3) ?? '');
+      final price = _unescape(match.group(4) ?? '0');
+      final oldPrice = _unescape(match.group(5) ?? '0');
+      final discount = _unescape(match.group(6) ?? '0%');
+      final plat = _unescape(match.group(7) ?? '');
+      final img = _unescape(match.group(8) ?? '');
+      final tags = _unescape(match.group(9) ?? '');
+      final rating = _unescape(match.group(10) ?? '');
+
+      if (platform != 'all' && !plat.contains(platform)) continue;
+
+      deals.add({
+        'title': title,
+        'description': desc,
+        'url': url,
+        'price': price,
+        'old_price': oldPrice,
+        'discount': discount,
+        'platform': plat,
+        'image': img,
+        'tags': tags.split('|').where((t) => t.isNotEmpty).toList(),
+        'rating': rating,
+      });
     }
-    return {'platinum': '0', 'all_achievements': '0', 'games': '0'};
+
+    // Fallback: try parsing cards from inline JSON
+    if (deals.isEmpty) {
+      deals.addAll(await _fetchFromJson());
+    }
+
+    return deals;
   }
 
-  Future<List<Map<String, dynamic>>> fetchDeals({String platform = 'all'}) async {
-    try {
-      final url = '$baseUrl/docs/data/deals.json';
-      final body = await _httpGet(url);
-      if (body != null) {
-        final data = json.decode(body) as List;
-        return data.cast<Map<String, dynamic>>();
-      }
-    } catch (e) {
-      debugPrint('fetchDeals error: $e');
+  /// Parse inline JSON from the HTML
+  Future<List<Map<String, dynamic>>> _fetchFromJson() async {
+    final html = await _fetchHtml();
+    if (html == null) return [];
+
+    // Try to find JSON data embedded in script tags
+    final scriptPattern = RegExp(
+      r'<script[^>]*>\s*window\.__DATA__\s*=\s*(\{.+?\})\s*</script>',
+      caseSensitive: false,
+      dotAll: true,
+    );
+    
+    for (final match in scriptPattern.allMatches(html)) {
+      try {
+        final data = json.decode(match.group(1)!) as Map<String, dynamic>;
+        if (data.containsKey('deals')) {
+          return (data['deals'] as List).cast<Map<String, dynamic>>();
+        }
+      } catch (_) {}
     }
+
     return [];
   }
 
-  /// Core HTTP GET using dart:io HttpClient
-  Future<String?> _httpGet(String url) async {
-    final uri = Uri.parse(url);
+  /// Fetch the HTML from GitHub Pages
+  Future<String?> _fetchHtml() async {
+    final uri = Uri.parse(_htmlUrl);
     final client = HttpClient()
       ..connectionTimeout = const Duration(seconds: 10)
-      ..idleTimeout = const Duration(seconds: 10)
-      ..badCertificateCallback = ((cert, host, port) => true); // Accept any cert
+      ..badCertificateCallback = ((cert, host, port) => true);
 
     try {
       final request = await client.getUrl(uri);
       request.headers.set('User-Agent', 'TrophyRoom/1.0');
-      request.headers.set('Accept', '*/*');
-      request.headers.set('Connection', 'keep-alive');
-
-      final response = await request.close().timeout(const Duration(seconds: 10));
+      final response = await request.close().timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        return await utf8.decodeStream(response);
-      } else {
-        debugPrint('HTTP ${response.statusCode}: $url');
-        return null;
+        return await response.transform(utf8.decoder).join();
       }
     } catch (e) {
-      debugPrint('_httpGet error: $e');
-      // Fallback: try with socket directly
+      debugPrint('_fetchHtml error: $e');
+      // Fallback: raw socket
       return await _socketGet(uri);
     } finally {
       client.close();
     }
+    return null;
   }
 
-  /// Last resort: raw TCP socket connection + manual HTTP request
+  /// Raw TCP socket HTTP request (fallback)
   Future<String?> _socketGet(Uri uri) async {
     try {
-      final host = uri.host;
-      final port = uri.scheme == 'https' ? 443 : 80;
-      final path = uri.path.isNotEmpty ? uri.path : '/';
-      final query = uri.query.isNotEmpty ? '?${uri.query}' : '';
-
-      debugPrint('_socketGet: connecting to $host:$port$path$query');
-
       final socket = await SecureSocket.connect(
-        host, port,
+        uri.host, 443,
         timeout: const Duration(seconds: 10),
-        // Accept any certificate to avoid Android 15 SSL issues
         onBadCertificate: (cert) => true,
       );
 
-      // Send raw HTTP request
-      final httpRequest = 'GET $path$query HTTP/1.1\r\n'
-          'Host: $host\r\n'
+      final path = uri.path.isNotEmpty ? uri.path : '/';
+      final httpRequest = 'GET $path HTTP/1.1\r\n'
+          'Host: ${uri.host}\r\n'
           'User-Agent: TrophyRoom/1.0\r\n'
-          'Accept: */*\r\n'
           'Connection: close\r\n'
           '\r\n';
 
       socket.write(httpRequest);
       await socket.flush();
-
-      // Read response
+      
       final response = await utf8.decodeStream(socket);
-      socket.close();
-
-      // Parse out headers and body
+      // Extract body after headers
       final parts = response.split('\r\n\r\n');
-      if (parts.length >= 2) {
-        final statusLine = parts[0].split('\r\n')[0];
-        debugPrint('Socket response: $statusLine');
+      if (parts.length > 1) {
         return parts.sublist(1).join('\r\n\r\n');
       }
-      return response;
     } catch (e) {
       debugPrint('_socketGet error: $e');
-      return null;
     }
+    return null;
+  }
+
+  String _unescape(String s) {
+    return s
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&#x27;', "'")
+        .replaceAll('&#x2F;', '/');
   }
 }

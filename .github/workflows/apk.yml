@@ -46,12 +46,67 @@ jobs:
           cd /tmp/trophyroom
           flutter pub get
 
-          # 4. Patch app/build.gradle - applicationId + signing
+          # 4. Check what flutter create generated
           cd /tmp/trophyroom/android
-          sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' app/build.gradle
+          find . -name "*.gradle*" -type f 2>/dev/null || true
+          ls -la app/ 2>/dev/null || echo "no app/ dir"
 
-          # 5. Append signing config
-          cat >> app/build.gradle << 'SIGNGRADLE'
+          # 5. Find the correct build.gradle (may be .kts)
+          GRADLE_FILE=""
+          if [ -f app/build.gradle ]; then GRADLE_FILE="app/build.gradle"; fi
+          if [ -f app/build.gradle.kts ]; then GRADLE_FILE="app/build.gradle.kts"; fi
+          echo "Found gradle file: $GRADLE_FILE"
+
+          # 6. Patch applicationId
+          if echo "$GRADLE_FILE" | grep -q '\.kts$'; then
+            sed -i 's/applicationId = ".*"/applicationId = "com.yann.trophyroom"/' "$GRADLE_FILE"
+          else
+            sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' "$GRADLE_FILE"
+          fi
+
+          # 7. Append signing config (also in .kts format if needed)
+          if echo "$GRADLE_FILE" | grep -q '\.kts$'; then
+            cat >> "$GRADLE_FILE" << 'SIGNGRADLE'
+
+            signingConfigs {
+                create("release") {
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                    storeFile = file(keystoreProperties["storeFile"] as String)
+                    storePassword = keystoreProperties["storePassword"] as String
+                }
+            }
+            buildTypes {
+                getByName("release") {
+                    signingConfig = signingConfigs.getByName("release")
+                }
+            }
+SIGNGRADLE
+          else
+            cat >> "$GRADLE_FILE" << 'SIGNGRADLE'
+
+            def keystoreProperties = new Properties()
+            def keystorePropertiesFile = rootProject.file('key.properties')
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+            }
+            android {
+                signingConfigs {
+                    release {
+                        keyAlias keystoreProperties['keyAlias']
+                        keyPassword keystoreProperties['keyPassword']
+                        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                        storePassword keystoreProperties['storePassword']
+                    }
+                }
+                buildTypes {
+                    release {
+                        signingConfig signingConfigs.release
+                    }
+                }
+            }
+SIGNGRADLE
+          fi
 
           def keystoreProperties = new Properties()
           def keystorePropertiesFile = rootProject.file('key.properties')

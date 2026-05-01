@@ -8,6 +8,9 @@ on:
     paths:
       - 'trophyroom-app/**'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,10 +37,10 @@ jobs:
           curl -sL "https://github.com/gradle/gradle/raw/v8.3.0/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar
           chmod +x gradlew
 
-      - name: Create key.properties for release signing
+      - name: Create key.properties
         run: |
           keytool -genkey -v -keystore /tmp/release.keystore \
-            -alias release -keyalg RSA -keysize 2048 -validity 10000 \
+            -alias release -keyalg RSA -keysize 2044 -validity 10000 \
             -storepass trophyroom -keypass trophyroom \
             -dname "CN=TrophyRoom, OU=Dev, O=Yann, L=Shanghai, S=Shanghai, C=CN"
           cat > trophyroom-app/android/key.properties << EOF
@@ -54,18 +57,25 @@ jobs:
       - name: Build Release APK
         working-directory: trophyroom-app
         run: |
-          flutter build apk --release \
-            --build-number=${{ github.run_number }} \
-            --build-name=1.0.${{ github.run_number }}
-          ls -lh build/app/outputs/flutter-apk/
+          flutter build apk --release --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }}
           cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
+          ls -lh /tmp/TrophyRoom.apk
 
-      - name: Create Release
+      - name: Upload to Release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v${{ github.run_number }} \
-            /tmp/TrophyRoom.apk \
+          gh release create "v${{ github.run_number }}" \
+            "/tmp/TrophyRoom.apk#TrophyRoom.apk" \
             --title "TrophyRoom v${{ github.run_number }}" \
-            --notes "TrophyRoom APK (Release - Signed - targetSdk33)" \
-            --latest
+            --notes "Release APK - targetSdk33, signed" \
+            --latest || true
+          # Also try softprops as fallback
+      - name: Softprops Release (fallback)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: TrophyRoom v${{ github.run_number }}
+          files: /tmp/TrophyRoom.apk
+          make_latest: true
+          fail_on_unmatched_files: false

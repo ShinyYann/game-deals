@@ -97,7 +97,7 @@ class _DealsPageState extends State<DealsPage> {
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.text3.withOpacity(0.5),
+                  color: AppTheme.text2.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -314,7 +314,7 @@ class _DealsPageState extends State<DealsPage> {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 40),
                         child: Text(_error!, textAlign: TextAlign.center,
-                          style: TextStyle(color: AppTheme.text3, fontSize: 12)),
+                          style: TextStyle(color: AppTheme.text2, fontSize: 12)),
                       ),
                       SizedBox(height: 12),
                       TextButton.icon(
@@ -358,7 +358,7 @@ class _DealsPageState extends State<DealsPage> {
                               padding: const EdgeInsets.symmetric(vertical: 20),
                               child: Center(
                                 child: Text('已展示全部 ${_deals.length} 款折扣',
-                                  style: TextStyle(color: AppTheme.text3, fontSize: 12)),
+                                  style: TextStyle(color: AppTheme.text2, fontSize: 12)),
                               ),
                             );
                           }
@@ -464,7 +464,7 @@ class _DealsPageState extends State<DealsPage> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(tags.first.toString(),
-                          style: TextStyle(color: AppTheme.text3, fontSize: 10),
+                          style: TextStyle(color: AppTheme.text2, fontSize: 10),
                           maxLines: 1, overflow: TextOverflow.ellipsis),
                       ),
                     ],

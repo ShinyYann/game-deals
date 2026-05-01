@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -12,16 +11,22 @@ class UpdateService {
   /// Check for update. Returns (hasUpdate, latestVersion, downloadUrl, releaseNotes)
   static Future<Map<String, dynamic>?> checkUpdate(String currentVersion) async {
     try {
-      final resp = await http
-          .get(Uri.parse(_apiUrl), headers: {
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'TrophyRoom/1.0',
-          })
-          .timeout(const Duration(seconds: 10));
+      final uri = Uri.parse(_apiUrl);
+      final client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 10)
+        ..badCertificateCallback = ((cert, host, port) => true);
 
-      if (resp.statusCode != 200) return null;
+      final request = await client.getUrl(uri);
+      request.headers.set('Accept', 'application/vnd.github.v3+json');
+      request.headers.set('User-Agent', 'TrophyRoom/1.0');
 
-      final data = json.decode(resp.body);
+      final response = await request.close().timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return null;
+
+      final body = await utf8.decodeStream(response);
+      client.close();
+
+      final data = json.decode(body);
       final latestTag = data['tag_name'] as String? ?? '';
       final assets = data['assets'] as List? ?? [];
       String? downloadUrl;
@@ -35,7 +40,7 @@ class UpdateService {
       if (downloadUrl == null && assets.isNotEmpty) {
         downloadUrl = assets[0]['browser_download_url'] as String?;
       }
-      downloadUrl ??= '${_apiUrl.replaceAll('/releases/latest', '/releases/latest/download/TrophyRoom.apk')}';
+      downloadUrl ??= 'https://github.com/ShinyYann/trophyroom/releases/latest/download/TrophyRoom.apk';
 
       final hasUpdate = _compareVersions(latestTag, currentVersion);
       return {
@@ -67,22 +72,23 @@ class UpdateService {
       final dir = await getExternalStorageDirectory();
       final file = File('${dir!.path}/TrophyRoom-Update.apk');
 
-      // Download with progress
-      final resp = await http
-          .get(Uri.parse(url), headers: {
-            'User-Agent': 'TrophyRoom/1.0',
-          })
-          .timeout(const Duration(minutes: 3));
+      final uri = Uri.parse(url);
+      final client = HttpClient()
+        ..badCertificateCallback = ((cert, host, port) => true);
+      final request = await client.getUrl(uri);
+      request.headers.set('User-Agent', 'TrophyRoom/1.0');
+      final response = await request.close().timeout(const Duration(minutes: 3));
 
-      await file.writeAsBytes(resp.bodyBytes);
+      final bytes = await consolidateHttpClientResponseBytes(response);
+      await file.writeAsBytes(bytes);
+      client.close();
+
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      // Open file with system intent
-      final uri = Uri.parse('file://${file.path}');
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
+      final fUri = Uri.parse('file://${file.path}');
+      if (await canLaunchUrl(fUri)) {
+        await launchUrl(fUri);
       } else {
-        // Fallback: tell user where the file is
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('下载完成! 请手动打开: ${file.path}')),
         );

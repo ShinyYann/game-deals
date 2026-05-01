@@ -428,30 +428,48 @@ class _DealsPageState extends State<DealsPage> {
                 padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
-                    // Thumbnail
+                    // Thumbnail - real game image
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [platColor.withOpacity(0.2), platColor.withOpacity(0.05)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: platColor,
+                      child: image.isNotEmpty
+                        ? Image.network(
+                            image,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, st) => Container(
+                              width: 60, height: 60,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [platColor.withOpacity(0.2), platColor.withOpacity(0.05)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?',
+                                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: platColor),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: 60, height: 60,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [platColor.withOpacity(0.2), platColor.withOpacity(0.05)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?',
+                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: platColor),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

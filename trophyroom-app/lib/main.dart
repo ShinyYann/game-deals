@@ -124,8 +124,7 @@ Future<Map<String, dynamic>> _diagnoseNetwork() async {
 
   // Method 6: System shell ping
   try {
-    final r = await Process.run('ping', ['-c', '1', '-W', '5', 'gitee.com'],
-        timeout: const Duration(seconds: 8));
+    final r = await Process.run('ping', ['-c', '1', '-W', '5', 'gitee.com']);
     results['shell_ping'] = {
       'ok': r.exitCode == 0,
       'stdout': r.stdout.toString().substring(0, min(200, (r.stdout as String).length)),

@@ -12,50 +12,19 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-
-      - name: Build APK
-        run: |
-          set -ex
-          cd /tmp
-          flutter create --org com.yann --project-name trophyroom trophyroom
-          rm -rf trophyroom/lib/*
-          cp -r "${{ github.workspace }}/trophyroom-app/lib/"* trophyroom/lib/
-          cp "${{ github.workspace }}/trophyroom-app/pubspec.yaml trophyroom/pubspec.yaml"
-          cd /tmp/trophyroom
-          flutter pub get
-          cd /tmp/trophyroom/android
-          if [ -f app/build.gradle.kts ]; then
-            sed -i 's/applicationId = ".*"/applicationId = "com.yann.trophyroom"/' app/build.gradle.kts
-            printf '\nsigningConfigs {\n    create("release") {\n        keyAlias = keystoreProperties["keyAlias"] as String\n        keyPassword = keystoreProperties["keyPassword"] as String\n        storeFile = file(keystoreProperties["storeFile"] as String)\n        storePassword = keystoreProperties["storePassword"] as String\n    }\n}\nbuildTypes {\n    getByName("release") {\n        signingConfig = signingConfigs.getByName("release")\n    }\n}\n' >> app/build.gradle.kts
-          else
-            sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' app/build.gradle
-            printf '\ndef keystoreProperties = new Properties()\ndef keystorePropertiesFile = rootProject.file('"'"'key.properties'"'"')\nif (keystorePropertiesFile.exists()) {\n    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n}\nandroid {\n    signingConfigs {\n        release {\n            keyAlias keystoreProperties['"'"'keyAlias'"'"']\n            keyPassword keystoreProperties['"'"'keyPassword'"'"']\n            storeFile keystoreProperties['"'"'storeFile'"'"'] ? file(keystoreProperties['"'"'storeFile'"'"']) : null\n            storePassword keystoreProperties['"'"'storePassword'"'"']\n        }\n    }\n    buildTypes {\n        release {\n            signingConfig signingConfigs.release\n        }\n    }\n}\n' >> app/build.gradle
-          fi
-          keytool -genkey -v -keystore /tmp/release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass trophyroom -keypass trophyroom -dname "CN=TrophyRoom, OU=Dev, O=Yann, L=Shanghai, S=Shanghai, C=CN"
-          printf 'storePassword=trophyroom\nkeyPassword=trophyroom\nkeyAlias=release\nstoreFile=/tmp/release.keystore\n' > /tmp/trophyroom/android/key.properties
-          cd /tmp/trophyroom
-          flutter build apk --release --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }}
-          cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
-          file /tmp/TrophyRoom.apk
-          ls -lh /tmp/TrophyRoom.apk
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
+      - name: Run build script
+        run: bash .github/workflows/build-trophyroom.sh "${{ github.workspace }}" ${{ github.run_number }}
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: TrophyRoom v${{ github.run_number }}

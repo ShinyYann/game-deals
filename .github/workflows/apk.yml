@@ -28,19 +28,26 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Re-init android project for Flutter 3.41+
+      - name: Create fresh Flutter project
         run: |
           cd /tmp
-          flutter create --org com.yann --project-name trophyroom_build trophyroom_build
-          cp -r trophyroom_build/android/* ${{ github.workspace }}/trophyroom-app/android/
-          rm -rf trophyroom_build
+          flutter create --org com.yann --project-name trophyroom trophyroom
+          # Remove default code
+          rm -rf trophyroom/lib/*
+          # Copy our code structure
+          cp -r ${{ github.workspace }}/trophyroom-app/lib/* /tmp/trophyroom/lib/
+          cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml /tmp/trophyroom/pubspec.yaml
+          # Keep the fresh android/ from flutter create
+          # Our gradle files are replaced by flutter create's
+          cd /tmp/trophyroom
+          flutter pub get
 
-      - name: Patch app/build.gradle for our IDs
+      - name: Patch applicationId + signing
         run: |
-          cd trophyroom-app/android
+          cd /tmp/trophyroom/android
           sed -i 's/applicationId.*/applicationId "com.yann.trophyroom"/' app/build.gradle
-          # Enable release signing
-          cat >> app/build.gradle << 'EOF'
+          # Add signing config
+          cat >> app/build.gradle << 'GRADLE'
           def keystoreProperties = new Properties()
           def keystorePropertiesFile = rootProject.file('key.properties')
           if (keystorePropertiesFile.exists()) {
@@ -61,7 +68,7 @@ jobs:
                   }
               }
           }
-          EOF
+          GRADLE
 
       - name: Create key.properties
         run: |
@@ -69,20 +76,16 @@ jobs:
             -alias release -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass trophyroom -keypass trophyroom \
             -dname "CN=TrophyRoom, OU=Dev, O=Yann, L=Shanghai, S=Shanghai, C=CN"
-          cat > trophyroom-app/android/key.properties << EOF
+          cat > /tmp/trophyroom/android/key.properties << EOF
           storePassword=trophyroom
           keyPassword=trophyroom
           keyAlias=release
           storeFile=/tmp/release.keystore
           EOF
 
-      - name: Get dependencies
-        working-directory: trophyroom-app
-        run: flutter pub get
-
       - name: Build Release APK
-        working-directory: trophyroom-app
         run: |
+          cd /tmp/trophyroom
           flutter build apk --release \
             --build-number=${{ github.run_number }} \
             --build-name=1.0.${{ github.run_number }}

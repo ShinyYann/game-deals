@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class DataService {
-  static const String _githubRaw = 'https://raw.githubusercontent.com/ShinyYann/trophyroom/main/docs/data';
+  static const String _githubRaw = 'https://shinyyann.github.io/trophyroom/data';
   
   String get baseUrl => _githubRaw;
 

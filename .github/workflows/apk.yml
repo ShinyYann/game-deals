@@ -28,26 +28,31 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create fresh Flutter project
+      - name: Build APK
         run: |
+          set -ex
+
+          # 1. Create fresh Flutter project
           cd /tmp
           flutter create --org com.yann --project-name trophyroom trophyroom
-          # Remove default code
-          rm -rf trophyroom/lib/*
-          # Copy our code structure
-          cp -r ${{ github.workspace }}/trophyroom-app/lib/* /tmp/trophyroom/lib/
-          cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml /tmp/trophyroom/pubspec.yaml
-          # Keep the fresh android/ from flutter create
-          # Our gradle files are replaced by flutter create's
+
+          # 2. Copy our code into it
+          OUR_CODE="${{ github.workspace }}/trophyroom-app"
+          rm -rf /tmp/trophyroom/lib/*
+          cp -r "$OUR_CODE/lib/"* /tmp/trophyroom/lib/
+          cp "$OUR_CODE/pubspec.yaml" /tmp/trophyroom/pubspec.yaml
+
+          # 3. Install dependencies
           cd /tmp/trophyroom
           flutter pub get
 
-      - name: Patch applicationId + signing
-        working-directory: /tmp/trophyroom/android
-        run: |
-          sed -i 's/applicationId.*/applicationId "com.yann.trophyroom"/' app/build.gradle
-          # Add signing config
-          cat >> app/build.gradle << 'GRADLE'
+          # 4. Patch app/build.gradle - applicationId + signing
+          cd /tmp/trophyroom/android
+          sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' app/build.gradle
+
+          # 5. Append signing config
+          cat >> app/build.gradle << 'SIGNGRADLE'
+
           def keystoreProperties = new Properties()
           def keystorePropertiesFile = rootProject.file('key.properties')
           if (keystorePropertiesFile.exists()) {
@@ -68,32 +73,31 @@ jobs:
                   }
               }
           }
-          GRADLE
+          SIGNGRADLE
 
-      - name: Create key.properties
-        working-directory: /tmp/trophyroom/android
-        run: |
+          # 6. Create keystore and key.properties
           keytool -genkey -v -keystore /tmp/release.keystore \
             -alias release -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass trophyroom -keypass trophyroom \
             -dname "CN=TrophyRoom, OU=Dev, O=Yann, L=Shanghai, S=Shanghai, C=CN"
-          cat > /tmp/trophyroom/android/key.properties << EOF
+
+          cat > /tmp/trophyroom/android/key.properties << KEYEOF
           storePassword=trophyroom
           keyPassword=trophyroom
           keyAlias=release
           storeFile=/tmp/release.keystore
-          EOF
+          KEYEOF
 
-      - name: Build Release APK
-        run: |
+          # 7. Build release APK
           cd /tmp/trophyroom
           flutter build apk --release \
             --build-number=${{ github.run_number }} \
             --build-name=1.0.${{ github.run_number }}
+
+          # 8. Copy APK for upload
           cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
 
-      - name: Verify APK
-        run: |
+          # 9. Verify
           file /tmp/TrophyRoom.apk
           ls -lh /tmp/TrophyRoom.apk
 

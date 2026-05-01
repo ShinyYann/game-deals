@@ -24,22 +24,29 @@ keyPassword=trophyroom
 keyAlias=release
 storeFile=/tmp/release.keystore
 EOF
-  # Read key.properties for Gradle
+  # Read key.properties for Gradle (Kotlin DSL)
   cat >> "$APP_GRADLE" << 'EOF'
 
+import java.util.Properties
+import java.io.FileInputStream
+
 val keystorePropsFile = rootProject.file("key.properties")
-val keystoreProps = java.util.Properties()
+val keystoreProps = Properties()
 if (keystorePropsFile.exists()) {
-    keystoreProps.load(keystorePropsFile.inputStream())
+    keystoreProps.load(FileInputStream(keystorePropsFile))
 }
 
 android {
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProps["keyAlias"] as String
-            keyPassword = keystoreProps["keyPassword"] as String
-            storeFile = file(keystoreProps["storeFile"] as String)
-            storePassword = keystoreProps["storePassword"] as String
+            val alias: String = keystoreProps.getProperty("keyAlias")
+            val pass: String = keystoreProps.getProperty("keyPassword")
+            val storeF: String = keystoreProps.getProperty("storeFile")
+            val storeP: String = keystoreProps.getProperty("storePassword")
+            keyAlias = alias
+            keyPassword = pass
+            storeFile = file(storeF)
+            storePassword = storeP
         }
     }
     buildTypes {

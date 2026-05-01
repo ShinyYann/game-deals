@@ -322,6 +322,12 @@ class _DealsPageState extends State<DealsPage> {
                         icon: Icon(Icons.refresh, color: AppTheme.accent2, size: 18),
                         label: Text('重新加载', style: TextStyle(color: AppTheme.accent2)),
                       ),
+                      SizedBox(height: 8),
+                      Text(
+                        '提示：请用系统浏览器下载安装\n否则联网权限可能被限制',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppTheme.accent4, fontSize: 12),
+                      ),
                     ]),
                   )
                 : _deals.isEmpty

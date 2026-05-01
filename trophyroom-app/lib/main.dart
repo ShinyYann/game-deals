@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -54,7 +55,7 @@ void main() async {
     _reportCrash('FLUTTER', details.exception, details.stack);
   };
 
-  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+  ui.PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
     _reportCrash('DISPATCH', error, stack);
     return true;
   };

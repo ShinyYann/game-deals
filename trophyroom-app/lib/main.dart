@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'pages/home_page.dart';
 import 'pages/trophy_page.dart';
 import 'pages/deals_page.dart';
@@ -25,23 +24,30 @@ Future<void> _reportCrash(String type, dynamic error, StackTrace? stack) async {
       await File('${dir.path}/crash.log').writeAsString('$log\n${"=" * 40}\n', mode: FileMode.append);
     }
   } catch (_) {}
-  // Try POST to dpaste (best effort)
+  // Try POST to dpaste (best effort, skip on network errors)
   try {
-    final resp = await http.post(
-      Uri.parse('https://dpaste.org/api/'),
-      body: {'content': log, 'format': 'url', 'expiry_days': '7'},
-    ).timeout(const Duration(seconds: 10));
-    if ((resp.statusCode == 200 || resp.statusCode == 201) && resp.body.trim().isNotEmpty) {
-      final url = resp.body.trim();
-      try {
-        var dir = Directory('/storage/emulated/0/Android/data/com.yann.trophyroom/files');
-        if (!await dir.exists()) {
-          dir = Directory('/data/data/com.yann.trophyroom/files');
-        }
-        if (await dir.exists()) {
-          await File('${dir.path}/crash.url').writeAsString(url);
-        }
-      } catch (_) {}
+    final dpUri = Uri.parse('https://dpaste.org/api/');
+    final dpClient = HttpClient()..badCertificateCallback = ((cert, host, port) => true);
+    final dpReq = await dpClient.postUrl(dpUri);
+    dpReq.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+    dpReq.write('content=${Uri.encodeComponent(log)}&format=url&expiry_days=7');
+    final dpResp = await dpReq.close().timeout(const Duration(seconds: 10));
+    if (dpResp.statusCode == 200 || dpResp.statusCode == 201) {
+      final url = await utf8.decodeStream(dpResp);
+      dpClient.close();
+      if (url.trim().isNotEmpty) {
+        try {
+          var dir = Directory('/storage/emulated/0/Android/data/com.yann.trophyroom/files');
+          if (!await dir.exists()) {
+            dir = Directory('/data/data/com.yann.trophyroom/files');
+          }
+          if (await dir.exists()) {
+            await File('${dir.path}/crash.url').writeAsString(url.trim());
+          }
+        } catch (_) {}
+      }
+    } else {
+      dpClient.close();
     }
   } catch (_) {}
 }

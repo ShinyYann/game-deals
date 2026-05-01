@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - 'trophyroom-app/**'
+      - '.github/workflows/apk.yml'
 
 permissions:
   contents: write
@@ -54,44 +55,22 @@ jobs:
         working-directory: trophyroom-app
         run: flutter pub get
 
-      - name: Build Release APK (no-compress)
+      - name: Build Release APK
         working-directory: trophyroom-app
         run: |
           flutter build apk --release \
             --build-number=${{ github.run_number }} \
             --build-name=1.0.${{ github.run_number }}
-          ls -lh build/app/outputs/flutter-apk/
-
-      - name: Verify APK integrity
-        run: |
-          echo "=== APK file info ==="
-          file trophyroom-app/build/app/outputs/flutter-apk/app-release.apk
-          echo "=== PK ZIP check ==="
-          python3 -c "
-import zipfile
-try:
-    with zipfile.ZipFile('trophyroom-app/build/app/outputs/flutter-apk/app-release.apk') as z:
-        names = z.namelist()
-        print(f'Files in APK: {len(names)}')
-        for n in names[:10]:
-            print(f'  {n}')
-        if 'AndroidManifest.xml' in names:
-            print('✅ AndroidManifest.xml found')
-        if 'classes.dex' in names:
-            print('✅ classes.dex found')
-        if 'META-INF/CERT.RSA' in names:
-            print('✅ Signature found')
-        # check file sizes
-        total = sum(z.getinfo(n).file_size for n in names)
-        print(f'Uncompressed size: {total/1024/1024:.1f} MB')
-        print(f'Compressed size: {sum(z.getinfo(n).compress_size for n in names)/1024/1024:.1f} MB')
-except Exception as e:
-    print(f'❌ ZIP check failed: {e}')
-"
 
       - name: Copy APK
         run: |
           cp trophyroom-app/build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
+
+      - name: Verify APK
+        run: |
+          file /tmp/TrophyRoom.apk
+          ls -lh /tmp/TrophyRoom.apk
+          python3 -c "import zipfile; z=zipfile.ZipFile('/tmp/TrophyRoom.apk'); print('Files:', len(z.namelist())); print('OK' if 'AndroidManifest.xml' in z.namelist() else 'NO MANIFEST')"
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2

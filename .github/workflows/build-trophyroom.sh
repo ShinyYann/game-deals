@@ -34,7 +34,11 @@ echo "android.useAndroidX=true" >> gradle.properties
 
 cd /tmp/trophyroom
 flutter build apk --debug --build-number=$2 --build-name=1.0.$2 --target-platform android-arm,android-arm64
-cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk 2>/dev/null || \
-  cp build/app/outputs/apk/release/app-release.apk /tmp/TrophyRoom.apk 2>/dev/null || true
-file /tmp/TrophyRoom.apk
-ls -lh /tmp/TrophyRoom.apk
+# Debug APK paths
+cp build/app/outputs/flutter-apk/app-debug.apk /tmp/TrophyRoom.apk 2>/dev/null || \
+  cp build/app/outputs/apk/debug/app-debug.apk /tmp/TrophyRoom.apk 2>/dev/null || \
+  cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk 2>/dev/null || \
+  cp build/app/outputs/apk/release/app-release.apk /tmp/TrophyRoom.apk 2>/dev/null || \
+  cp build/app/outputs/flutter-apk/app.apk /tmp/TrophyRoom.apk 2>/dev/null || true
+file /tmp/TrophyRoom.apk 2>/dev/null || echo "No APK found"
+ls -lh /tmp/TrophyRoom.apk 2>/dev/null || true

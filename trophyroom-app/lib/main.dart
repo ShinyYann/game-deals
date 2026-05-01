@@ -228,8 +228,8 @@ class _TrophyRoomAppState extends State<TrophyRoomApp> {
               style: TextStyle(
                 color: isActive
                     ? const Color(0xFFa855f7)
-                    : const Color(0xFF666),
-                fontSize: 10,
+                    : const Color(0xFF999),
+                fontSize: 11,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),

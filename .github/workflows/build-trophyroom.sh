@@ -55,7 +55,15 @@ echo "org.gradle.jvmargs=-Xmx4g" >> gradle.properties
 echo "android.useAndroidX=true" >> gradle.properties
 
 cd /tmp/trophyroom
-flutter build apk --release --build-number=$2 --build-name=1.0.$2 --target-platform android-arm,android-arm64
+flutter build apk --release --build-number=$2 --build-name=1.0.$2 --target-platform android-arm,android-arm64 2>&1 || {
+  echo "=== BUILD FAILED ==="
+  flutter build apk --release --build-number=$2 --build-name=1.0.$2 --target-platform android-arm,android-arm64 2>&1 || true
+  echo "=== Listing build output ==="
+  find build -name "*.apk" 2>/dev/null || echo "No APKs found"
+  echo "=== Gradle error log (if exists) ==="
+  cat /tmp/trophyroom/build/app/outputs/flutter-apk/*.log 2>/dev/null || true
+  exit 1
+}
 # Debug APK paths
 cp build/app/outputs/flutter-apk/app-debug.apk /tmp/TrophyRoom.apk 2>/dev/null || \
   cp build/app/outputs/apk/debug/app-debug.apk /tmp/TrophyRoom.apk 2>/dev/null || \

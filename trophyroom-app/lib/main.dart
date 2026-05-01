@@ -111,7 +111,7 @@ Future<Map<String, dynamic>> _diagnoseNetwork() async {
       '-s', '--connect-timeout', '5', '--max-time', '8',
       '-H', 'User-Agent: TrophyRoom/1.0',
       'https://gitee.com/yann8888/game-deals/raw/main/README.md'
-    ], timeout: const Duration(seconds: 10));
+    ]);
     results['shell_curl'] = {
       'ok': r.exitCode == 0 && (r.stdout as String).isNotEmpty,
       'stdout_len': (r.stdout as String).length,
@@ -142,7 +142,7 @@ Future<Map<String, dynamic>> _diagnoseNetwork() async {
       '-q', '-O', '-', '--timeout=8',
       '--header=User-Agent: TrophyRoom/1.0',
       'https://gitee.com/yann8888/game-deals/raw/main/README.md'
-    ], timeout: const Duration(seconds: 10));
+    ]);
     results['shell_wget'] = {
       'ok': r.exitCode == 0 && (r.stdout as String).isNotEmpty,
       'stdout_len': (r.stdout as String).length,

@@ -24,6 +24,28 @@ flutter pub get
 
 cd /tmp/trophyroom/android
 
+# --- Build InstallHelper APK ---
+cd /tmp
+export ANDROID_HOME=/usr/local/lib/android/sdk
+mkdir -p install-helper/app/src/main/java/com/yann/installhelper
+GRADLE_VER=8.12
+if [ ! -f /tmp/gradle-${GRADLE_VER}/bin/gradle ]; then
+  curl -sL "https://services.gradle.org/distributions/gradle-${GRADLE_VER}-bin.zip" -o /tmp/gradle.zip
+  unzip -q /tmp/gradle.zip -d /tmp
+fi
+
+# Copy InstallHelper project files
+cp -r "$1/install-helper/"* /tmp/install-helper/
+
+# Build InstallHelper
+cd /tmp/install-helper
+/tmp/gradle-${GRADLE_VER}/bin/gradle assembleRelease --no-daemon -p . 2>&1 || echo "InstallHelper build failed (non-critical)"
+
+# Copy helper APK next to main APK
+mkdir -p /tmp/helper-output
+cp /tmp/install-helper/app/build/outputs/apk/release/*.apk /tmp/helper-output/ 2>/dev/null || true
+
+# --- Back to main build ---
 # Patch applicationId
 sed -i 's/applicationId = ".*"/applicationId = "com.yann.trophyroom"/' app/build.gradle.kts 2>/dev/null || true
 sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' app/build.gradle 2>/dev/null || true

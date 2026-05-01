@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/app_theme.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -74,6 +76,9 @@ class _SettingsPageState extends State<SettingsPage> {
               _divider(),
               _infoItem('更新渠道', 'Gitee Release'),
             ]),
+            const SizedBox(height: 20),
+            // Debug
+            _debugSection(),
             const SizedBox(height: 32),
             // Footer
             Center(
@@ -272,6 +277,45 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _debugSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        _sectionHeader('🛠️ 调试'),
+        const SizedBox(height: 8),
+        _buildCard([
+          _settingItem('查看崩溃日志', '点击导出', Icons.bug_report, Colors.redAccent, () async {
+            final dir = Directory('/storage/emulated/0/Android/data/com.yann.trophyroom/files');
+            if (await dir.exists()) {
+              final file = File('${dir.path}/crash.log');
+              if (await file.exists()) {
+                final log = await file.readAsString();
+                await Share.share(log, subject: 'TrophyRoom Crash Log');
+                return;
+              }
+            }
+            // fallback
+            final dir2 = Directory('/data/data/com.yann.trophyroom/files');
+            if (await dir2.exists()) {
+              final file = File('${dir2.path}/crash.log');
+              if (await file.exists()) {
+                final log = await file.readAsString();
+                await Share.share(log, subject: 'TrophyRoom Crash Log');
+                return;
+              }
+            }
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('没有找到崩溃日志')),
+              );
+            }
+          }),
+        ]),
+      ],
     );
   }
 

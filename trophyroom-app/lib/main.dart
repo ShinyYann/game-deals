@@ -25,27 +25,6 @@ Future<void> _reportCrash(String type, dynamic error, StackTrace? stack) async {
   } catch (_) {}
 }
 
-/// Attempt to open network permission settings for this app
-/// Works on most Chinese ROMs (Xiaomi, OPPO, Huawei, Nubia/RedMagic)
-Future<void> _requestNetworkPermission() async {
-  try {
-    // Method 1: Open app details settings (standard Android)
-    await Process.run('am', [
-      'start',
-      '-a', 'android.settings.APPLICATION_DETAILS_SETTINGS',
-      '-d', 'package:com.yann.trophyroom'
-    ]);
-  } catch (_) {
-    try {
-      // Method 2: Try WLAN control settings (Nubia/RedMagic specific)
-      await Process.run('am', [
-        'start',
-        '-a', 'android.settings.WIFI_SETTINGS'
-      ]);
-    } catch (_) {}
-  }
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -65,6 +44,12 @@ void main() async {
     systemNavigationBarColor: Color(0xFF0A0A12),
     systemNavigationBarIconBrightness: Brightness.light,
   ));
+
+  // Request network permission on startup (triggers system dialog on Chinese ROMs)
+  try {
+    final channel = MethodChannel('com.yann.trophyroom/native_http');
+    await channel.invokeMethod<bool>('requestNetworkPermission');
+  } catch (_) {}
 
   runApp(TrophyRoomApp());
 }
@@ -146,11 +131,10 @@ class _MainAppState extends State<_MainApp> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '检测到 TrophyRoom 可能被禁止联网。\n\n'
-              '请点击下面的按钮，在系统设置中：\n'
-              '1. 找到 "TrophyRoom"\n'
-              '2. 开启 "WLAN" 和 "数据网络" 开关\n\n'
-              '手机管家 → 联网管理 → TrophyRoom',
+              'TrophyRoom 需要联网才能获取游戏数据。\n\n'
+              '请点击下方按钮，在系统设置中：\n'
+              '找到 "TrophyRoom" → 开启联网开关\n\n'
+              '如果找不到联网选项，请查看手机管家的"联网管理"',
               style: TextStyle(color: Color(0xFFaaa), fontSize: 14, height: 1.5),
             ),
           ],
@@ -163,7 +147,7 @@ class _MainAppState extends State<_MainApp> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              _requestNetworkPermission();
+              _openNetworkSettings();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFa855f7),
@@ -174,6 +158,23 @@ class _MainAppState extends State<_MainApp> {
         ],
       ),
     );
+  }
+
+  Future<void> _openNetworkSettings() async {
+    try {
+      await Process.run('am', [
+        'start',
+        '-a', 'android.settings.APPLICATION_DETAILS_SETTINGS',
+        '-d', 'package:com.yann.trophyroom'
+      ]);
+    } catch (_) {
+      try {
+        await Process.run('am', [
+          'start',
+          '-a', 'android.settings.MANAGE_ALL_APPLICATIONS_SETTINGS'
+        ]);
+      } catch (_) {}
+    }
   }
 
   @override
@@ -235,7 +236,7 @@ class _MainAppState extends State<_MainApp> {
               ),
             ],
           ),
-          // Home indicator for bottom nav
+          // Bottom nav
           Positioned(
             left: 0, right: 0, bottom: 0,
             child: _buildBottomNav(),

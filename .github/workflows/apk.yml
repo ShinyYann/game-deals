@@ -1,60 +1,91 @@
 name: Build TrophyRoom APK
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
       - 'trophyroom-app/**'
-  workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: ☕ Setup Java 17
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'temurin'
 
-      - name: 🎯 Setup Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
           channel: 'stable'
+          cache: true
 
-      - name: 🏗️ Build
+      - name: Download gradle-wrapper.jar
+        working-directory: trophyroom-app/android
+        run: |
+          curl -sL "https://github.com/gradle/gradle/raw/v8.3.0/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar
+          chmod +x gradlew
+          ls -la gradle/wrapper/gradle-wrapper.jar
+
+      - name: Create release keystore
+        run: |
+          keytool -genkey -v -keystore /tmp/release.keystore \
+            -alias release -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass trophyroom -keypass trophyroom \
+            -dname "CN=TrophyRoom, OU=Dev, O=Yann, L=Shanghai, S=Shanghai, C=CN"
+
+      - name: Get dependencies
+        working-directory: trophyroom-app
+        run: flutter pub get
+
+      - name: Build Release APK
         working-directory: trophyroom-app
         run: |
-          flutter build apk --debug 2>&1 | tee /tmp/build_log.txt
-          exit ${PIPESTATUS[0]}
+          flutter build apk --release \
+            --build-number=${{ github.run_number }} \
+            --build-name=1.0.${{ github.run_number }}
 
-      - name: 📤 Upload build log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: /tmp/build_log.txt
-
-      - name: 📤 Move APK
-        if: success()
+      - name: Sign and align APK (zipalign + apksigner)
         run: |
-          mkdir -p release
-          cp trophyroom-app/build/app/outputs/flutter-apk/app-debug.apk release/TrophyRoom.apk
+          # Align
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 \
+            trophyroom-app/build/app/outputs/flutter-apk/app-release-unsigned.apk \
+            /tmp/app-aligned.apk
+          # Sign
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks /tmp/release.keystore \
+            --ks-key-alias release \
+            --ks-pass pass:trophyroom \
+            --key-pass pass:trophyroom \
+            --out trophyroom-app/build/app/outputs/flutter-apk/TrophyRoom.apk \
+            /tmp/app-aligned.apk
 
-      - name: 🚀 Release
-        if: success()
+      - name: List build output
+        working-directory: trophyroom-app
+        run: |
+          ls -lh build/app/outputs/flutter-apk/
+          ls -lh build/app/outputs/flutter-apk/app-release.apk 2>/dev/null || true
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: TrophyRoom v${{ github.run_number }}
-          body: 🏆 TrophyRoom
-          files: release/TrophyRoom.apk
+          body: |
+            TrophyRoom APK 自动编译
+            
+            - 版本: 1.0.${{ github.run_number }}
+            - 构建号: ${{ github.run_number }}
+            - 平台: Android
+          files: |
+            trophyroom-app/build/app/outputs/flutter-apk/TrophyRoom.apk
           make_latest: true
+          fail_on_unmatched_files: false

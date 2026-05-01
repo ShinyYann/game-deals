@@ -301,11 +301,10 @@ class _NetworkDebugPage extends StatelessWidget {
                 const Text('2. 应用装在双开/分身/隐私空间', style: TextStyle(color: Color(0xFF888), fontSize: 12)),
                 const Text('3. VPN/代理对 TrophyRoom 生效', style: TextStyle(color: Color(0xFF888), fontSize: 12)),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(
-                    builder: (_) => const _MainApp(),
-                  )),
-                  child: const Text('跳过诊断 → 进入应用', style: TextStyle(color: Color(0xFFa855f7))),
+                TextButton.icon(
+                  onPressed: () => _openNetworkSettings(context),
+                  icon: const Icon(Icons.settings, color: Color(0xFFa855f7)),
+                  label: const Text('打开联网设置', style: TextStyle(color: Color(0xFFa855f7))),
                 ),
               ],
             ],
@@ -315,6 +314,61 @@ class _NetworkDebugPage extends StatelessWidget {
     );
   }
 }
+
+void _openNetworkSettings(BuildContext context) async {
+    final methods = [
+      '努比亚/红魔: 设置→特殊应用权限→WLAN控制',
+      '小米: 设置→应用→应用管理→联网控制',
+      'OPPO: 手机管家→联网管理',
+      '华为: 设置→无线和网络→流量管理→应用联网',
+      '通用: 设置→应用→TrophyRoom→流量使用情况',
+    ];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1a1a2e),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('📶 选择你的手机品牌',
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ...methods.map((m) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _tryOpenSettings(m);
+                },
+                child: Text(m, style: const TextStyle(color: Color(0xFFa855f7), fontSize: 13)),
+              ),
+            )),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('取消', style: TextStyle(color: Color(0xFF666))),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _tryOpenSettings(String brandHint) {
+    try {
+      Process.run('am', ['start', '-a', 'android.settings.APPLICATION_DETAILS_SETTINGS',
+        '-d', 'package:com.yann.trophyroom']);
+    } catch (_) {
+      try {
+        Process.run('am', ['start', '-a', 'android.settings.WIFI_SETTINGS']);
+      } catch (_) {}
+    }
+  }
 
 class _MainApp extends StatefulWidget {
   const _MainApp();

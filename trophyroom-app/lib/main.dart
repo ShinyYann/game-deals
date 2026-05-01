@@ -104,8 +104,58 @@ Future<Map<String, dynamic>> _diagnoseNetwork() async {
     results['raw_socket'] = {'ok': false, 'error': e.toString()};
   }
 
+  // Method 5: System shell curl (bypasses app-level network controls)
+  try {
+    final start = DateTime.now();
+    final r = await Process.run('curl', [
+      '-s', '--connect-timeout', '5', '--max-time', '8',
+      '-H', 'User-Agent: TrophyRoom/1.0',
+      'https://gitee.com/yann8888/game-deals/raw/main/README.md'
+    ], timeout: const Duration(seconds: 10));
+    results['shell_curl'] = {
+      'ok': r.exitCode == 0 && (r.stdout as String).isNotEmpty,
+      'stdout_len': (r.stdout as String).length,
+      'stderr': r.stderr.toString(),
+      'time_ms': DateTime.now().difference(start).inMilliseconds,
+    };
+  } catch (e) {
+    results['shell_curl'] = {'ok': false, 'error': e.toString()};
+  }
+
+  // Method 6: System shell ping
+  try {
+    final r = await Process.run('ping', ['-c', '1', '-W', '5', 'gitee.com'],
+        timeout: const Duration(seconds: 8));
+    results['shell_ping'] = {
+      'ok': r.exitCode == 0,
+      'stdout': r.stdout.toString().substring(0, min(200, (r.stdout as String).length)),
+      'stderr': r.stderr.toString(),
+    };
+  } catch (e) {
+    results['shell_ping'] = {'ok': false, 'error': e.toString()};
+  }
+
+  // Method 7: System shell wget
+  try {
+    final start = DateTime.now();
+    final r = await Process.run('wget', [
+      '-q', '-O', '-', '--timeout=8',
+      '--header=User-Agent: TrophyRoom/1.0',
+      'https://gitee.com/yann8888/game-deals/raw/main/README.md'
+    ], timeout: const Duration(seconds: 10));
+    results['shell_wget'] = {
+      'ok': r.exitCode == 0 && (r.stdout as String).isNotEmpty,
+      'stdout_len': (r.stdout as String).length,
+      'time_ms': DateTime.now().difference(start).inMilliseconds,
+    };
+  } catch (e) {
+    results['shell_wget'] = {'ok': false, 'error': e.toString()};
+  }
+
   return results;
 }
+
+int min(int a, int b) => a < b ? a : b;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -155,7 +205,7 @@ class _NetworkDebugPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allMethods = ['dart_io_gitee', 'dart_io_github', 'dns_gitee', 'dns_github', 'raw_socket'];
+    final allMethods = ['dart_io_gitee', 'dart_io_github', 'dns_gitee', 'dns_github', 'raw_socket', 'shell_curl', 'shell_wget', 'shell_ping'];
     final anyOk = allMethods.any((m) => diagnosis[m]?['ok'] == true);
     // If network is OK after all, redirect to main app
     if (anyOk) {

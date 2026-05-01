@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'pages/home_page.dart';
@@ -8,15 +10,50 @@ import 'pages/settings_page.dart';
 import 'pages/splash_page.dart';
 import 'models/app_theme.dart';
 
-void main() {
+/// Global crash log path
+String? crashLogPath;
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF0A0A12),
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
-  runApp(const TrophyRoomApp());
+  FlutterError.onError = (FlutterErrorDetails details) async {
+    FlutterError.presentError(details);
+    final log = '[${DateTime.now()}][FLUTTER] ${details.exception}\n${details.stack}\n';
+    final dir = Directory('/storage/emulated/0/Android/data/com.yann.trophyroom/files');
+    if (await dir.exists()) {
+      await File('${dir.path}/crash.log').writeAsString(log, mode: FileMode.append);
+    } else {
+      // fallback
+      final tmp = Directory('/data/data/com.yann.trophyroom/files');
+      if (await tmp.exists()) {
+        await File('${tmp.path}/crash.log').writeAsString(log, mode: FileMode.append);
+      }
+    }
+  };
+
+  // Try-catch the entire app
+  runZonedGuarded(() async {
+    try {
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Color(0xFF0A0A12),
+        systemNavigationBarIconBrightness: Brightness.light,
+      ));
+      runApp(const TrophyRoomApp());
+    } catch (e, stack) {
+      final log = '[${DateTime.now()}][INIT] $e\n$stack\n';
+      final dir = Directory('/data/data/com.yann.trophyroom/files');
+      if (await dir.exists()) {
+        await File('${dir.path}/crash.log').writeAsString(log, mode: FileMode.append);
+      }
+    }
+  }, (Object error, StackTrace stack) async {
+    final log = '[${DateTime.now()}][ZONE] $error\n$stack\n';
+    final dir = Directory('/data/data/com.yann.trophyroom/files');
+    if (await dir.exists()) {
+      await File('${dir.path}/crash.log').writeAsString(log, mode: FileMode.append);
+    }
+  });
 }
 
 class TrophyRoomApp extends StatefulWidget {

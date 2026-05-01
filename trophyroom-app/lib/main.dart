@@ -25,6 +25,27 @@ Future<void> _reportCrash(String type, dynamic error, StackTrace? stack) async {
   } catch (_) {}
 }
 
+/// Attempt to open network permission settings for this app
+/// Works on most Chinese ROMs (Xiaomi, OPPO, Huawei, Nubia/RedMagic)
+Future<void> _requestNetworkPermission() async {
+  try {
+    // Method 1: Open app details settings (standard Android)
+    await Process.run('am', [
+      'start',
+      '-a', 'android.settings.APPLICATION_DETAILS_SETTINGS',
+      '-d', 'package:com.yann.trophyroom'
+    ]);
+  } catch (_) {
+    try {
+      // Method 2: Try WLAN control settings (Nubia/RedMagic specific)
+      await Process.run('am', [
+        'start',
+        '-a', 'android.settings.WIFI_SETTINGS'
+      ]);
+    } catch (_) {}
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -71,6 +92,7 @@ class _MainApp extends StatefulWidget {
 
 class _MainAppState extends State<_MainApp> {
   int _currentIndex = 0;
+  bool _networkIssue = false;
 
   final List<Widget> _pages = const [
     HomePage(),
@@ -83,11 +105,11 @@ class _MainAppState extends State<_MainApp> {
   @override
   void initState() {
     super.initState();
-    // Quick async network check - doesn't block UI
-    _quickCheck();
+    _checkNetwork();
   }
 
-  Future<void> _quickCheck() async {
+  Future<void> _checkNetwork() async {
+    bool ok = false;
     try {
       final client = HttpClient()
         ..connectionTimeout = const Duration(seconds: 5)
@@ -95,46 +117,131 @@ class _MainAppState extends State<_MainApp> {
       final req = await client.getUrl(Uri.parse('https://gitee.com/yann8888/game-deals/raw/main/README.md'));
       req.headers.set('User-Agent', 'TrophyRoom/1.0');
       final resp = await req.close().timeout(const Duration(seconds: 5));
-      if (resp.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('网络正常 ✓'),
-            backgroundColor: Color(0xFF22c55e),
-            duration: Duration(seconds: 2),
-          ));
-        }
-      }
+      ok = resp.statusCode == 200;
       client.close();
-    } catch (_) {
-      // Network check failed silently - will rely on the "no network" UX
+    } catch (_) {}
+
+    if (!ok && mounted) {
+      setState(() => _networkIssue = true);
     }
+  }
+
+  void _onRequestNetwork() {
+    // Ask user to go to settings to enable network access
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1a1a2e),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Text('📶', style: TextStyle(fontSize: 28)),
+            SizedBox(width: 12),
+            Text('需要联网权限', style: TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '检测到 TrophyRoom 可能被禁止联网。\n\n'
+              '请点击下面的按钮，在系统设置中：\n'
+              '1. 找到 "TrophyRoom"\n'
+              '2. 开启 "WLAN" 和 "数据网络" 开关\n\n'
+              '手机管家 → 联网管理 → TrophyRoom',
+              style: TextStyle(color: Color(0xFFaaa), fontSize: 14, height: 1.5),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('稍后', style: TextStyle(color: Color(0xFF666))),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _requestNetworkPermission();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFa855f7),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('去开启联网', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        switchInCurve: Curves.easeOutQuint,
-        switchOutCurve: Curves.easeInQuint,
-        transitionBuilder: (child, animation) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.2, 0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutExpo,
-            )),
-            child: FadeTransition(opacity: animation, child: child),
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey<int>(_currentIndex),
-          child: _pages[_currentIndex],
-        ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // Network warning banner
+              if (_networkIssue)
+                GestureDetector(
+                  onTap: _onRequestNetwork,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFef4444), Color(0xFFdc2626)],
+                      ),
+                    ),
+                    child: const Row(
+                      children: [
+                        Text('🚫', style: TextStyle(fontSize: 18)),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '无网络连接，点击开启联网权限',
+                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, color: Colors.white, size: 14),
+                      ],
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  switchInCurve: Curves.easeOutQuint,
+                  switchOutCurve: Curves.easeInQuint,
+                  transitionBuilder: (child, animation) {
+                    return SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.2, 0),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutExpo,
+                      )),
+                      child: FadeTransition(opacity: animation, child: child),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey<int>(_currentIndex),
+                    child: _pages[_currentIndex],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Home indicator for bottom nav
+          Positioned(
+            left: 0, right: 0, bottom: 0,
+            child: _buildBottomNav(),
+          ),
+        ],
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 

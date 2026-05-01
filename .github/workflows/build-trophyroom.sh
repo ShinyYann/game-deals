@@ -39,7 +39,7 @@ cat > /tmp/trophyroom/android/key.properties << EOF
 storePassword=android
 keyPassword=android
 keyAlias=androiddebugkey
-storeFile=debug.keystore
+storeFile=app/debug.keystore
 EOF
 
 # Build APK

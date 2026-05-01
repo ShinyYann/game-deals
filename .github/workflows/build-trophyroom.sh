@@ -3,6 +3,9 @@ set -ex
 
 cd /tmp
 flutter create --org com.yann --project-name trophyroom trophyroom
+# Copy custom Android config (manifest, plugins, etc.)
+rm -rf trophyroom/android/app/src/main
+cp -r "$1/trophyroom-app/android/app/src/main" trophyroom/android/app/src/main/
 rm -rf trophyroom/lib/*
 cp -r "$1/trophyroom-app/lib/"* trophyroom/lib/
 cp "$1/trophyroom-app/pubspec.yaml" trophyroom/pubspec.yaml

@@ -80,7 +80,7 @@ class _MainAppState extends State<_MainApp> {
   bool _networkIssue = false;
 
   final List<Widget> _pages = const [
-    HomePage(onNavigateTab: (tab) => setState(() => _selectedIndex = tab),)),
+    HomePage(onNavigateTab: (int tab) { setState(() { _selectedIndex = tab; }); },)),
     TrophyPage(),
     DealsPage(),
     GuidePage(),

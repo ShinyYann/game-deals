@@ -385,6 +385,7 @@ class _DealsPageState extends State<DealsPage> {
     final platform = deal['platform'] ?? '';
     final medal = deal['medal'] ?? '';
     final tags = (deal['tags'] as List?) ?? [];
+    final image = deal['image'] ?? '';
 
     final priceStr = price.toString().replaceAll('¥', '').trim();
     final discountStr = discount.toString().replaceAll('%', '').trim();
@@ -404,85 +405,140 @@ class _DealsPageState extends State<DealsPage> {
     return GestureDetector(
       onTap: () => _showDetail(deal),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: AppTheme.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.border),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: platColor.withOpacity(0.25), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: platColor.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: Row(
-          children: [
-            // Thumbnail placeholder
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: 56, height: 56,
-                color: platColor.withOpacity(0.1),
-                child: Center(
-                  child: Text(
-                    name.isNotEmpty ? name.substring(0, 1) : '?',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: platColor),
-                  ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Column(
+            children: [
+              // Accent bar
+              Container(height: 3, color: platColor),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    // Thumbnail
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [platColor.withOpacity(0.2), platColor.withOpacity(0.05)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: platColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Game name
+                          Text(name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          // Badges row
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              // Platform badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: platColor.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(platform,
+                                  style: TextStyle(color: platColor, fontSize: 11, fontWeight: FontWeight.w700)),
+                              ),
+                              // Discount badge
+                              if (discountStr.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Colors.red.withOpacity(0.25), Colors.red.withOpacity(0.1)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text('-$discountStr%',
+                                    style: const TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.w800)),
+                                ),
+                              // Medal
+                              if (medal.isNotEmpty)
+                                Text(medal, style: const TextStyle(fontSize: 18)),
+                              // First tag
+                              if (tags.isNotEmpty && discountStr.isEmpty)
+                                Text(tags.first.toString(),
+                                  style: const TextStyle(color: AppTheme.text2, fontSize: 10),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Price
+                    if (priceStr.isNotEmpty)
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '¥$priceStr',
+                            style: TextStyle(
+                              color: const Color(0xFFfbbf24),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(
+                                  color: const Color(0xFFfbbf24).withOpacity(0.25),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(name,
-                          style: const TextStyle(color: AppTheme.text, fontSize: 14, fontWeight: FontWeight.w600),
-                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (medal.isNotEmpty)
-                        Text(medal, style: const TextStyle(fontSize: 16)),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: platColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(platform,
-                        style: TextStyle(color: platColor, fontSize: 10, fontWeight: FontWeight.w700)),
-                    ),
-                    const SizedBox(width: 6),
-                    if (discountStr.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accent3.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text('-$discountStr',
-                          style: const TextStyle(color: AppTheme.accent3, fontSize: 10, fontWeight: FontWeight.w700)),
-                      ),
-                    if (tags.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(tags.first.toString(),
-                          style: TextStyle(color: AppTheme.text2, fontSize: 10),
-                          maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ),
-                    ],
-                  ]),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            if (priceStr.isNotEmpty)
-              Text(priceStr,
-                style: const TextStyle(color: AppTheme.accent2, fontSize: 16, fontWeight: FontWeight.w800)),
-          ],
+            ],
+          ),
         ),
       ),
     );

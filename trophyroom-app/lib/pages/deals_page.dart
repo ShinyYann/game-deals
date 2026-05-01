@@ -322,6 +322,13 @@ class _DealsPageState extends State<DealsPage> {
                         icon: Icon(Icons.refresh, color: AppTheme.accent2, size: 18),
                         label: Text('重新加载', style: TextStyle(color: AppTheme.accent2)),
                       ),
+                      SizedBox(height: 8),
+                      Text(
+                        '首次使用？请前往「设置 → 联网控制」
+允许 TrophyRoom 访问网络后重试',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppTheme.accent4, fontSize: 12),
+                      ),
                     ]),
                   )
                 : _deals.isEmpty

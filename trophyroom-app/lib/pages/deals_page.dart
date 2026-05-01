@@ -224,29 +224,35 @@ class _DealsPageState extends State<DealsPage> {
   }
 
   Widget _dealCard(Map<String, dynamic> deal, int index) {
-    final name = deal['name'] ?? deal['title'] ?? '未知游戏';
-    final originalPrice = deal['original_price'] ?? deal['price'] ?? '--';
-    final discountPrice = deal['discount_price'] ?? deal['sale_price'] ?? '';
+    final name = deal['title'] ?? deal['name'] ?? '未知游戏';
+    final price = deal['price'] ?? '';
     final discount = deal['discount'] ?? '';
     final platform = deal['platform'] ?? '';
-    final image = deal['image'] ?? deal['img'] ?? '';
+    final image = deal['image'] ?? '';
+    final medal = deal['medal'] ?? '';
+    final tags = deal['tags'] ?? [];
+
+    // Parse discount percentage for badge
+    String discountPct = '';
+    if (discount is String) {
+      discountPct = discount.startsWith('-') ? discount : '-$discount';
+    } else {
+      discountPct = '-$discount';
+    }
+
+    // Parse price - strip ¥ symbol
+    String priceStr = price.toString().replaceAll('¥', '').trim();
 
     Color platColor;
-    switch (platform) {
-      case 'PSN':
-      case 'psn':
-        platColor = AppTheme.accent1;
-        break;
-      case 'Steam':
-      case 'steam':
-        platColor = AppTheme.accent2;
-        break;
-      case 'Switch':
-      case 'switch':
-        platColor = AppTheme.accent3;
-        break;
-      default:
-        platColor = AppTheme.accent4;
+    final platLower = platform.toLowerCase();
+    if (platLower.contains('psn') || platLower.contains('playstation')) {
+      platColor = AppTheme.accent1;
+    } else if (platLower.contains('steam')) {
+      platColor = AppTheme.accent2;
+    } else if (platLower.contains('switch') || platLower.contains('nintendo')) {
+      platColor = AppTheme.accent3;
+    } else {
+      platColor = AppTheme.accent4;
     }
 
     return Container(
@@ -267,7 +273,10 @@ class _DealsPageState extends State<DealsPage> {
               height: 56,
               color: platColor.withOpacity(0.1),
               child: Center(
-                child: Text(name.substring(0, 1), style: TextStyle(fontSize: 20, color: platColor)),
+                child: Text(
+                name.isNotEmpty ? name.substring(0, 1) : '?',
+                style: TextStyle(fontSize: 20, color: platColor)
+              ),
               ),
             ),
           ),
@@ -323,24 +332,14 @@ class _DealsPageState extends State<DealsPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (discountPrice != '')
-                Text(
-                  '¥$discountPrice',
-                  style: const TextStyle(
-                    color: AppTheme.accent2,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
+              Text(
+                priceStr,
+                style: const TextStyle(
+                  color: AppTheme.accent2,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
                 ),
-              if (originalPrice != '')
-                Text(
-                  '¥$originalPrice',
-                  style: TextStyle(
-                    color: AppTheme.text2.withOpacity(0.5),
-                    fontSize: 12,
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                ),
+              ),
             ],
           ),
         ],

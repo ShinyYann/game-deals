@@ -79,12 +79,12 @@ class _MainAppState extends State<_MainApp> {
   int _currentIndex = 0;
   bool _networkIssue = false;
 
-  final List<Widget> _pages = [
-    HomePage(onNavigateTab: (int tab) { setState(() { _currentIndex = tab; }); },),
-    TrophyPage(),
-    DealsPage(),
-    GuidePage(),
-    SettingsPage(),
+  List<Widget> get _pages => [
+    HomePage(onNavigateTab: (int tab) { setState(() { _currentIndex = tab; }); }),
+    const TrophyPage(),
+    const DealsPage(),
+    const GuidePage(),
+    const SettingsPage(),
   ];
 
   @override

@@ -1,7 +1,8 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http;
 import '../models/app_theme.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -288,30 +289,57 @@ class _SettingsPageState extends State<SettingsPage> {
         _sectionHeader('🛠️ 调试'),
         const SizedBox(height: 8),
         _buildCard([
-          _settingItem('查看崩溃日志', '点击导出', Icons.bug_report, Colors.redAccent, () async {
-            final dir = Directory('/storage/emulated/0/Android/data/com.yann.trophyroom/files');
-            if (await dir.exists()) {
-              final file = File('${dir.path}/crash.log');
-              if (await file.exists()) {
-                final log = await file.readAsString();
-                await Share.share(log, subject: 'TrophyRoom Crash Log');
-                return;
+          _settingItem('查看崩溃日志', '点击上传', Icons.bug_report, Colors.redAccent, () async {
+            List<String> paths = [
+              '/storage/emulated/0/Android/data/com.yann.trophyroom/files/crash.log',
+              '/data/data/com.yann.trophyroom/files/crash.log',
+            ];
+            String? logContent;
+            for (final p in paths) {
+              final f = File(p);
+              if (await f.exists()) {
+                logContent = await f.readAsString();
+                break;
               }
             }
-            // fallback
-            final dir2 = Directory('/data/data/com.yann.trophyroom/files');
-            if (await dir2.exists()) {
-              final file = File('${dir2.path}/crash.log');
-              if (await file.exists()) {
-                final log = await file.readAsString();
-                await Share.share(log, subject: 'TrophyRoom Crash Log');
-                return;
+            if (logContent == null || logContent.trim().isEmpty) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('没有找到崩溃日志，说明没闪退过！🎉')),
+                );
               }
+              return;
             }
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('没有找到崩溃日志')),
-              );
+            // Upload to dpaste
+            try {
+              final resp = await http.post(
+                Uri.parse('https://dpaste.org/api/'),
+                body: {'content': 'TrophyRoom Crash Log\n${"=" * 40}\n$logContent', 'format': 'url', 'expiry_days': '7'},
+              ).timeout(const Duration(seconds: 10));
+              if (resp.statusCode == 200 || resp.statusCode == 201) {
+                final url = resp.body.trim();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('已上传: $url')),
+                  );
+                }
+                // Also open the URL
+                if (await canLaunchUrl(Uri.parse(url))) {
+                  await launchUrl(Uri.parse(url));
+                }
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('上传失败: ${resp.statusCode}')),
+                  );
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('上传失败: $e')),
+                );
+              }
             }
           }),
         ]),

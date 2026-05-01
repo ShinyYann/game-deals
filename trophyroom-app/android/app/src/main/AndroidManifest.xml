@@ -3,7 +3,7 @@
     android:versionCode="1"
     android:versionName="1.0.0">
     <uses-permission android:name="android.permission.INTERNET"/>
-    <application
+    <application android:usesCleartextTraffic="true"
         android:label="TrophyRoom"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"

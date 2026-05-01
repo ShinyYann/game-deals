@@ -79,7 +79,9 @@ class UpdateService {
       request.headers.set('User-Agent', 'TrophyRoom/1.0');
       final response = await request.close().timeout(const Duration(minutes: 3));
 
-      final bytes = await consolidateHttpClientResponseBytes(response);
+      final bytes = await response.fold<List<int>>(
+        <int>[], (prev, chunk) => prev..addAll(chunk),
+      );
       await file.writeAsBytes(bytes);
       client.close();
 

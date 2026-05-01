@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:http/http.dart' as http;
 import '../models/app_theme.dart';
 import '../services/update_service.dart';
 
@@ -358,25 +357,30 @@ class _SettingsPageState extends State<SettingsPage> {
             }
             // Upload to dpaste
             try {
-              final resp = await http.post(
-                Uri.parse('https://dpaste.org/api/'),
-                body: {'content': 'TrophyRoom Crash Log\n${"=" * 40}\n$logContent', 'format': 'url', 'expiry_days': '7'},
-              ).timeout(const Duration(seconds: 10));
-              if (resp.statusCode == 200 || resp.statusCode == 201) {
-                final url = resp.body.trim();
+              final dpUri = Uri.parse('https://dpaste.org/api/');
+              final dpClient = HttpClient()..badCertificateCallback = ((cert, host, port) => true);
+              final dpReq = await dpClient.postUrl(dpUri);
+              dpReq.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+              final postBody = 'content=${Uri.encodeComponent("TrophyRoom Crash Log\n${"=" * 40}\n$logContent")}&format=url&expiry_days=7';
+              dpReq.write(postBody);
+              final dpResp = await dpReq.close().timeout(const Duration(seconds: 10));
+              if (dpResp.statusCode == 200 || dpResp.statusCode == 201) {
+                final url = await utf8.decodeStream(dpResp);
+                dpClient.close();
+                final cleanUrl = url.trim();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('已上传: $url')),
+                    SnackBar(content: Text('已上传: $cleanUrl')),
                   );
                 }
-                // Also open the URL
-                if (await canLaunchUrl(Uri.parse(url))) {
-                  await launchUrl(Uri.parse(url));
+                if (await canLaunchUrl(Uri.parse(cleanUrl))) {
+                  await launchUrl(Uri.parse(cleanUrl));
                 }
               } else {
+                dpClient.close();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('上传失败: ${resp.statusCode}')),
+                    SnackBar(content: Text('上传失败: ${dpResp.statusCode}')),
                   );
                 }
               }

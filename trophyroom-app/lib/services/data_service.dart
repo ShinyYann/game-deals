@@ -55,7 +55,7 @@ class DataService {
       final response = await request.close().timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        return await response.transform(utf8.decoder).join();
+        return await response.transform(utf8.decoder as StreamTransformer<List<int>, String>).join();
       } else {
         debugPrint('HTTP ${response.statusCode}: $url');
         return null;

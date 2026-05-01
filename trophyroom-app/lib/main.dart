@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'dart:async';
+import 'dart:convert';
 import 'dart:ui' as ui;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'pages/home_page.dart';
@@ -11,7 +12,6 @@ import 'pages/settings_page.dart';
 import 'pages/splash_page.dart';
 import 'models/app_theme.dart';
 
-/// Save crash log locally
 Future<void> _reportCrash(String type, dynamic error, StackTrace? stack) async {
   final log = '[${DateTime.now().toIso8601String()}][$type] $error\n$stack';
   try {
@@ -25,30 +25,86 @@ Future<void> _reportCrash(String type, dynamic error, StackTrace? stack) async {
   } catch (_) {}
 }
 
-/// Test real network access to a known server
-Future<bool> _checkNetworkAccess() async {
-  final testUrls = [
-    'https://www.baidu.com',
-    'https://httpbin.org/ip',
-    'https://gitee.com/yann8888/game-deals/raw/main/README.md',
-  ];
-  for (final url in testUrls) {
-    try {
-      final uri = Uri.parse(url);
-      final client = HttpClient()
-        ..connectionTimeout = const Duration(seconds: 5)
-        ..badCertificateCallback = ((cert, host, port) => true);
-      final request = await client.getUrl(uri);
-      request.headers.set('User-Agent', 'TrophyRoom/1.0');
-      final response = await request.close().timeout(const Duration(seconds: 8));
-      if (response.statusCode == 200) {
-        client.close();
-        return true;
-      }
-      client.close();
-    } catch (_) {}
+/// Test network via multiple methods
+Future<Map<String, dynamic>> _diagnoseNetwork() async {
+  final results = <String, dynamic>{};
+
+  // Method 1: dart:io HttpClient to gitee
+  try {
+    final start = DateTime.now();
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 8)
+      ..badCertificateCallback = ((cert, host, port) => true);
+    final req = await client.getUrl(Uri.parse('https://gitee.com/yann8888/game-deals/raw/main/README.md'));
+    req.headers.set('User-Agent', 'TrophyRoom/1.0');
+    final resp = await req.close().timeout(const Duration(seconds: 10));
+    final body = await utf8.decodeStream(resp);
+    client.close();
+    results['dart_io_gitee'] = {
+      'ok': resp.statusCode == 200,
+      'status': resp.statusCode,
+      'time_ms': DateTime.now().difference(start).inMilliseconds,
+      'body_len': body.length,
+    };
+  } catch (e) {
+    results['dart_io_gitee'] = {'ok': false, 'error': e.toString()};
   }
-  return false;
+
+  // Method 2: dart:io HttpClient to github
+  try {
+    final start = DateTime.now();
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 8)
+      ..badCertificateCallback = ((cert, host, port) => true);
+    final req = await client.getUrl(Uri.parse('https://raw.githubusercontent.com/ShinyYann/trophyroom/main/README.md'));
+    req.headers.set('User-Agent', 'TrophyRoom/1.0');
+    final resp = await req.close().timeout(const Duration(seconds: 10));
+    final body = await utf8.decodeStream(resp);
+    client.close();
+    results['dart_io_github'] = {
+      'ok': resp.statusCode == 200,
+      'status': resp.statusCode,
+      'time_ms': DateTime.now().difference(start).inMilliseconds,
+      'body_len': body.length,
+    };
+  } catch (e) {
+    results['dart_io_github'] = {'ok': false, 'error': e.toString()};
+  }
+
+  // Method 3: DNS lookup
+  try {
+    await InternetAddress.lookup('gitee.com');
+    results['dns_gitee'] = {'ok': true};
+  } catch (e) {
+    results['dns_gitee'] = {'ok': false, 'error': e.toString()};
+  }
+
+  try {
+    await InternetAddress.lookup('github.com');
+    results['dns_github'] = {'ok': true};
+  } catch (e) {
+    results['dns_github'] = {'ok': false, 'error': e.toString()};
+  }
+
+  // Method 4: Raw TCP socket to gitee:443
+  try {
+    final start = DateTime.now();
+    final socket = await SecureSocket.connect('gitee.com', 443,
+        timeout: const Duration(seconds: 8),
+        onBadCertificate: (cert) => true);
+    socket.write('GET / HTTP/1.1\r\nHost: gitee.com\r\nConnection: close\r\n\r\n');
+    await socket.flush();
+    final resp = await utf8.decodeStream(socket);
+    socket.close();
+    results['raw_socket'] = {
+      'ok': resp.startsWith('HTTP/'),
+      'time_ms': DateTime.now().difference(start).inMilliseconds,
+    };
+  } catch (e) {
+    results['raw_socket'] = {'ok': false, 'error': e.toString()};
+  }
+
+  return results;
 }
 
 void main() async {
@@ -71,159 +127,138 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
 
-  final hasNetwork = await _checkNetworkAccess();
+  // Run full network diagnosis at startup
+  final diag = await _diagnoseNetwork();
 
-  runApp(TrophyRoomApp(hasNetwork: hasNetwork));
+  runApp(TrophyRoomApp(diagnosis: diag));
 }
 
-class TrophyRoomApp extends StatefulWidget {
-  final bool hasNetwork;
-  const TrophyRoomApp({super.key, required this.hasNetwork});
-
-  @override
-  State<TrophyRoomApp> createState() => _TrophyRoomAppState();
-}
-
-class _TrophyRoomAppState extends State<TrophyRoomApp> {
-  int _currentIndex = 0;
-  bool _showSplash = true;
-  late bool _networkOk;
-
-  @override
-  void initState() {
-    super.initState();
-    _networkOk = widget.hasNetwork;
-    Future.delayed(const Duration(milliseconds: 2800), () {
-      if (mounted) setState(() => _showSplash = false);
-    });
-  }
-
-  void _showNetworkGuide() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a2e),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Text('⚠️', style: TextStyle(fontSize: 24)),
-            SizedBox(width: 8),
-            Text('网络访问异常', style: TextStyle(color: Colors.white, fontSize: 18)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'TrophyRoom 无法访问网络，可能是以下原因：',
-              style: TextStyle(color: Color(0xFFaaa), fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            _guideStep('1', '打开「手机管家」或「安全中心」'),
-            _guideStep('2', '找到「联网控制」或「联网管理」'),
-            _guideStep('3', '在应用列表中找到 TrophyRoom'),
-            _guideStep('4', '打开 Wi-Fi 和移动数据的联网权限'),
-            const SizedBox(height: 16),
-            const Text(
-              '也请检查：设置 → 应用 → TrophyRoom → 权限 → 确保「网络」已开启',
-              style: TextStyle(color: Color(0xFF888), fontSize: 12),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => _openAppSettings(),
-            child: const Text('去设置', style: TextStyle(color: Color(0xFFa855f7))),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('知道了', style: TextStyle(color: Color(0xFF666))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _guideStep(String num, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 22, height: 22,
-            decoration: BoxDecoration(
-              color: const Color(0xFFa855f7).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: Center(
-              child: Text(num, style: const TextStyle(color: Color(0xFFa855f7), fontSize: 12, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(color: Color(0xFFccc), fontSize: 13))),
-        ],
-      ),
-    );
-  }
-
-  void _openAppSettings() async {
-    try {
-      await Process.run('am', ['start', '-a', 'android.settings.APPLICATION_DETAILS_SETTINGS',
-        '-d', 'package:com.yann.trophyroom']);
-    } catch (_) {
-      // Fallback: try to open settings directly
-      try {
-        await Process.run('am', ['start', '-a', 'android.settings.SETTINGS']);
-      } catch (_) {}
-    }
-  }
+class TrophyRoomApp extends StatelessWidget {
+  final Map<String, dynamic> diagnosis;
+  const TrophyRoomApp({super.key, required this.diagnosis});
 
   @override
   Widget build(BuildContext context) {
-    if (!_showSplash && !_networkOk) {
-      // Show network guide after splash
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _showNetworkGuide();
-      });
-    }
-
     return MaterialApp(
       title: 'TrophyRoom',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: _showSplash
-          ? const SplashPage()
-          : Scaffold(
-              body: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                switchInCurve: Curves.easeOutQuint,
-                switchOutCurve: Curves.easeInQuint,
-                transitionBuilder: (child, animation) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.2, 0),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutExpo,
-                    )),
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
-                child: KeyedSubtree(
-                  key: ValueKey<int>(_currentIndex),
-                  child: _pages[_currentIndex],
-                ),
-              ),
-              bottomNavigationBar: _buildBottomNav(),
-            ),
+      // Show a debug screen first with network test results
+      home: _NetworkDebugPage(diagnosis: diagnosis),
     );
   }
+}
 
-  // ... rest of the existing widget methods (unchanged)
+class _NetworkDebugPage extends StatelessWidget {
+  final Map<String, dynamic> diagnosis;
+  const _NetworkDebugPage({required this.diagnosis});
+
+  @override
+  Widget build(BuildContext context) {
+    final allMethods = ['dart_io_gitee', 'dart_io_github', 'dns_gitee', 'dns_github', 'raw_socket'];
+    final anyOk = allMethods.any((m) => diagnosis[m]?['ok'] == true);
+    // If network is OK after all, redirect to main app
+    if (anyOk) {
+      Future.microtask(() {
+        Navigator.pushReplacement(context, MaterialPageRoute(
+          builder: (_) => const _MainApp(),
+        ));
+      });
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0A12),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('🔍', style: TextStyle(fontSize: 48)),
+              const SizedBox(height: 16),
+              const Text(
+                '网络诊断结果',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              if (anyOk)
+                const Text('✅ 网络正常!', style: TextStyle(color: Color(0xFF22c55e), fontSize: 16))
+              else
+                const Text('❌ 所有网络请求失败', style: TextStyle(color: Color(0xFFef4444), fontSize: 16)),
+              const SizedBox(height: 24),
+              ...allMethods.map((method) {
+                final r = diagnosis[method] as Map<String, dynamic>?;
+                if (r == null) return const SizedBox();
+                final ok = r['ok'] == true;
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1a1a2e),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(ok ? '✅' : '❌', style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 8),
+                          Text(method,
+                            style: TextStyle(
+                              color: ok ? const Color(0xFF22c55e) : const Color(0xFFef4444),
+                              fontWeight: FontWeight.bold,
+                            )),
+                        ],
+                      ),
+                      if (r['status'] != null)
+                        Text('状态码: ${r['status']}', style: const TextStyle(color: Color(0xFF888), fontSize: 12)),
+                      if (r['time_ms'] != null)
+                        Text('耗时: ${r['time_ms']}ms', style: const TextStyle(color: Color(0xFF888), fontSize: 12)),
+                      if (r['body_len'] != null)
+                        Text('数据大小: ${r['body_len']} bytes', style: const TextStyle(color: Color(0xFF888), fontSize: 12)),
+                      if (r['error'] != null)
+                        Text('错误: ${r['error']}', style: const TextStyle(color: Color(0xFFef4444), fontSize: 11)),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 24),
+              if (anyOk)
+                const Text('正在跳转主界面...', style: TextStyle(color: Color(0xFF666)))
+              else ...[
+                const Text('可能的原因:', style: TextStyle(color: Color(0xFFaaa), fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('1. 手机管家 → 联网管理 → TrophyRoom 被禁网', style: TextStyle(color: Color(0xFF888), fontSize: 12)),
+                const Text('2. 应用装在双开/分身/隐私空间', style: TextStyle(color: Color(0xFF888), fontSize: 12)),
+                const Text('3. VPN/代理对 TrophyRoom 生效', style: TextStyle(color: Color(0xFF888), fontSize: 12)),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(
+                    builder: (_) => const _MainApp(),
+                  )),
+                  child: const Text('跳过诊断 → 进入应用', style: TextStyle(color: Color(0xFFa855f7))),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MainApp extends StatefulWidget {
+  const _MainApp();
+
+  @override
+  State<_MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<_MainApp> {
+  int _currentIndex = 0;
+
   final List<Widget> _pages = const [
     HomePage(),
     TrophyPage(),
@@ -231,6 +266,34 @@ class _TrophyRoomAppState extends State<TrophyRoomApp> {
     GuidePage(),
     SettingsPage(),
   ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        switchInCurve: Curves.easeOutQuint,
+        switchOutCurve: Curves.easeInQuint,
+        transitionBuilder: (child, animation) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.2, 0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutExpo,
+            )),
+            child: FadeTransition(opacity: animation, child: child),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<int>(_currentIndex),
+          child: _pages[_currentIndex],
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
 
   Widget _buildBottomNav() {
     return Container(

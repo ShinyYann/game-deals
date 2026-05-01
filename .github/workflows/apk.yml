@@ -5,9 +5,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'trophyroom-app/**'
-      - '.github/workflows/apk.yml'
 
 permissions:
   contents: write
@@ -28,8 +25,43 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'  # Latest stable (3.24+)
+          channel: 'stable'
           cache: true
+
+      - name: Re-init android project for Flutter 3.41+
+        run: |
+          cd /tmp
+          flutter create --org com.yann --project-name trophyroom_build trophyroom_build
+          cp -r trophyroom_build/android/* ${{ github.workspace }}/trophyroom-app/android/
+          rm -rf trophyroom_build
+
+      - name: Patch app/build.gradle for our IDs
+        run: |
+          cd trophyroom-app/android
+          sed -i 's/applicationId.*/applicationId "com.yann.trophyroom"/' app/build.gradle
+          # Enable release signing
+          cat >> app/build.gradle << 'EOF'
+          def keystoreProperties = new Properties()
+          def keystorePropertiesFile = rootProject.file('key.properties')
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+          }
+          android {
+              signingConfigs {
+                  release {
+                      keyAlias keystoreProperties['keyAlias']
+                      keyPassword keystoreProperties['keyPassword']
+                      storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                      storePassword keystoreProperties['storePassword']
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          EOF
 
       - name: Create key.properties
         run: |

@@ -2030,6 +2030,52 @@ function googleTranslateElementInit() {{
     return html
 
 
+def export_deals_json(out_dir):
+    """Export all deal data as JSON for the APK."""
+    os.makedirs(os.path.join(out_dir, 'data'), exist_ok=True)
+    
+    psn = parse_psn()
+    steam = parse_steam()
+    switch = parse_switch()
+    p9_lows = parse_p9_new_lows()
+    
+    # Clean PSN games: add platform tag
+    psn_data = []
+    for g in psn:
+        g['platform'] = 'PSN'
+        psn_data.append(g)
+    
+    steam_data = []
+    for g in steam:
+        g['platform'] = 'Steam'
+        steam_data.append(g)
+    
+    switch_data = []
+    for g in switch:
+        g['platform'] = 'Switch'
+        switch_data.append(g)
+    
+    # P9 史低 data
+    p9_low_data = []
+    for g in p9_lows:
+        g['platform'] = g.get('platform', 'PSN')
+        p9_low_data.append(g)
+    
+    # Merge all deals per platform
+    all_data = {
+        'updated': time.strftime('%Y-%m-%d %H:%M', time.localtime()),
+        'psn': psn_data,
+        'steam': steam_data,
+        'switch': switch_data,
+        'p9_new_lows': p9_low_data,
+    }
+    
+    out_path = os.path.join(out_dir, 'data', 'deals.json')
+    with open(out_path, 'w', encoding='utf-8') as f:
+        json.dump(all_data, f, ensure_ascii=False)
+    print(f"✅ deals.json saved to {out_path} ({sum(len(v) for v in [psn_data, steam_data, switch_data, p9_low_data])} deals)")
+
+
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else 'docs'
     os.makedirs(out_dir, exist_ok=True)
@@ -2038,3 +2084,6 @@ if __name__ == '__main__':
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
     print(f"✅ HTML saved to {out_path}")
+    
+    # Also export JSON for APK
+    export_deals_json(out_dir)

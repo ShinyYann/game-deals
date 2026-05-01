@@ -31,128 +31,26 @@ jobs:
       - name: Build APK
         run: |
           set -ex
-
-          # 1. Create fresh Flutter project
           cd /tmp
           flutter create --org com.yann --project-name trophyroom trophyroom
-
-          # 2. Copy our code into it
-          OUR_CODE="${{ github.workspace }}/trophyroom-app"
-          rm -rf /tmp/trophyroom/lib/*
-          cp -r "$OUR_CODE/lib/"* /tmp/trophyroom/lib/
-          cp "$OUR_CODE/pubspec.yaml" /tmp/trophyroom/pubspec.yaml
-
-          # 3. Install dependencies
+          rm -rf trophyroom/lib/*
+          cp -r "${{ github.workspace }}/trophyroom-app/lib/"* trophyroom/lib/
+          cp "${{ github.workspace }}/trophyroom-app/pubspec.yaml trophyroom/pubspec.yaml"
           cd /tmp/trophyroom
           flutter pub get
-
-          # 4. Check what flutter create generated
           cd /tmp/trophyroom/android
-          find . -name "*.gradle*" -type f 2>/dev/null || true
-          ls -la app/ 2>/dev/null || echo "no app/ dir"
-
-          # 5. Find the correct build.gradle (may be .kts)
-          GRADLE_FILE=""
-          if [ -f app/build.gradle ]; then GRADLE_FILE="app/build.gradle"; fi
-          if [ -f app/build.gradle.kts ]; then GRADLE_FILE="app/build.gradle.kts"; fi
-          echo "Found gradle file: $GRADLE_FILE"
-
-          # 6. Patch applicationId
-          if echo "$GRADLE_FILE" | grep -q '\.kts$'; then
-            sed -i 's/applicationId = ".*"/applicationId = "com.yann.trophyroom"/' "$GRADLE_FILE"
+          if [ -f app/build.gradle.kts ]; then
+            sed -i 's/applicationId = ".*"/applicationId = "com.yann.trophyroom"/' app/build.gradle.kts
+            printf '\nsigningConfigs {\n    create("release") {\n        keyAlias = keystoreProperties["keyAlias"] as String\n        keyPassword = keystoreProperties["keyPassword"] as String\n        storeFile = file(keystoreProperties["storeFile"] as String)\n        storePassword = keystoreProperties["storePassword"] as String\n    }\n}\nbuildTypes {\n    getByName("release") {\n        signingConfig = signingConfigs.getByName("release")\n    }\n}\n' >> app/build.gradle.kts
           else
-            sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' "$GRADLE_FILE"
+            sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' app/build.gradle
+            printf '\ndef keystoreProperties = new Properties()\ndef keystorePropertiesFile = rootProject.file('"'"'key.properties'"'"')\nif (keystorePropertiesFile.exists()) {\n    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n}\nandroid {\n    signingConfigs {\n        release {\n            keyAlias keystoreProperties['"'"'keyAlias'"'"']\n            keyPassword keystoreProperties['"'"'keyPassword'"'"']\n            storeFile keystoreProperties['"'"'storeFile'"'"'] ? file(keystoreProperties['"'"'storeFile'"'"']) : null\n            storePassword keystoreProperties['"'"'storePassword'"'"']\n        }\n    }\n    buildTypes {\n        release {\n            signingConfig signingConfigs.release\n        }\n    }\n}\n' >> app/build.gradle
           fi
-
-          # 7. Append signing config (also in .kts format if needed)
-          if echo "$GRADLE_FILE" | grep -q '\.kts$'; then
-            cat >> "$GRADLE_FILE" << 'SIGNGRADLE'
-
-            signingConfigs {
-                create("release") {
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
-                    storeFile = file(keystoreProperties["storeFile"] as String)
-                    storePassword = keystoreProperties["storePassword"] as String
-                }
-            }
-            buildTypes {
-                getByName("release") {
-                    signingConfig = signingConfigs.getByName("release")
-                }
-            }
-SIGNGRADLE
-          else
-            cat >> "$GRADLE_FILE" << 'SIGNGRADLE'
-
-            def keystoreProperties = new Properties()
-            def keystorePropertiesFile = rootProject.file('key.properties')
-            if (keystorePropertiesFile.exists()) {
-                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-            }
-            android {
-                signingConfigs {
-                    release {
-                        keyAlias keystoreProperties['keyAlias']
-                        keyPassword keystoreProperties['keyPassword']
-                        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-                        storePassword keystoreProperties['storePassword']
-                    }
-                }
-                buildTypes {
-                    release {
-                        signingConfig signingConfigs.release
-                    }
-                }
-            }
-SIGNGRADLE
-          fi
-
-          def keystoreProperties = new Properties()
-          def keystorePropertiesFile = rootProject.file('key.properties')
-          if (keystorePropertiesFile.exists()) {
-              keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-          }
-          android {
-              signingConfigs {
-                  release {
-                      keyAlias keystoreProperties['keyAlias']
-                      keyPassword keystoreProperties['keyPassword']
-                      storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-                      storePassword keystoreProperties['storePassword']
-                  }
-              }
-              buildTypes {
-                  release {
-                      signingConfig signingConfigs.release
-                  }
-              }
-          }
-          SIGNGRADLE
-
-          # 6. Create keystore and key.properties
-          keytool -genkey -v -keystore /tmp/release.keystore \
-            -alias release -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass trophyroom -keypass trophyroom \
-            -dname "CN=TrophyRoom, OU=Dev, O=Yann, L=Shanghai, S=Shanghai, C=CN"
-
-          cat > /tmp/trophyroom/android/key.properties << KEYEOF
-          storePassword=trophyroom
-          keyPassword=trophyroom
-          keyAlias=release
-          storeFile=/tmp/release.keystore
-          KEYEOF
-
-          # 7. Build release APK
+          keytool -genkey -v -keystore /tmp/release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass trophyroom -keypass trophyroom -dname "CN=TrophyRoom, OU=Dev, O=Yann, L=Shanghai, S=Shanghai, C=CN"
+          printf 'storePassword=trophyroom\nkeyPassword=trophyroom\nkeyAlias=release\nstoreFile=/tmp/release.keystore\n' > /tmp/trophyroom/android/key.properties
           cd /tmp/trophyroom
-          flutter build apk --release \
-            --build-number=${{ github.run_number }} \
-            --build-name=1.0.${{ github.run_number }}
-
-          # 8. Copy APK for upload
+          flutter build apk --release --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }}
           cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
-
-          # 9. Verify
           file /tmp/TrophyRoom.apk
           ls -lh /tmp/TrophyRoom.apk
 

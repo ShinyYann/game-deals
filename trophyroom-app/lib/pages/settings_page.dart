@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import '../models/app_theme.dart';
+import '../services/update_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -76,6 +77,51 @@ class _SettingsPageState extends State<SettingsPage> {
               _infoItem('数据源', 'PSN · Steam · Switch'),
               _divider(),
               _infoItem('更新渠道', 'Gitee Release'),
+            ]),
+            const SizedBox(height: 20),
+            // Update
+            _sectionHeader('🔄 更新'),
+            const SizedBox(height: 8),
+            _buildCard([
+              _settingItem('检查更新', '点击检测', Icons.system_update, AppTheme.accent1, () async {
+                final result = await UpdateService.checkUpdate('v127');
+                if (result == null || !context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('❌ 检测失败，请检查网络')),
+                  );
+                  return;
+                }
+                if (result['hasUpdate'] == true) {
+                  final shouldUpdate = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: const Color(0xFF1a1a2e),
+                      title: const Text('发现新版本!', style: TextStyle(color: Colors.white)),
+                      content: Text(
+                        '当前: v127\n最新: ${result['latestVersion']}\n\n${result['releaseNotes'] ?? ''}',
+                        style: const TextStyle(color: Color(0xFFaaa)),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('稍后'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('立即更新', style: TextStyle(color: Color(0xFFa855f7))),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (shouldUpdate == true) {
+                    await UpdateService.downloadAndInstall(context, result['downloadUrl']);
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('✅ 已是最新版本!')),
+                  );
+                }
+              }),
             ]),
             const SizedBox(height: 20),
             // Debug

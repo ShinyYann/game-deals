@@ -305,7 +305,7 @@ class _MainAppState extends State<_MainApp> {
         curve: Curves.easeOutBack,
         padding: EdgeInsets.symmetric(horizontal: isActive ? 16 : 8, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFa855f7).withOpacity(0.15) : Colors.transparent,
+          color: isActive ? const Color(0xFFa855f7).withOpacity(0.20) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: isActive ? Border.all(color: const Color(0xFFa855f7).withOpacity(0.3), width: 1) : null,
         ),
@@ -317,7 +317,7 @@ class _MainAppState extends State<_MainApp> {
             Text(
               label,
               style: TextStyle(
-                color: isActive ? const Color(0xFFa855f7) : const Color(0xFF999),
+                color: isActive ? Colors.white : const Color(0xFFaab),
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),

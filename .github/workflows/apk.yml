@@ -54,24 +54,46 @@ jobs:
         working-directory: trophyroom-app
         run: flutter pub get
 
-      - name: Build Release APK
+      - name: Build Release APK (no-compress)
         working-directory: trophyroom-app
         run: |
-          flutter build apk --release --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }}
-          cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
-          ls -lh /tmp/TrophyRoom.apk
+          flutter build apk --release \
+            --build-number=${{ github.run_number }} \
+            --build-name=1.0.${{ github.run_number }}
+          ls -lh build/app/outputs/flutter-apk/
+
+      - name: Verify APK integrity
+        run: |
+          echo "=== APK file info ==="
+          file trophyroom-app/build/app/outputs/flutter-apk/app-release.apk
+          echo "=== PK ZIP check ==="
+          python3 -c "
+import zipfile
+try:
+    with zipfile.ZipFile('trophyroom-app/build/app/outputs/flutter-apk/app-release.apk') as z:
+        names = z.namelist()
+        print(f'Files in APK: {len(names)}')
+        for n in names[:10]:
+            print(f'  {n}')
+        if 'AndroidManifest.xml' in names:
+            print('✅ AndroidManifest.xml found')
+        if 'classes.dex' in names:
+            print('✅ classes.dex found')
+        if 'META-INF/CERT.RSA' in names:
+            print('✅ Signature found')
+        # check file sizes
+        total = sum(z.getinfo(n).file_size for n in names)
+        print(f'Uncompressed size: {total/1024/1024:.1f} MB')
+        print(f'Compressed size: {sum(z.getinfo(n).compress_size for n in names)/1024/1024:.1f} MB')
+except Exception as e:
+    print(f'❌ ZIP check failed: {e}')
+"
+
+      - name: Copy APK
+        run: |
+          cp trophyroom-app/build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
 
       - name: Upload to Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "v${{ github.run_number }}" \
-            "/tmp/TrophyRoom.apk#TrophyRoom.apk" \
-            --title "TrophyRoom v${{ github.run_number }}" \
-            --notes "Release APK - targetSdk33, signed" \
-            --latest || true
-          # Also try softprops as fallback
-      - name: Softprops Release (fallback)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
@@ -79,3 +101,4 @@ jobs:
           files: /tmp/TrophyRoom.apk
           make_latest: true
           fail_on_unmatched_files: false
+          generate_release_notes: false

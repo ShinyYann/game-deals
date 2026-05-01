@@ -3,11 +3,21 @@ set -ex
 
 cd /tmp
 flutter create --org com.yann --project-name trophyroom trophyroom
-# Copy custom Android config (manifest, plugins, etc.)
-rm -rf trophyroom/android/app/src/main
-cp -r "$1/trophyroom-app/android/app/src/main" trophyroom/android/app/src/main/
+
+# Copy custom Android Kotlin files, preserving Flutter's MainActivity.kt
+cp -r "$1/trophyroom-app/android/app/src/main/kotlin/"* trophyroom/android/app/src/main/kotlin/com/yann/trophyroom/
+
+# Copy custom AndroidManifest.xml
+cp "$1/trophyroom-app/android/app/src/main/AndroidManifest.xml" trophyroom/android/app/src/main/AndroidManifest.xml
+
+# Copy custom res/ (icons, network_security_config)
+cp -r "$1/trophyroom-app/android/app/src/main/res/"* trophyroom/android/app/src/main/res/
+
+# Copy lib files
 rm -rf trophyroom/lib/*
 cp -r "$1/trophyroom-app/lib/"* trophyroom/lib/
+
+# Copy pubspec
 cp "$1/trophyroom-app/pubspec.yaml" trophyroom/pubspec.yaml
 cd /tmp/trophyroom
 flutter pub get

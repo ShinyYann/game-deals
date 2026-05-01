@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'pages/home_page.dart';
 import 'pages/trophy_page.dart';
 import 'pages/deals_page.dart';
@@ -149,6 +150,23 @@ Future<Map<String, dynamic>> _diagnoseNetwork() async {
     };
   } catch (e) {
     results['shell_wget'] = {'ok': false, 'error': e.toString()};
+  }
+
+
+  // Method 8: Native Android HttpURLConnection via MethodChannel
+  try {
+    final channel = MethodChannel('com.yann.trophyroom/native_http');
+    final start = DateTime.now();
+    final resp = await channel.invokeMethod<String>('httpGet', {
+      'url': 'https://gitee.com/yann8888/game-deals/raw/main/README.md'
+    }).timeout(const Duration(seconds: 10));
+    results['native_android'] = {
+      'ok': resp != null && resp.isNotEmpty,
+      'body_len': resp?.length ?? 0,
+      'time_ms': DateTime.now().difference(start).inMilliseconds,
+    };
+  } catch (e) {
+    results['native_android'] = {'ok': false, 'error': e.toString()};
   }
 
   return results;

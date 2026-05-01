@@ -4,7 +4,8 @@ import '../models/app_theme.dart';
 import '../services/data_service.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final void Function(int tabIndex)? onNavigateTab;
+  const HomePage({super.key, this.onNavigateTab});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -414,7 +415,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return Container(
+              return GestureDetector(
+                onTap: () {
+                  // Navigate based on item index
+                  // 0=盲盒, 1=参谋, 2=时间线, 3=百科, 4=必玩, 5=成就
+                  // For now navigate to deals page for "查看更多" type items
+                  widget.onNavigateTab?.call(2); // Deals tab
+                },
+                child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppTheme.card,

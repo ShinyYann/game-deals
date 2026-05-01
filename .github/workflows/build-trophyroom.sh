@@ -31,11 +31,22 @@ sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' app/build.gra
 echo "org.gradle.jvmargs=-Xmx4g" >> gradle.properties
 echo "android.useAndroidX=true" >> gradle.properties
 
+# Generate consistent debug keystore for fixed signing (so Android keeps network permissions)
+keytool -genkey -v -keystore /tmp/trophyroom/android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" 2>/dev/null || true
+
+# Create key.properties pointing to the keystore
+cat > /tmp/trophyroom/android/key.properties << EOF
+storePassword=android
+keyPassword=android
+keyAlias=androiddebugkey
+storeFile=debug.keystore
+EOF
+
 # Build APK
 cd /tmp/trophyroom
 flutter build apk --release --build-number=$2 --build-name=1.0.$2 --target-platform android-arm,android-arm64
 
 # Copy APK to output
-cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
+cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk 2>/dev/null || cp /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
 ls -lh /tmp/TrophyRoom.apk
 file /tmp/TrophyRoom.apk

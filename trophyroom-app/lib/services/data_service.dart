@@ -98,7 +98,7 @@ class DataService {
       await socket.flush();
 
       // Read response
-      final response = await socket.transform(utf8.decoder).join();
+      final response = await utf8.decodeStream(socket);
       socket.close();
 
       // Parse out headers and body

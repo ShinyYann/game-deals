@@ -417,40 +417,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               final item = items[index];
               return GestureDetector(
                 onTap: () {
-                  // Navigate based on item index
-                  // 0=盲盒, 1=参谋, 2=时间线, 3=百科, 4=必玩, 5=成就
-                  // For now navigate to deals page for "查看更多" type items
-                  widget.onNavigateTab?.call(2); // Deals tab
+                  widget.onNavigateTab?.call(2);
                 },
                 child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.card,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(item.emoji, style: const TextStyle(fontSize: 26)),
-                    const SizedBox(height: 6),
-                    Text(
-                      item.title,
-                      style: const TextStyle(
-                        color: AppTheme.text,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.card,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(item.emoji, style: const TextStyle(fontSize: 26)),
+                      const SizedBox(height: 6),
+                      Text(
+                        item.title,
+                        style: const TextStyle(
+                          color: AppTheme.text,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.subtitle,
-                      style: const TextStyle(
-                        color: AppTheme.text2,
-                        fontSize: 10,
+                      const SizedBox(height: 2),
+                      Text(
+                        item.subtitle,
+                        style: const TextStyle(
+                          color: AppTheme.text2,
+                          fontSize: 10,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },

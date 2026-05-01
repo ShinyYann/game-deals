@@ -1,7 +1,7 @@
 name: Build TrophyRoom APK
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # manual
   push:
     branches:
       - main

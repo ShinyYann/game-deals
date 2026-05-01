@@ -28,12 +28,12 @@ cd /tmp/trophyroom/android
 sed -i 's/applicationId = ".*"/applicationId = "com.yann.trophyroom"/' app/build.gradle.kts 2>/dev/null || true
 sed -i 's/applicationId ".*"/applicationId "com.yann.trophyroom"/' app/build.gradle 2>/dev/null || true
 
-# Debug build - no signing needed
+# Release build
 echo "org.gradle.jvmargs=-Xmx4g" >> gradle.properties
 echo "android.useAndroidX=true" >> gradle.properties
 
 cd /tmp/trophyroom
-flutter build apk --debug --build-number=$2 --build-name=1.0.$2 --target-platform android-arm,android-arm64
+flutter build apk --release --build-number=$2 --build-name=1.0.$2 --target-platform android-arm,android-arm64
 # Debug APK paths
 cp build/app/outputs/flutter-apk/app-debug.apk /tmp/TrophyRoom.apk 2>/dev/null || \
   cp build/app/outputs/apk/debug/app-debug.apk /tmp/TrophyRoom.apk 2>/dev/null || \

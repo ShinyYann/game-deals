@@ -250,12 +250,7 @@ class _HomePageState extends State<HomePage>
     setState(() => _loading = false);
   }
 
-  late AnimationController _animCtrl;
-  late Animation<double> _titleSlide;
-  bool _animDone = false;
-
   @override
-    @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(

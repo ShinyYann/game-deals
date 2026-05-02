@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'trophyroom-app/**'
+      - 'trophyroom-app/lib/**'
+      - 'trophyroom-app/pubspec.yaml'
       - '.github/workflows/apk.yml'
 
 jobs:
@@ -21,16 +22,33 @@ jobs:
 
       - name: Build APK
         run: |
-          cd trophyroom-app
-          flutter pub get
-          flutter build apk --release --target-platform android-arm,android-arm64
+          # Create a fresh Flutter project (generates correct android/ structure)
+          cd /tmp
+          flutter create --org com.trophyroom --project-name trophyroom --platforms android trophyroom
 
-      - name: Upload APK as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TrophyRoom
-          path: trophyroom-app/build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 7
+          # Copy our custom Dart code
+          rm -rf /tmp/trophyroom/lib/*
+          cp -r ${{ github.workspace }}/trophyroom-app/lib/* /tmp/trophyroom/lib/
+          cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml /tmp/trophyroom/pubspec.yaml
+
+          cd /tmp/trophyroom
+          flutter pub get
+
+          # Force INTERNET permissions into the generated AndroidManifest
+          ANDROID_MANIFEST="/tmp/trophyroom/android/app/src/main/AndroidManifest.xml"
+          awk '
+          /<application/ {
+            print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
+            print "    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
+            print "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>"
+          }
+          { print }
+          ' "$ANDROID_MANIFEST" > "${ANDROID_MANIFEST}.new"
+          mv "${ANDROID_MANIFEST}.new" "$ANDROID_MANIFEST"
+          grep "permission" "$ANDROID_MANIFEST"
+
+          flutter build apk --release --target-platform android-arm,android-arm64
+          cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
 
       - name: Create Release
         uses: ncipollo/release-action@v1
@@ -42,6 +60,6 @@ jobs:
             
             - 仅一个页面 + 联网测试按钮
             - 权限: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
-          artifacts: trophyroom-app/build/app/outputs/flutter-apk/app-release.apk
+          artifacts: /tmp/TrophyRoom.apk
           allowUpdates: true
           replacesArtifacts: true

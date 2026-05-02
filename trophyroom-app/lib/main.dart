@@ -27,39 +27,67 @@ class TrophyRoomApp extends StatelessWidget {
   }
 }
 
-/// 启动动画：APNG 播放（Python 3D 渲染的粒子碎裂动画）
+/// 启动动画：APNG 播放 → 奖杯屋大字 → 无缝过渡到首页标题
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _enterAnim;
+
   @override
   void initState() {
     super.initState();
-    // APNG 动画长 4.5 秒，5 秒后自动跳转主页
-    Future.delayed(const Duration(milliseconds: 5200), () {
+    // APNG 播放 4.5s，然后过渡 0.8s，最后进首页
+    Future.delayed(const Duration(milliseconds: 5000), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const HomePage(),
             transitionsBuilder: (_, anim, __, child) =>
-                SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.05),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: anim,
-                    curve: Curves.easeOutCubic,
-                  )),
-                  child: FadeTransition(opacity: anim, child: child),
+                Stack(
+                  children: [
+                    // 背景 + 奖杯屋大字（启动动画最后一帧的延伸）
+                    FadeTransition(
+                      opacity: Tween<double>(begin: 1, end: 0).animate(anim),
+                      child: Scaffold(
+                        backgroundColor: const Color(0xFF0A0A12),
+                        body: Center(
+                          child: ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                            ).createShader(bounds),
+                            child: const Text(
+                              '奖杯屋',
+                              style: TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 10,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // 新页面淡入
+                    FadeTransition(opacity: anim, child: child),
+                  ],
                 ),
-            transitionDuration: const Duration(milliseconds: 600),
+            transitionDuration: const Duration(milliseconds: 800),
           ),
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -133,13 +161,18 @@ class _HomePageState extends State<HomePage>
     super.initState();
     _animCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
     );
     _titleSlide = CurvedAnimation(
       parent: _animCtrl,
       curve: Curves.easeOutCubic,
     );
-    _animCtrl.forward().then((_) => setState(() => _animDone = true));
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) _animCtrl.forward().then((_) => setState(() => _animDone = true));
+    });
+    _deals = List.from(_offlineGames);
+    _dealsStatus = '${_offlineGames.length} 款内置游戏';
+    _initPSNWebView();
     _checkNetwork();
   }
 

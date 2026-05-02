@@ -212,33 +212,48 @@ class _HomePageState extends State<HomePage> {
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (ctx, i) {
                 final g = _deals[i];
-                return ListTile(
-                  dense: true,
-                  leading: Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text('${i + 1}',
-                          style: TextStyle(
-                              color: Colors.purple[300],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12)),
+                final imgUrl = g['img']?.toString() ?? '';
+                final name = g['name']?.toString() ?? '';
+                return InkWell(
+                  onTap: () => _showGameDetail(ctx, g),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: SizedBox(
+                            width: 50, height: 65,
+                            child: imgUrl.isNotEmpty
+                                ? Image.network(imgUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _placeholderIcon())
+                                : _placeholderIcon(),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name, maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 14)),
+                              if (g['discount']?.toString()?.isNotEmpty == true &&
+                                  g['discount'] != '-')
+                                Text('-${g['discount']}',
+                                    style: TextStyle(color: Colors.green[400],
+                                        fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Text(g['price']?.toString() ?? '',
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 13)),
+                      ],
                     ),
                   ),
-                  title: Text(g['name']?.toString() ?? '',
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 14)),
-                  subtitle: Text(
-                      '${g['platform']?.toString() ?? ''}  原${g['original']?.toString() ?? ''}',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-                  trailing: Text('-${g['discount']?.toString() ?? ''}',
-                      style: TextStyle(
-                          color: Colors.green[400],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13)),
                 );
               },
             ),
@@ -335,48 +350,239 @@ class _HomePageState extends State<HomePage> {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (ctx, i) {
                     final g = filtered[i];
-                    return ListTile(
-                      leading: Container(
-                        width: 40, height: 40,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.purple[800]!, Colors.indigo[800]!],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
+                    final imgUrl = g['img']?.toString() ?? '';
+                    final name = g['name']?.toString() ?? '';
+                    final plat = g['platform']?.toString() ?? '';
+                    final price = g['price']?.toString() ?? '';
+                    final original = g['original']?.toString() ?? '';
+                    final disc = g['discount']?.toString() ?? '';
+                    return InkWell(
+                      onTap: () => _showGameDetail(ctx, g),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Row(
+                          children: [
+                            // 封面图
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: SizedBox(
+                                width: 60, height: 80,
+                                child: imgUrl.isNotEmpty
+                                    ? Image.network(imgUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            _placeholderIcon())
+                                    : _placeholderIcon(),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // 游戏信息
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(name, maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600)),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      _tag(plat),
+                                      const SizedBox(width: 6),
+                                      if (original.isNotEmpty)
+                                        Text('原$original',
+                                            style: TextStyle(
+                                                color: Colors.grey[500],
+                                                fontSize: 11,
+                                                decoration: TextDecoration
+                                                    .lineThrough)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Text(price,
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white)),
+                                      if (disc.isNotEmpty && disc != '-') ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red[700],
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                          child: Text(disc,
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white)),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.chevron_right,
+                                color: Colors.grey[600], size: 20),
+                          ],
                         ),
-                        child: Center(
-                          child: Text('${i + 1}',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12)),
-                        ),
-                      ),
-                      title: Text(g['name']?.toString() ?? '',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 14)),
-                      subtitle: Text(
-                          '${g['platform']?.toString() ?? ''}  HK\$${g['original']?.toString() ?? ''}',
-                          style: TextStyle(
-                              color: Colors.grey[500], fontSize: 11)),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(g['price']?.toString() ?? '',
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold)),
-                          Text('-${g['discount']?.toString() ?? ''}',
-                              style: TextStyle(
-                                  color: Colors.green[400], fontSize: 12)),
-                        ],
                       ),
                     );
                   },
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _tag(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: text == 'PSN'
+            ? Colors.blue[800]
+            : text == 'Steam'
+                ? Colors.orange[800]
+                : Colors.green[800],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(text, style: const TextStyle(fontSize: 10, color: Colors.white)),
+    );
+  }
+
+  Widget _placeholderIcon() {
+    return Container(
+      color: Colors.grey[850],
+      child: Icon(Icons.videogame_asset, color: Colors.grey[600], size: 30),
+    );
+  }
+
+  void _showGameDetail(BuildContext context, Map<String, dynamic> game) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: _GameDetailCard(game: game),
+      ),
+    );
+  }
+}
+
+class _GameDetailCard extends StatelessWidget {
+  final Map<String, dynamic> game;
+  const _GameDetailCard({required this.game});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = game['name']?.toString() ?? '';
+    final imgUrl = game['img']?.toString() ?? '';
+    final plat = game['platform']?.toString() ?? '';
+    final price = game['price']?.toString() ?? '';
+    final original = game['original']?.toString() ?? '';
+    final disc = game['discount']?.toString() ?? '';
+    final rating = game['rating']?.toString() ?? '';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.purple[800]!),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 封面大图
+          if (imgUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(imgUrl, height: 200,
+                  width: double.infinity, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 200, color: Colors.grey[850],
+                    child: Icon(Icons.videogame_asset, size: 60,
+                        color: Colors.grey[600]),
+                  )),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                // 信息行
+                _infoRow(Icons.smartphone, plat),
+                if (rating.isNotEmpty)
+                  _infoRow(Icons.star, '评分: $rating'),
+                const SizedBox(height: 12),
+                // 价格
+                Row(
+                  children: [
+                    Text(price, style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold,
+                        color: Colors.green[400])),
+                    if (original.isNotEmpty) ...[
+                      const SizedBox(width: 12),
+                      Text(original, style: TextStyle(
+                          fontSize: 14, color: Colors.grey[500],
+                          decoration: TextDecoration.lineThrough)),
+                    ],
+                    if (disc.isNotEmpty && disc != '-') ...[
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.red[700],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(disc, style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('关闭', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[400]),
+          const SizedBox(width: 8),
+          Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 14)),
+        ],
+      ),
     );
   }
 }

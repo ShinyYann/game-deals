@@ -11,6 +11,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,11 +26,9 @@ jobs:
 
       - name: Build APK
         run: |
-          # Create a fresh Flutter project (generates correct android/ structure)
           cd /tmp
           flutter create --org com.trophyroom --project-name trophyroom --platforms android trophyroom
 
-          # Copy our custom Dart code
           rm -rf /tmp/trophyroom/lib/*
           cp -r ${{ github.workspace }}/trophyroom-app/lib/* /tmp/trophyroom/lib/
           cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml /tmp/trophyroom/pubspec.yaml
@@ -34,7 +36,6 @@ jobs:
           cd /tmp/trophyroom
           flutter pub get
 
-          # Force INTERNET permissions into the generated AndroidManifest
           ANDROID_MANIFEST="/tmp/trophyroom/android/app/src/main/AndroidManifest.xml"
           awk '
           /<application/ {
@@ -50,16 +51,24 @@ jobs:
           flutter build apk --release --target-platform android-arm,android-arm64
           cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TrophyRoom-APK
+          path: /tmp/TrophyRoom.apk
+          retention-days: 1
+
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           tag: apk-minimal
           name: "TrophyRoom v1.0.0"
           body: |
-            最小化 APK — 联网权限测试
+            TrophyRoom APK — 离线数据 + 联网更新
             
-            - 仅一个页面 + 联网测试按钮
-            - 权限: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
+            - 内置 25 款热门折扣游戏
+            - 自动从 Gitee/GitHub 更新数据
+            - 无论联网与否都能用
           artifacts: /tmp/TrophyRoom.apk
           allowUpdates: true
           replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}

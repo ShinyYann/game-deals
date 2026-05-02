@@ -65,6 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2800),
     );
+    _controller.addListener(() => setState(() {}));
 
     _phase1 = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOut)),
@@ -103,15 +104,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (ctx, _) {
-        return Scaffold(
-          backgroundColor: const Color(0xFF0A0A12),
-          body: Center(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0A12),
+      body: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
                 // 粒子层
                 if (_phase2.value > 0)
                   ...List.generate(_particles.length, (i) {
@@ -181,8 +179,6 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
         );
-      },
-    );
   }
 }
 

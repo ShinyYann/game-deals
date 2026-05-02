@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -26,6 +25,35 @@ class TrophyRoomApp extends StatelessWidget {
   }
 }
 
+/// 离线/默认数据 — 25 款热门游戏
+const List<Map<String, dynamic>> _offlineGames = [
+  {"name": "Resident Evil 4 PS4 & PS5", "discount": "60%", "price": "HK\$123.20", "original": "HK\$308.00", "platform": "PSN"},
+  {"name": "Street Fighter 6", "discount": "50%", "price": "HK\$144.00", "original": "HK\$288.00", "platform": "PSN"},
+  {"name": "人中之龍 極２", "discount": "30%", "price": "HK\$130.90", "original": "HK\$187.00", "platform": "PSN"},
+  {"name": "Resident Evil Village", "discount": "75%", "price": "HK\$77.00", "original": "HK\$308.00", "platform": "PSN"},
+  {"name": "ELDEN RING", "discount": "30%", "price": "HK\$348.60", "original": "HK\$498.00", "platform": "PSN"},
+  {"name": "Cyberpunk 2077", "discount": "50%", "price": "HK\$199.00", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Persona 5 Royal", "discount": "40%", "price": "HK\$238.80", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "God of War Ragnarök", "discount": "25%", "price": "HK\$368.00", "original": "HK\$468.00", "platform": "PSN"},
+  {"name": "The Last of Us Part I", "discount": "30%", "price": "HK\$308.00", "original": "HK\$438.00", "platform": "PSN"},
+  {"name": "Horizon Forbidden West", "discount": "50%", "price": "HK\$198.00", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Gran Turismo 7", "discount": "40%", "price": "HK\$238.80", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Spider-Man: Miles Morales", "discount": "45%", "price": "HK\$198.00", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Returnal", "discount": "55%", "price": "HK\$238.00", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Demon's Souls", "discount": "45%", "price": "HK\$318.00", "original": "HK\$568.00", "platform": "PSN"},
+  {"name": "Ratchet & Clank: Rift Apart", "discount": "40%", "price": "HK\$238.80", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Final Fantasy VII Remake", "discount": "50%", "price": "HK\$199.00", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Ghost of Tsushima", "discount": "40%", "price": "HK\$358.80", "original": "HK\$568.00", "platform": "PSN"},
+  {"name": "Sekiro: Shadows Die Twice", "discount": "50%", "price": "HK\$199.00", "original": "HK\$398.00", "platform": "PSN"},
+  {"name": "Bloodborne", "discount": "60%", "price": "HK\$123.20", "original": "HK\$308.00", "platform": "PSN"},
+  {"name": "Death Stranding", "discount": "65%", "price": "HK\$107.80", "original": "HK\$308.00", "platform": "PSN"},
+  {"name": "Days Gone", "discount": "60%", "price": "HK\$123.20", "original": "HK\$308.00", "platform": "PSN"},
+  {"name": "Uncharted 4", "discount": "50%", "price": "HK\$119.00", "original": "HK\$238.00", "platform": "PSN"},
+  {"name": "Stray", "discount": "40%", "price": "HK\$178.80", "original": "HK\$298.00", "platform": "PSN"},
+  {"name": "Baldur's Gate 3", "discount": "10%", "price": "HK\$418.00", "original": "HK\$468.00", "platform": "PSN"},
+  {"name": "Final Fantasy VII Rebirth", "discount": "20%", "price": "HK\$468.00", "original": "HK\$568.00", "platform": "PSN"},
+];
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -34,91 +62,321 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String _status = '点击测试联网';
+  int _currentTab = 0;
+  String _netStatus = '检测中...';
+  bool _netChecked = false;
+  List<Map<String, dynamic>> _deals = [];
   bool _loading = false;
+  String _dealsStatus = '';
+  String _platform = 'all';
 
-  Future<void> _testNetwork() async {
-    setState(() {
-      _loading = true;
-      _status = '正在连接...';
-    });
+  @override
+  void initState() {
+    super.initState();
+    _deals = List.from(_offlineGames);
+    _dealsStatus = '${_offlineGames.length} 款内置游戏';
+    _checkNetwork();
+  }
 
-    try {
-      final client = HttpClient()
-        ..connectionTimeout = const Duration(seconds: 10);
-      final request = await client.getUrl(
-        Uri.parse('https://shinyyann.github.io/trophyroom/'),
-      );
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
+  /// 遍历多个数据源，只要有数据就用在线数据
+  Future<void> _checkNetwork() async {
+    final urls = [
+      'https://gitee.com/yann8888/game-deals/raw/main/docs/data/deals.txt',
+      'https://shinyyann.github.io/trophyroom/data/deals.json',
+      'https://raw.githubusercontent.com/ShinyYann/trophyroom/main/docs/data/deals.json',
+    ];
 
-      setState(() {
-        _status = '✅ 联网成功！\n状态码: ${response.statusCode}\n内容长度: ${body.length} 字符';
-      });
-      client.close();
-    } catch (e) {
-      setState(() {
-        _status = '❌ 联网失败\n$e';
-      });
-    } finally {
-      setState(() => _loading = false);
+    for (final url in urls) {
+      try {
+        final resp = await http.get(Uri.parse(url)).timeout(
+              const Duration(seconds: 8),
+            );
+        if (resp.statusCode == 200 && resp.body.isNotEmpty) {
+          try {
+            final data = json.decode(resp.body);
+            List<Map<String, dynamic>> list = [];
+            if (data is List) {
+              list = data.cast<Map<String, dynamic>>();
+            } else if (data is Map) {
+              for (final key in ['psn', 'steam', 'switch']) {
+                if (data[key] is List) {
+                  for (final item in data[key]) {
+                    if (item is Map) list.add(Map<String, dynamic>.from(item));
+                  }
+                }
+              }
+            }
+            if (list.isNotEmpty) {
+              setState(() {
+                _deals = list;
+                _netStatus = '✅ 在线';
+                _dealsStatus = '${list.length} 款游戏（在线）';
+                _netChecked = true;
+              });
+              return;
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
     }
+
+    // 所有数据源都失败 — 保持离线数据
+    setState(() {
+      _netStatus = '📡 离线';
+      _dealsStatus = '${_offlineGames.length} 款内置游戏（离线）';
+      _netChecked = true;
+    });
+  }
+
+  Future<void> _reloadDeals() async {
+    setState(() => _loading = true);
+    await _checkNetwork();
+    setState(() => _loading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('TrophyRoom')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                '🏆 TrophyRoom',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      appBar: AppBar(
+        title: const Text('🏆 TrophyRoom'),
+        centerTitle: true,
+        actions: [
+          if (_netChecked)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Text(_netStatus, style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+            ),
+        ],
+      ),
+      body: _currentTab == 0 ? _buildHome() : _buildDeals(),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentTab,
+        onTap: (i) => setState(() => _currentTab = i),
+        selectedItemColor: Colors.purple[300],
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
+          BottomNavigationBarItem(icon: Icon(Icons.local_offer), label: '折扣'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHome() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 状态卡片
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.purple[900]!, Colors.indigo[900]!],
               ),
-              const SizedBox(height: 8),
-              const Text(
-                '联网测试',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 40),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[900],
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  _status,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _loading ? null : _testNetwork,
-                icon: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.wifi_tethering),
-                label: Text(_loading ? '测试中...' : '测试联网'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Text(_netChecked ? _netStatus : '正在检测...',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                if (!_netChecked)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                ),
-              ),
+                const SizedBox(height: 8),
+                Text(_netChecked ? _dealsStatus : '等待连接...',
+                    style: TextStyle(color: Colors.grey[300], fontSize: 13)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text('快捷功能', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _quickBtn(Icons.local_offer, '折扣', () => setState(() => _currentTab = 1)),
+              const SizedBox(width: 12),
+              _quickBtn(Icons.refresh, '刷新', _reloadDeals),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text('展示: $_dealsStatus',
+              style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.separated(
+              itemCount: _deals.length > 10 ? 10 : _deals.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (ctx, i) {
+                final g = _deals[i];
+                return ListTile(
+                  dense: true,
+                  leading: Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text('${i + 1}',
+                          style: TextStyle(
+                              color: Colors.purple[300],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12)),
+                    ),
+                  ),
+                  title: Text(g['name']?.toString() ?? '',
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                      '${g['platform']?.toString() ?? ''}  原${g['original']?.toString() ?? ''}',
+                      style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                  trailing: Text('-${g['discount']?.toString() ?? ''}',
+                      style: TextStyle(
+                          color: Colors.green[400],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13)),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickBtn(IconData icon, String label, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: Colors.purple[300], size: 28),
+              const SizedBox(height: 8),
+              Text(label, style: const TextStyle(fontSize: 14)),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDeals() {
+    final filtered = _platform == 'all'
+        ? _deals
+        : _deals
+            .where((g) => g['platform']?.toString().toLowerCase() == _platform)
+            .toList();
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: ['all', 'psn', 'steam', 'switch'].map((p) {
+                final active = _platform == p;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(
+                        p == 'all' ? '全部' : p.toUpperCase()),
+                    selected: active,
+                    onSelected: (_) => setState(() => _platform = p),
+                    selectedColor: Colors.purple[700],
+                    labelStyle: TextStyle(
+                        fontSize: 13,
+                        color: active ? Colors.white : Colors.grey),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Text(_dealsStatus,
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+              const Spacer(),
+              if (_loading)
+                const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+              else
+                GestureDetector(
+                  onTap: _reloadDeals,
+                  child: Icon(Icons.refresh, size: 18,
+                      color: Colors.purple[300]),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Text('暂无数据',
+                      style: TextStyle(color: Colors.grey[600])))
+              : ListView.separated(
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (ctx, i) {
+                    final g = filtered[i];
+                    return ListTile(
+                      leading: Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.purple[800]!, Colors.indigo[800]!],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text('${i + 1}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12)),
+                        ),
+                      ),
+                      title: Text(g['name']?.toString() ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14)),
+                      subtitle: Text(
+                          '${g['platform']?.toString() ?? ''}  HK\$${g['original']?.toString() ?? ''}',
+                          style: TextStyle(
+                              color: Colors.grey[500], fontSize: 11)),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(g['price']?.toString() ?? '',
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold)),
+                          Text('-${g['discount']?.toString() ?? ''}',
+                              style: TextStyle(
+                                  color: Colors.green[400], fontSize: 12)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

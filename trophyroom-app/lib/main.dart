@@ -113,10 +113,14 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   int _currentTab = 0;
   String _netStatus = '检测中...';
   bool _netChecked = false;
+  late AnimationController _animCtrl;
+  late Animation<double> _titleSlide;
+  bool _animDone = false;
   List<Map<String, dynamic>> _deals = [];
   bool _loading = false;
   String _dealsStatus = '';
@@ -127,10 +131,22 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _deals = List.from(_offlineGames);
-    _dealsStatus = '${_offlineGames.length} 款内置游戏';
-    _initPSNWebView();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _titleSlide = CurvedAnimation(
+      parent: _animCtrl,
+      curve: Curves.easeOutCubic,
+    );
+    _animCtrl.forward().then((_) => setState(() => _animDone = true));
     _checkNetwork();
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
   }
 
   void _initPSNWebView() {
@@ -201,11 +217,46 @@ class _HomePageState extends State<HomePage> {
     setState(() => _loading = false);
   }
 
+  late AnimationController _animCtrl;
+  late Animation<double> _titleSlide;
+  bool _animDone = false;
+
   @override
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🏆 奖杯屋'),
+        title: AnimatedBuilder(
+          animation: _titleSlide,
+          builder: (ctx, _) {
+            return Transform.translate(
+              offset: Offset(0, 30 * (1 - _titleSlide.value)),
+              child: Opacity(
+                opacity: _titleSlide.value,
+                child: ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [
+                      const Color(0xFFFFD700),
+                      const Color(0xFFFFA500),
+                      const Color(0xFFFF6B35),
+                      const Color(0xFFFFD700),
+                    ],
+                    stops: const [0.0, 0.33, 0.66, 1.0],
+                  ).createShader(bounds),
+                  child: const Text(
+                    '🏆 奖杯屋',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
         centerTitle: true,
         actions: [
           if (_netChecked)

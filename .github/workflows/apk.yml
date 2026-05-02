@@ -37,11 +37,15 @@ jobs:
           flutter pub get
 
           ANDROID_MANIFEST="/tmp/trophyroom/android/app/src/main/AndroidManifest.xml"
+          # Add permissions BEFORE <application> (Android requires this)
           awk '
           /<application/ {
             print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
             print "    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
             print "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>"
+            print ""
+            print $0
+            next
           }
           { print }
           ' "$ANDROID_MANIFEST" > "${ANDROID_MANIFEST}.new"

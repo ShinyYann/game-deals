@@ -32,6 +32,8 @@ jobs:
           rm -rf /tmp/trophyroom/lib/*
           cp -r ${{ github.workspace }}/trophyroom-app/lib/* /tmp/trophyroom/lib/
           cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml /tmp/trophyroom/pubspec.yaml
+          mkdir -p /tmp/trophyroom/assets
+          cp ${{ github.workspace }}/trophyroom-app/assets/splash.png /tmp/trophyroom/assets/splash.png
 
           cd /tmp/trophyroom
           rm -f pubspec.lock

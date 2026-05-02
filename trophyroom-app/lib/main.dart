@@ -266,25 +266,51 @@ class _HomePageState extends State<HomePage>
               offset: Offset(0, 30 * (1 - _titleSlide.value)),
               child: Opacity(
                 opacity: _titleSlide.value,
-                child: ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [
-                      const Color(0xFFFFD700),
-                      const Color(0xFFFFA500),
-                      const Color(0xFFFF6B35),
-                      const Color(0xFFFFD700),
-                    ],
-                    stops: const [0.0, 0.33, 0.66, 1.0],
-                  ).createShader(bounds),
-                  child: const Text(
-                    '🏆 奖杯屋',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                      color: Colors.white,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [
+                          const Color(0xFFFFD700),
+                          const Color(0xFFFFA500),
+                          const Color(0xFFFF6B35),
+                          const Color(0xFFFFD700),
+                        ],
+                        stops: const [0.0, 0.33, 0.66, 1.0],
+                      ).createShader(bounds),
+                      child: const Text(
+                        '🏆 奖杯屋',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Color(0x99FFD700),
+                          Color(0x66FFA500),
+                          Color(0x99FFD700),
+                        ],
+                      ).createShader(bounds),
+                      child: const Text(
+                        'trophyroom',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 3,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

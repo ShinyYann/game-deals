@@ -1,227 +1,122 @@
+import 'dart:convert';
 import 'dart:io';
-import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'pages/home_page.dart';
-import 'pages/trophy_page.dart';
-import 'pages/deals_page.dart';
-import 'pages/guide_page.dart';
-import 'pages/settings_page.dart';
-import 'pages/splash_page.dart';
-import 'models/app_theme.dart';
 
-/// Global crash log path
-String? crashLogPath;
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  FlutterError.onError = (FlutterErrorDetails details) async {
-    FlutterError.presentError(details);
-    final log = '[${DateTime.now()}][FLUTTER] ${details.exception}\n${details.stack}\n';
-    final dir = Directory('/storage/emulated/0/Android/data/com.yann.trophyroom/files');
-    if (await dir.exists()) {
-      await File('${dir.path}/crash.log').writeAsString(log, mode: FileMode.append);
-    } else {
-      // fallback
-      final tmp = Directory('/data/data/com.yann.trophyroom/files');
-      if (await tmp.exists()) {
-        await File('${tmp.path}/crash.log').writeAsString(log, mode: FileMode.append);
-      }
-    }
-  };
-
-  // Try-catch the entire app
-  runZonedGuarded(() async {
-    try {
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Color(0xFF0A0A12),
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
-      runApp(const TrophyRoomApp());
-    } catch (e, stack) {
-      final log = '[${DateTime.now()}][INIT] $e\n$stack\n';
-      final dir = Directory('/data/data/com.yann.trophyroom/files');
-      if (await dir.exists()) {
-        await File('${dir.path}/crash.log').writeAsString(log, mode: FileMode.append);
-      }
-    }
-  }, (Object error, StackTrace stack) async {
-    final log = '[${DateTime.now()}][ZONE] $error\n$stack\n';
-    final dir = Directory('/data/data/com.yann.trophyroom/files');
-    if (await dir.exists()) {
-      await File('${dir.path}/crash.log').writeAsString(log, mode: FileMode.append);
-    }
-  });
+void main() {
+  runApp(const TrophyRoomApp());
 }
 
-class TrophyRoomApp extends StatefulWidget {
+class TrophyRoomApp extends StatelessWidget {
   const TrophyRoomApp({super.key});
-
-  @override
-  State<TrophyRoomApp> createState() => _TrophyRoomAppState();
-}
-
-class _TrophyRoomAppState extends State<TrophyRoomApp> {
-  int _currentIndex = 0;
-  bool _showSplash = true;
-
-  final List<Widget> _pages = const [
-    HomePage(),
-    TrophyPage(),
-    DealsPage(),
-    GuidePage(),
-    SettingsPage(),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 2800), () {
-      if (mounted) setState(() => _showSplash = false);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'TrophyRoom',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: _showSplash
-          ? const SplashPage()
-          : Scaffold(
-              body: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                switchInCurve: Curves.easeOutQuint,
-                switchOutCurve: Curves.easeInQuint,
-                transitionBuilder: (child, animation) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.2, 0),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutExpo,
-                    )),
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
-                child: KeyedSubtree(
-                  key: ValueKey<int>(_currentIndex),
-                  child: _pages[_currentIndex],
-                ),
-              ),
-              bottomNavigationBar: _buildBottomNav(),
-            ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF0A0A12).withOpacity(0),
-            const Color(0xFF0A0A12),
-          ],
+      theme: ThemeData.dark(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFA855F7),
+          brightness: Brightness.dark,
         ),
       ),
-      child: Stack(
-        children: [
-          // Navigation background blur panel
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 8,
-            child: Container(
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFF12121f).withOpacity(0.85),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: const Color(0xFF2a2a3e).withOpacity(0.5),
+      home: const HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String _status = '点击测试联网';
+  bool _loading = false;
+
+  Future<void> _testNetwork() async {
+    setState(() {
+      _loading = true;
+      _status = '正在连接...';
+    });
+
+    try {
+      final client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 10);
+      final request = await client.getUrl(
+        Uri.parse('https://shinyyann.github.io/trophyroom/'),
+      );
+      final response = await request.close();
+      final body = await response.transform(utf8.decoder).join();
+
+      setState(() {
+        _status = '✅ 联网成功！\n状态码: ${response.statusCode}\n内容长度: ${body.length} 字符';
+      });
+      client.close();
+    } catch (e) {
+      setState(() {
+        _status = '❌ 联网失败\n$e';
+      });
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('TrophyRoom')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                '🏆 TrophyRoom',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '联网测试',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              const SizedBox(height: 40),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFa855f7).withOpacity(0.05),
-                    blurRadius: 20,
-                    spreadRadius: -5,
+                child: Text(
+                  _status,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loading ? null : _testNetwork,
+                icon: _loading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.wifi_tethering),
+                label: Text(_loading ? '测试中...' : '测试联网'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-          // Nav items
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _navItem(0, '🏠', '首页'),
-                  _navItem(1, '🏆', '奖杯'),
-                  _navItem(2, '💰', '折扣'),
-                  _navItem(3, '📖', '攻略'),
-                  _navItem(4, '⚙️', '设置'),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _navItem(int index, String emoji, String label) {
-    final isActive = _currentIndex == index;
-    return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutBack,
-        padding: EdgeInsets.symmetric(
-          horizontal: isActive ? 16 : 8,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: isActive
-              ? const Color(0xFFa855f7).withOpacity(0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          border: isActive
-              ? Border.all(
-                  color: const Color(0xFFa855f7).withOpacity(0.3),
-                  width: 1,
-                )
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              emoji,
-              style: TextStyle(
-                fontSize: isActive ? 22 : 20,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive
-                    ? const Color(0xFFa855f7)
-                    : const Color(0xFF666),
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -698,9 +698,9 @@ class _HomePageState extends State<HomePage> {
   /// 打开外部链接
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    } catch (_) {
       if (context.mounted) {
         showDialog(
           context: context,

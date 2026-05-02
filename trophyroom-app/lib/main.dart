@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -28,68 +27,20 @@ class TrophyRoomApp extends StatelessWidget {
   }
 }
 
-/// 优雅溶解启动动画：TROPHYROOM → 奖杯屋
+/// 启动动画：APNG 播放（Python 3D 渲染的粒子碎裂动画）
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _phaseShow;    // 0-1: TROPHYROOM 浮现
-  late Animation<double> _phaseMelt;    // 0-1: 溶解破裂
-  late Animation<double> _phaseReform;  // 0-1: 奖杯屋重组
-  late Animation<double> _shockwave;    // 冲击波
-  late Animation<double> _glowPulse;    // 脉冲光
-
-  final _random = math.Random(42);
-  final List<_MeltParticle> _meltParticles = [];
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // 生成从字母上剥落的粒子 — 集中在文字区域
-    for (int i = 0; i < 80; i++) {
-      _meltParticles.add(_MeltParticle(
-        x: 0.2 + _random.nextDouble() * 0.6,
-        y: 0.35 + _random.nextDouble() * 0.3,
-        size: 1.5 + _random.nextDouble() * 4.0,
-        delay: _random.nextDouble() * 0.35,
-        speedX: (_random.nextDouble() - 0.5) * 200,
-        speedY: 50 + _random.nextDouble() * 200,
-        rot: _random.nextDouble() * 360,
-        color: _random.nextDouble() > 0.5
-            ? const Color(0xFFFFD700)
-            : const Color(0xFFFFA500),
-      ));
-    }
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3200),
-    );
-    _controller.addListener(() => setState(() {}));
-
-    _phaseShow = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOutCubic)),
-    );
-    _phaseMelt = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.25, 0.55, curve: Curves.easeInCubic)),
-    );
-    _phaseReform = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.5, 0.85, curve: Curves.easeOutBack)),
-    );
-    _shockwave = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.35, 0.5, curve: Curves.easeOut)),
-    );
-    _glowPulse = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 0.9, curve: Curves.easeInOutSine)),
-    );
-
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
+    // APNG 动画长 4.5 秒，5 秒后自动跳转主页
+    Future.delayed(const Duration(milliseconds: 5200), () {
+      if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const HomePage(),
@@ -109,127 +60,23 @@ class _SplashScreenState extends State<SplashScreen>
         );
       }
     });
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final meltVal = _phaseMelt.value;
-    final showVal = _phaseShow.value;
-
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A12),
-      body: Stack(
-        children: [
-          // 背景渐变
-          Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                colors: [
-                  Color.lerp(
-                    const Color(0xFF0A0A12),
-                    const Color(0xFF1A0A30),
-                    (_phaseReform.value * 0.6),
-                  )!,
-                  const Color(0xFF0A0A12),
-                ],
-                radius: 0.8,
-              ),
-            ),
-          ),
-
-          // 冲击波
-          if (_shockwave.value > 0 && _shockwave.value < 1)
-            Center(
-              child: Transform.scale(
-                scale: 0.2 + 1.5 * _shockwave.value,
-                child: Opacity(
-                  opacity: (1 - _shockwave.value) * 0.4,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.5),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-          Center(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // === 粒子系统 — 从字母剥落 ===
-                ...List.generate(_meltParticles.length, (i) {
-                  final p = _meltParticles[i];
-                  final localT = (_controller.value - p.delay).clamp(0.0, 1.0);
-                  if (localT <= 0) return const SizedBox.shrink();
-
-                  final isMeltPhase = p.delay < _phaseMelt.value;
-                  final progress = (localT - 0.25).clamp(0.0, 0.75) / 0.75;
-
-                  // 溶解阶段：粒子下落
-                  final meltX = p.speedX * progress * _phaseMelt.value;
-                  final meltY = p.speedY * progress * _phaseMelt.value;
-                  final particleAlpha = progress < 0.1
-                      ? progress / 0.1
-                      : (1 - (progress - 0.1) / 0.9).clamp(0.0, 1.0);
-
-                  final posX = size.width * p.x + meltX;
-                  final posY = size.height * p.y + meltY;
-
-                  // 重组阶段：粒子向中心汇聚
-                  final centerX = size.width / 2;
-                  final centerY = size.height / 2;
-                  final reformProgress = (_phaseReform.value).clamp(0.0, 1.0);
-
-                  final reformX = centerX + (posX - centerX) * (1 - reformProgress * 0.7);
-                  final reformY = centerY + (posY - centerY) * (1 - reformProgress * 0.7);
-
-                  final finalX = p.x < meltVal ? reformX : posX;
-                  final finalY = p.y < meltVal * 0.5 ? reformY : posY;
-
-                  final displayX = isMeltPhase && meltVal > 0 ? finalX : posX;
-                  final displayY = isMeltPhase && meltVal > 0 ? finalY : posY;
-
-                  if (reformProgress > 0.8 && isMeltPhase) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Positioned(
-                    left: displayX - p.size,
-                    top: displayY - p.size,
-                    child: Transform.rotate(
-                      angle: p.rot * (3.14 / 180) + progress * 2,
-                      child: Container(
-                        width: p.size * (1 + 0.5 * reformProgress),
-                        height: p.size * (1 + 0.5 * reformProgress),
-                        decoration: BoxDecoration(
-                          color: p.color
-                              .withValues(alpha: particleAlpha * (1 - meltVal * 0.3)),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-
-                // === TROPHYROOM 英文 ===
-                Opacity(
-                  opacity: showVal * (1 - meltVal),
+      body: Center(
+        child: Image.asset(
+          'assets/splash.png',
+          fit: BoxFit.contain,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+      ),
+    );
+  }
+}
                   child: Transform.translate(
                     offset: Offset(0, -20 * meltVal),
                     child: ShaderMask(
@@ -316,21 +163,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
-}
-
-class _MeltParticle {
-  final double x, y, size, delay, speedX, speedY, rot;
-  final Color color;
-  const _MeltParticle({
-    required this.x,
-    required this.y,
-    required this.size,
-    required this.delay,
-    required this.speedX,
-    required this.speedY,
-    required this.rot,
-    required this.color,
-  });
 }
 
 /// 离线/默认数据 — 25 款热门游戏

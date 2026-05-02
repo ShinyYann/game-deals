@@ -15,7 +15,7 @@ class TrophyRoomApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TrophyRoom',
+      title: '奖杯屋',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true).copyWith(
         colorScheme: ColorScheme.fromSeed(
@@ -94,7 +94,16 @@ class _SplashScreenState extends State<SplashScreen>
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const HomePage(),
             transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
+                SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.05),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: anim,
+                    curve: Curves.easeOutCubic,
+                  )),
+                  child: FadeTransition(opacity: anim, child: child),
+                ),
             transitionDuration: const Duration(milliseconds: 600),
           ),
         );
@@ -452,7 +461,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🏆 TrophyRoom'),
+        title: const Text('🏆 奖杯屋'),
         centerTitle: true,
         actions: [
           if (_netChecked)

@@ -7,7 +7,6 @@ WORK_DIR="/tmp/trophyroom"
 rm -rf "$WORK_DIR"
 
 # Create Flutter project with ONLY Android platform
-# Using --template=app and adding --platforms=android avoids web/ios/macos/linux/windows dependencies
 flutter create --org com.yann --project-name trophyroom --platforms android "$WORK_DIR"
 
 # Copy our custom Dart code
@@ -17,6 +16,38 @@ cp "$1/trophyroom-app/pubspec.yaml" "$WORK_DIR/pubspec.yaml"
 
 cd "$WORK_DIR"
 flutter pub get
+
+# ====== FORCE INTERNET PERMISSIONS ======
+# Flutter's default template may not include INTERNET in release builds
+# Patch the AndroidManifest.xml to add permissions
+ANDROID_MANIFEST="$WORK_DIR/android/app/src/main/AndroidManifest.xml"
+if [ -f "$ANDROID_MANIFEST" ]; then
+  echo "Patching AndroidManifest.xml for network permissions..."
+  
+  # Add internet permissions before the <application> tag
+  # The template starts with <manifest>, we need permissions between manifest and application
+  # First check if INTERNET is already there
+  if grep -q "INTERNET" "$ANDROID_MANIFEST"; then
+    echo "  INTERNET permission already present"
+  else
+    # Add permissions before <application
+    awk '
+    /<application/ {
+      print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
+      print "    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
+      print "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>"
+    }
+    { print }
+    ' "$ANDROID_MANIFEST" > "${ANDROID_MANIFEST}.new"
+    mv "${ANDROID_MANIFEST}.new" "$ANDROID_MANIFEST"
+    echo "  Permissions added successfully"
+    grep "permission" "$ANDROID_MANIFEST"
+  fi
+else
+  echo "WARNING: AndroidManifest.xml not found at $ANDROID_MANIFEST"
+  # Try alternate location
+  find "$WORK_DIR" -name "AndroidManifest.xml" -path "*/app/*" 2>/dev/null
+fi
 
 # Generate keystore
 keytool -genkey -v -keystore /tmp/release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass trophyroom -keypass trophyroom \
@@ -40,34 +71,9 @@ android {
 SIGNEOF
 
 # Flutter 3.31+ generates build.gradle.kts (Kotlin DSL).
-# We can safely append the Groovy apply line to the bottom of app/build.gradle.
-# Note: flutter create generates "android/app/build.gradle.kts" on recent Flutter.
 ANDROID_DIR="$WORK_DIR/android"
 if [ -f "$ANDROID_DIR/app/build.gradle.kts" ]; then
-  # For Kotlin DSL projects, inject signing via Groovy init script
-  # instead of mixing Groovy into a Kotlin file
-  cat > /tmp/init-signing.gradle << 'INITEOF'
-initscript {
-    repositories { google(); mavenCentral() }
-}
-rootProject { project ->
-    allprojects { p ->
-        p.afterEvaluate {
-            if (p.plugins.hasPlugin("com.android.application")) {
-                p.android.signingConfigs.create("release")
-                p.android.signingConfigs.release.storePassword = "trophyroom"
-                p.android.signingConfigs.release.keyAlias = "release"
-                p.android.signingConfigs.release.keyPassword = "trophyroom"
-                p.android.signingConfigs.release.storeFile = file("/tmp/release.keystore")
-                p.android.buildTypes.all { type ->
-                    type.signingConfig = p.android.signingConfigs.release
-                }
-            }
-        }
-    }
-}
-INITEOF
-  echo "Using Kotlin DSL project, init script prepared"
+  echo "Using Kotlin DSL project"
 elif [ -f "$ANDROID_DIR/app/build.gradle" ]; then
   # Groovy DSL - append signing config
   echo '' >> "$ANDROID_DIR/app/build.gradle"

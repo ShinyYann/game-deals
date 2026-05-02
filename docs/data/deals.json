@@ -1,12 +1,1047 @@
 {
   "updated": "2026-05-02 22:40",
   "psn": [
-    {"name": "EA SPORTS FC\u2122 26", "price": "HK$549.00", "discount": "", "original_price": "", "img": "https://image.api.playstation.com/vulcan/ap/rnd/202507/2511/19ad6574090b6a71c88f0e6152ae5a668cc85882d87c51b5.png?w=240", "platform": "PSN"},
-    {"name": "eFootball\u2122", "price": "\u514d\u8cbb", "discount": "", "original_price": "", "img": "https://image.api.playstation.com/vulcan/ap/rnd/202604/2708/ba8102c335c935537ced9d8e451eb11c7030210a93373fb8.png?w=240", "platform": "PSN"}
+    {
+      "name": "EA SPORTS FC™ 26",
+      "price": "HK$549.00",
+      "discount": "",
+      "original_price": "",
+      "img": "https://image.api.playstation.com/vulcan/ap/rnd/202507/2511/19ad6574090b6a71c88f0e6152ae5a668cc85882d87c51b5.png?w=240",
+      "platform": "PSN"
+    },
+    {
+      "name": "eFootball™",
+      "price": "免費",
+      "discount": "",
+      "original_price": "",
+      "img": "https://image.api.playstation.com/vulcan/ap/rnd/202604/2708/ba8102c335c935537ced9d8e451eb11c7030210a93373fb8.png?w=240",
+      "platform": "PSN"
+    }
   ],
   "steam": [
-    {"name": "STAR WARS Jedi: Fallen Order\u2122", "price": "\u00a5 19.80", "discount": "-90%", "original_price": "\u00a5 198.00", "platform": "Steam"},
-    {"name": "STAR WARS Jedi: Survivor\u2122", "price": "\u00a5 49.80", "discount": "-75%", "original_price": "\u00a5 199.20", "platform": "Steam"}
+    {
+      "name": "STAR WARS Jedi: Fallen Order™",
+      "price": "¥ 19.80",
+      "discount": "-90%",
+      "original_price": "¥ 198.00",
+      "platform": "Steam"
+    },
+    {
+      "name": "STAR WARS Jedi: Survivor™",
+      "price": "¥ 49.80",
+      "discount": "-75%",
+      "original_price": "¥ 199.20",
+      "platform": "Steam"
+    }
   ],
-  "switch": []
+  "switch": [
+    {
+      "name": "無雙OROCHI 蛇魔３ Ultimate Deluxe Edition",
+      "price": "HKD 308",
+      "discount": "-50%",
+      "original_price": "HKD 616",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/3/83_gaia_wpk_ddx_herobanner_hk.jpg",
+      "url": "https://store.nintendo.com.hk/70070000009403",
+      "platform": "Switch"
+    },
+    {
+      "name": "SAMURAI SHODOWN",
+      "price": "HKD 59",
+      "discount": "-85%",
+      "original_price": "HKD 399",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/n/i/nintendoeshop_banner_samuraishodown.jpg",
+      "url": "https://store.nintendo.com.hk/70010000023476",
+      "platform": "Switch"
+    },
+    {
+      "name": "FINAL FANTASY VII REBIRTH",
+      "price": "HKD 254",
+      "discount": "-20%",
+      "original_price": "HKD 318",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/9/99d3f9086b7b97984916c93456752d6981d56dcab942421cf71cd45836a62b72.jpg",
+      "url": "https://store.nintendo.com.hk/70010000112485",
+      "platform": "Switch"
+    },
+    {
+      "name": "FINAL FANTASY VII REBIRTH Digital Deluxe Edition",
+      "price": "HKD 358",
+      "discount": "-20%",
+      "original_price": "HKD 448",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/7/0/70a52793fabd75c01580b945597cb4f623deab21280189a093e449049687ee9d.jpg",
+      "url": "https://store.nintendo.com.hk/70070000032107",
+      "platform": "Switch"
+    },
+    {
+      "name": "Farming Simulator 26: Nintendo Switch™ Edition",
+      "price": "HKD 168",
+      "discount": "-10%",
+      "original_price": "HKD 187",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/b/5bbac54ee720cf2ed9557e4fe40d33a0a942f4f9b4e19ff6ce2aed6df7b1024f.jpg",
+      "url": "https://store.nintendo.com.hk/70010000115166",
+      "platform": "Switch"
+    },
+    {
+      "name": "文字化化",
+      "price": "HKD 192",
+      "discount": "-19%",
+      "original_price": "HKD 240",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/2/c2c01c9cc92299b8d71feda726ccabd55fedb0b066a11c24ffd9bc3f8aab73f8.jpg",
+      "url": "https://store.nintendo.com.hk/70010000112038",
+      "platform": "Switch"
+    },
+    {
+      "name": "《WWE 2K26》",
+      "price": "HKD 465",
+      "discount": "-15%",
+      "original_price": "HKD 548",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/3/a3907c91bd4a90e8dfba2df94e6fc5ee15c8cd8ff85f4409ce8db961ed878089.jpg",
+      "url": "https://store.nintendo.com.hk/70010000105178",
+      "platform": "Switch"
+    },
+    {
+      "name": "箱庭開拓：倉鼠與太陽之鄉",
+      "price": "HKD 280",
+      "discount": "-10%",
+      "original_price": "HKD 312",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/d/ed31410842605c6057d6097f819257cdadbb6ba30fa5a2929a6a32f6e2d1c24b.jpg",
+      "url": "https://store.nintendo.com.hk/70010000111549",
+      "platform": "Switch"
+    },
+    {
+      "name": "零 ～紅蝶～ REMAKE Digital Deluxe Edition",
+      "price": "HKD 449",
+      "discount": "-20%",
+      "original_price": "HKD 562",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/0/d/0d72fa9d06078a7517f94b7bf32ea880b793a9608240f01350bdc86c7e99c2a0.jpg",
+      "url": "https://store.nintendo.com.hk/70070000033025",
+      "platform": "Switch"
+    },
+    {
+      "name": "零 ～紅蝶～ REMAKE",
+      "price": "HKD 334",
+      "discount": "-20%",
+      "original_price": "HKD 418",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/b/2/b263bcbf72546d62e224a0b75daf04898d6c27e679884060d7fd2588dd0bc9b1.jpg",
+      "url": "https://store.nintendo.com.hk/70010000105948",
+      "platform": "Switch"
+    },
+    {
+      "name": "《刺客教條：暗影者》高級版",
+      "price": "HKD 578",
+      "discount": "-25%",
+      "original_price": "HKD 778",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/4/0/40f7d5408cf83dd2c4d5ee67b8b3561ecf423688532db75fe5ae450162af3596.jpg",
+      "url": "https://store.nintendo.com.hk/70070000034273",
+      "platform": "Switch"
+    },
+    {
+      "name": "《WWE 2K26》Monday Night War版",
+      "price": "HKD 977",
+      "discount": "-15%",
+      "original_price": "HKD 1,150",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/d/ed3927ba6e269058bceb2d011cd745ff3bb6d569804ea45a353bd1a4cef56f21.jpg",
+      "url": "https://store.nintendo.com.hk/70070000033310",
+      "platform": "Switch"
+    },
+    {
+      "name": "人中之龍 極３ / 人中之龍３外傳 Dark Ties",
+      "price": "HKD 306",
+      "discount": "-30%",
+      "original_price": "HKD 438",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/1/2/12ea7238e58375070855f93b4ee050a25343c2f8bba0dbf284403182ebe70e5a.jpg",
+      "url": "https://store.nintendo.com.hk/70010000102009",
+      "platform": "Switch"
+    },
+    {
+      "name": "《PGA TOUR 2K25》",
+      "price": "HKD 328",
+      "discount": "-40%",
+      "original_price": "HKD 548",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/b/ebc4ade9276ada8328e0098344af8da84aefb4cb88478a5973921b716beb5375.jpg",
+      "url": "https://store.nintendo.com.hk/70010000105580",
+      "platform": "Switch"
+    },
+    {
+      "name": "FINAL FANTASY VII REMAKE INTERGRADE",
+      "price": "HKD 184",
+      "discount": "-40%",
+      "original_price": "HKD 308",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/3/833214b25828c4b093c4abde2564f399991438c9498594b3d88f3fc54dad4d75.jpg",
+      "url": "https://store.nintendo.com.hk/70010000100832",
+      "platform": "Switch"
+    },
+    {
+      "name": "三國志8 REMAKE with 威力加強版",
+      "price": "HKD 422",
+      "discount": "-20%",
+      "original_price": "HKD 528",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/0/b/0bfd35b786f6cd85e77ed76f565a9615b500c6ac13c6076f730586b41ca8b58c.jpg",
+      "url": "https://store.nintendo.com.hk/70070000031883",
+      "platform": "Switch"
+    },
+    {
+      "name": "真・三國無雙 起源",
+      "price": "HKD 358",
+      "discount": "-25%",
+      "original_price": "HKD 478",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/8/8819a985a3366c9bfd4bea649766b5aeba3f84b178ec63dccb662aa0edc108ad.jpg",
+      "url": "https://store.nintendo.com.hk/70010000105266",
+      "platform": "Switch"
+    },
+    {
+      "name": "真·三國無雙 起源 數位豪華版",
+      "price": "HKD 471",
+      "discount": "-25%",
+      "original_price": "HKD 629",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/9/f953aee02b761398baf62a82e2ff87b86c0a241c63f9e59689cfa1a1e162eaa6.jpg",
+      "url": "https://store.nintendo.com.hk/70070000031886",
+      "platform": "Switch"
+    },
+    {
+      "name": "the Game of LIFE for Nintendo Switch",
+      "price": "HKD 207",
+      "discount": "-20%",
+      "original_price": "HKD 259",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/6/b/6b747bbe9cb8400a1a5759fa9278011d1df08a64f9ff2defdda454f3d69f8356.jpg",
+      "url": "https://store.nintendo.com.hk/70010000088981",
+      "platform": "Switch"
+    },
+    {
+      "name": "星空列車與白的旅行",
+      "price": "HKD 213",
+      "discount": "-30%",
+      "original_price": "HKD 305",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/4/8/486575f1f2feb3e014e0b87cda0630496ece03a323ed6bb3e2d2c9f3b85e23e4.jpg",
+      "url": "https://store.nintendo.com.hk/70010000097120",
+      "platform": "Switch"
+    },
+    {
+      "name": "Death end Re;Quest Code Z",
+      "price": "HKD 174",
+      "discount": "-50%",
+      "original_price": "HKD 348",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/1/e/1eb4813609efa54a247073513833fb83a2c902dbf0789f6921bdf9505803afaf.jpg",
+      "url": "https://store.nintendo.com.hk/70010000099072",
+      "platform": "Switch"
+    },
+    {
+      "name": "狂飆次元戰機少女VS巨神史萊犬",
+      "price": "HKD 99",
+      "discount": "-50%",
+      "original_price": "HKD 198",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/e/ce05bf1ec38ca5fbcbfd574d1df5f9018f0e36592b1aeefee9f01bd64bb84f6b.jpg",
+      "url": "https://store.nintendo.com.hk/70010000103079",
+      "platform": "Switch"
+    },
+    {
+      "name": "ELDRADOR® CREATURES SHADOWFALL",
+      "price": "HKD 139",
+      "discount": "-30%",
+      "original_price": "HKD 199",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/a/cabb41ef31e2c9a0a3f50c46f31724c4cde919cc628a20079167325844c26b42.jpg",
+      "url": "https://store.nintendo.com.hk/70010000103406",
+      "platform": "Switch"
+    },
+    {
+      "name": "ONE PIECE 海賊無雙4 數位終極版",
+      "price": "HKD 110",
+      "discount": "-80%",
+      "original_price": "HKD 569",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/2/e2f6af1da0583b20643c0a2bbdcd20a69ae3388b890f515e608307e32396e5da.jpg",
+      "url": "https://store.nintendo.com.hk/70070000031733",
+      "platform": "Switch"
+    },
+    {
+      "name": "七龍珠 電光炸裂！ZERO (DRAGON BALL: Sparking! ZERO)",
+      "price": "HKD 296",
+      "discount": "-38%",
+      "original_price": "HKD 479",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/2/f/2f7b264f4551fcfb004945809e216d35dfb1fb3e140467d7ab1a8373114f9930_1.jpg",
+      "url": "https://store.nintendo.com.hk/70010000092463",
+      "platform": "Switch"
+    },
+    {
+      "name": "七龍珠 電光炸裂！ZERO 數位終極版",
+      "price": "HKD 448",
+      "discount": "-39%",
+      "original_price": "HKD 739",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/e/feb2484e7b623c598e8d64be9e6137a008c9c3eb2cbefa9dd339b037e11b1893_1.jpg",
+      "url": "https://store.nintendo.com.hk/70070000029679",
+      "platform": "Switch"
+    },
+    {
+      "name": "人中之龍 極２",
+      "price": "HKD 130",
+      "discount": "-30%",
+      "original_price": "HKD 187",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/a/aacfcf33d4601a21f5f3895620d0c4d0fc645cc9117e4322d40d350dfa507772.jpg",
+      "url": "https://store.nintendo.com.hk/70010000100324",
+      "platform": "Switch"
+    },
+    {
+      "name": "萊莎的鍊金工房3 ～終結之鍊金術士與秘密鑰匙～ DX",
+      "price": "HKD 238",
+      "discount": "-25%",
+      "original_price": "HKD 318",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/3/f/3f1eff0921fb0706b0e4480b164ab57772ae6174765db6e1d4869831b64a39a7.jpg",
+      "url": "https://store.nintendo.com.hk/70010000098501",
+      "platform": "Switch"
+    },
+    {
+      "name": "萊莎的鍊金工房 ～常闇女王與秘密藏身處～ DX",
+      "price": "HKD 238",
+      "discount": "-25%",
+      "original_price": "HKD 318",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/3/f3bb85dedeb8641ff8186ce7f5fd928b1d7fe6ba9e0bfe112848d8c7dad12177.jpg",
+      "url": "https://store.nintendo.com.hk/70010000098494",
+      "platform": "Switch"
+    },
+    {
+      "name": "萊莎的鍊金工房 ～秘密三部曲～ DX",
+      "price": "HKD 644",
+      "discount": "-10%",
+      "original_price": "HKD 716",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/0/c0d483c3354111b98ca6ca93b2479649c14bb77018d66bedcc95a2c76226aad3.jpg",
+      "url": "https://store.nintendo.com.hk/70070000028546",
+      "platform": "Switch"
+    },
+    {
+      "name": "萊莎的鍊金工房2 ～失落傳說與秘密妖精～ DX",
+      "price": "HKD 238",
+      "discount": "-25%",
+      "original_price": "HKD 318",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/0/d/0d06455cb712a533a32256c65399490e5c76cb07bbcbf737a874e6e71e7b868b.jpg",
+      "url": "https://store.nintendo.com.hk/70010000098498",
+      "platform": "Switch"
+    },
+    {
+      "name": "人中之龍 極",
+      "price": "HKD 130",
+      "discount": "-30%",
+      "original_price": "HKD 187",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/3/a3749e7a5bd2ee900d20e5c9bc4ad3037b865ff69513525a446f1322465050cc.jpg",
+      "url": "https://store.nintendo.com.hk/70010000100319",
+      "platform": "Switch"
+    },
+    {
+      "name": "無盡傳奇 Remastered 數位豪華版",
+      "price": "HKD 284",
+      "discount": "-40%",
+      "original_price": "HKD 479",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/c/ac6b2dd77b084a9f80f8a6667bb4a78317a407ce58bdf11d7ab53d6e9281b8d4.jpg",
+      "url": "https://store.nintendo.com.hk/70070000029886",
+      "platform": "Switch"
+    },
+    {
+      "name": "神次次元遊戲戰機少女重生3Ｖ世紀",
+      "price": "HKD 197",
+      "discount": "-38%",
+      "original_price": "HKD 318",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/b/f/bf02e9bdb3057ef08b24ffe4554049356a0e8820b0d78f7f91cfde0818d803d0.jpg",
+      "url": "https://store.nintendo.com.hk/70010000095559",
+      "platform": "Switch"
+    },
+    {
+      "name": "女神異聞錄３ Reload 數位高級版（Persona 3 Reload Digital Premium Edition）",
+      "price": "HKD 364",
+      "discount": "-40%",
+      "original_price": "HKD 608",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/3/0/30efd072c281732bc2110ecb5dc0cde6921f438bfbd364d35376e6e2a7cb54e2.jpg",
+      "url": "https://store.nintendo.com.hk/70070000028958",
+      "platform": "Switch"
+    },
+    {
+      "name": "從前從前有個塊魂",
+      "price": "HKD 178",
+      "discount": "-40%",
+      "original_price": "HKD 299",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/d/8de408810776ace1346c785f5e475c2c1af491206a6681f3b738b963e5f54b8b.jpg",
+      "url": "https://store.nintendo.com.hk/70010000091588",
+      "platform": "Switch"
+    },
+    {
+      "name": "女神異聞錄３ Reload 數位豪華版（Persona 3 Reload Digital Deluxe Edition）",
+      "price": "HKD 280",
+      "discount": "-40%",
+      "original_price": "HKD 468",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/6/5/656c5fa11f8a61c310bdd158504bd019ac3ea15a7118f884901870724999694a.jpg",
+      "url": "https://store.nintendo.com.hk/70070000028957",
+      "platform": "Switch"
+    },
+    {
+      "name": "《Just Dance 舞力全開 2026》豪華版",
+      "price": "HKD 228",
+      "discount": "-46%",
+      "original_price": "HKD 428",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/a/9aec74e2775bf7f4e8bd95e437e1ac22b32a1302046af5de00acbc178381e12f.jpg",
+      "url": "https://store.nintendo.com.hk/70070000029600",
+      "platform": "Switch"
+    },
+    {
+      "name": "小小夢魘3 數位豪華版 (Little Nightmares III Deluxe Edition)",
+      "price": "HKD 312",
+      "discount": "-34%",
+      "original_price": "HKD 479",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/3/53c23a72644dc0915de953009bdcee72e1e2ed6f116bb880e4bbe867bf6b6351_1.jpeg",
+      "url": "https://store.nintendo.com.hk/70070000029489",
+      "platform": "Switch"
+    },
+    {
+      "name": "EA SPORTS FC™ 26",
+      "price": "HKD 164",
+      "discount": "-70%",
+      "original_price": "HKD 549",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/c/fc26seg5_switch_software_banner_1920x1080_1.jpg",
+      "url": "https://store.nintendo.com.hk/70010000100271",
+      "platform": "Switch"
+    },
+    {
+      "name": "吃豆人 吃遍世界2 數位豪華版",
+      "price": "HKD 224",
+      "discount": "-25%",
+      "original_price": "HKD 299",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/0/50da16ab208db51b2ba7da004417ddc9b223077aa29a2f3e5e0dbc09832b6389.jpg",
+      "url": "https://store.nintendo.com.hk/70070000029631",
+      "platform": "Switch"
+    },
+    {
+      "name": "Sid Meier's Civilization® VII Settler's Edition (《席德·梅爾的文明帝國VII》開拓者版)",
+      "price": "HKD 520",
+      "discount": "-40%",
+      "original_price": "HKD 868",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/1/7/174adb80c537e634ef1a036e26a1f18eef1364d9e66712b3539b6ffa16ecf440.jpg",
+      "url": "https://store.nintendo.com.hk/70070000029839",
+      "platform": "Switch"
+    },
+    {
+      "name": "空之軌跡 the 1st",
+      "price": "HKD 351",
+      "discount": "-25%",
+      "original_price": "HKD 468",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/2/6/2638ba8d9b453990cac1279848e4dec3de00f58e37362d0df8d68dee74fce48c.jpg",
+      "url": "https://store.nintendo.com.hk/70010000098128",
+      "platform": "Switch"
+    },
+    {
+      "name": "永久與神樹的祈願者 數位豪華版",
+      "price": "HKD 179",
+      "discount": "-40%",
+      "original_price": "HKD 299",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/d/9dbba13dca0897352ae56db0fe33b37f0edc23591345da7b781247e7ac77f9d5.jpg",
+      "url": "https://store.nintendo.com.hk/70070000028412",
+      "platform": "Switch"
+    },
+    {
+      "name": "《NBA 2K26》",
+      "price": "HKD 70",
+      "discount": "-85%",
+      "original_price": "HKD 468",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/8/a8723e44e8f043ef5d8faa4a05af4107e11c9b496e9caef2a84005f995d65870_1.jpg",
+      "url": "https://store.nintendo.com.hk/70010000095400",
+      "platform": "Switch"
+    },
+    {
+      "name": "機甲戰魔 神話之裔　數位豪華典藏版",
+      "price": "HKD 339",
+      "discount": "-50%",
+      "original_price": "HKD 678",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/2/d/2de7a3176ac1ff00d72a07eda4e37b69327e5aa704e2f60361d5f1a97a9bc4d0.jpg",
+      "url": "https://store.nintendo.com.hk/70070000028444",
+      "platform": "Switch"
+    },
+    {
+      "name": "機甲戰魔 神話之裔　數位豪華版",
+      "price": "HKD 289",
+      "discount": "-50%",
+      "original_price": "HKD 578",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/3/c/3c3d40e06ab3adbf7cce8c82ddcb19e8282e245c48a1a70dfa56e87345b2b277.jpg",
+      "url": "https://store.nintendo.com.hk/70070000028443",
+      "platform": "Switch"
+    },
+    {
+      "name": "超級機器人大戰Y 數位終極版",
+      "price": "HKD 699",
+      "discount": "-30%",
+      "original_price": "HKD 999",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/d/5/d58525239095c5fdc07a3af4cfbe6116b4cebdd8158c3648355cff569adcb123.jpg",
+      "url": "https://store.nintendo.com.hk/70070000029003",
+      "platform": "Switch"
+    },
+    {
+      "name": "牧場物語 來吧！風之繁華市集",
+      "price": "HKD 215",
+      "discount": "-30%",
+      "original_price": "HKD 308",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/7/2/72009f0ea0a2489a368c119c7c6971e01eb7e027453262339d527addc5cbbd34.jpg",
+      "url": "https://store.nintendo.com.hk/70010000078033",
+      "platform": "Switch"
+    },
+    {
+      "name": "鬼滅之刃 火之神血風譚2　豪華版",
+      "price": "HKD 280",
+      "discount": "-40%",
+      "original_price": "HKD 468",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/3/2/32cbdb92c892a637be0e0ba7e98560725517af7997bc5d3fb300590b8227f1d0.jpg",
+      "url": "https://store.nintendo.com.hk/70070000027339",
+      "platform": "Switch"
+    },
+    {
+      "name": "夢燈花（Noctuary）",
+      "price": "HKD 148",
+      "discount": "-25%",
+      "original_price": "HKD 198",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/4/a/4a095cb2b27bd442189a79ae04664147ebd29cb6ecc15c3c60d1d048c9f148f7.jpg",
+      "url": "https://store.nintendo.com.hk/70010000096950",
+      "platform": "Switch"
+    },
+    {
+      "name": "Sky Oceans: Wings for Hire",
+      "price": "HKD 139",
+      "discount": "-30%",
+      "original_price": "HKD 199",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/5/956ede6e170beb000b3053470c31d46bd3ef8edb63c1f4b04cdba0715d9d655d.jpg",
+      "url": "https://store.nintendo.com.hk/70010000088371",
+      "platform": "Switch"
+    },
+    {
+      "name": "無法成眠的伊達鍵 - From AI：夢境檔案",
+      "price": "HKD 214",
+      "discount": "-10%",
+      "original_price": "HKD 238",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/8/58678ae3d4fa863e1df1e87b8119252c66e863c32ac8ce47e4a2e2b074ef151c.jpg",
+      "url": "https://store.nintendo.com.hk/70010000080218",
+      "platform": "Switch"
+    },
+    {
+      "name": "WILD HEARTS S",
+      "price": "HKD 199",
+      "discount": "-50%",
+      "original_price": "HKD 398",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/1/910a1273e79d4f1936799093f952a9ac3db0d7644149e51fdd8b0323e8c96737.jpg",
+      "url": "https://store.nintendo.com.hk/70010000097422",
+      "platform": "Switch"
+    },
+    {
+      "name": "超次次元遊戲戰機少女重生1",
+      "price": "HKD 197",
+      "discount": "-38%",
+      "original_price": "HKD 318",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/e/fe91a0ba289b200604ad9901d5fbedb412af1bb4370cf6e0e04327491d9c914e.jpg",
+      "url": "https://store.nintendo.com.hk/70010000095553",
+      "platform": "Switch"
+    },
+    {
+      "name": "超級瑪利歐派對 空前盛會 Nintendo Switch 2 Edition + 空前盛會TV",
+      "price": "HKD 329",
+      "discount": "-23%",
+      "original_price": "HKD 429",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/f/ffd161d63ca3f0f0bb917d54a1d97be91434b11829564000dc35fcf76b9bec62.jpg",
+      "url": "https://store.nintendo.com.hk/70010000096828",
+      "platform": "Switch"
+    },
+    {
+      "name": "蒼藍雷霆 GUNVOLT 三稜合極版",
+      "price": "HKD 186",
+      "discount": "-25%",
+      "original_price": "HKD 248",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/3/3/337cbb946f033cd041434d375c7e20ec379ce395fb2f3bbc8898d83b568c81d8.jpg",
+      "url": "https://store.nintendo.com.hk/70010000095021",
+      "platform": "Switch"
+    },
+    {
+      "name": "Shadow Labyrinth 闇鬥迷宮",
+      "price": "HKD 118",
+      "discount": "-50%",
+      "original_price": "HKD 239",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/4/7/47ff75cff67ad77128e5543eb1d1f7bf8fd5b00e2b918b093d65c2ef9729836d.jpg",
+      "url": "https://store.nintendo.com.hk/70010000077049",
+      "platform": "Switch"
+    },
+    {
+      "name": "PATAPON 1+2 REPLAY",
+      "price": "HKD 190",
+      "discount": "-20%",
+      "original_price": "HKD 239",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/b/n/bnea_nsw_drum_1.jpg",
+      "url": "https://store.nintendo.com.hk/70010000088393",
+      "platform": "Switch"
+    },
+    {
+      "name": "RAIDOU Remastered: 超力兵團奇譚 數位豪華版",
+      "price": "HKD 297",
+      "discount": "-35%",
+      "original_price": "HKD 458",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/d/c/dcd0bf711e34ef472fd464951c3b3b53494fcae776e300aacb8a04ae7f2b6250_1.jpg",
+      "url": "https://store.nintendo.com.hk/70070000027710",
+      "platform": "Switch"
+    },
+    {
+      "name": "Sorry We're Closed",
+      "price": "HKD 112",
+      "discount": "-30%",
+      "original_price": "HKD 160",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/8/c8efaace92729a2ab7d2465b5b642e0e8c39e5e6e3304a201a6bacdbb01ac462.jpg",
+      "url": "https://store.nintendo.com.hk/70010000088275",
+      "platform": "Switch"
+    },
+    {
+      "name": "東方符卡嘉年華",
+      "price": "HKD 184",
+      "discount": "-50%",
+      "original_price": "HKD 368",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/2/a/2a3a93b5f7c8504ab0ac694f6cf24a5c0bf28b0f5de86f5980a2ff0f97d3ad9c.jpg",
+      "url": "https://store.nintendo.com.hk/70010000090658",
+      "platform": "Switch"
+    },
+    {
+      "name": "Street Fighter 6",
+      "price": "HKD 144",
+      "discount": "-50%",
+      "original_price": "HKD 288",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/1/2/12d36a4c9bbf43a4babba2f203e1e271ef08de143349e08231dff56fd2bef70e.jpg",
+      "url": "https://store.nintendo.com.hk/70010000095206",
+      "platform": "Switch"
+    },
+    {
+      "name": "人中之龍０ 誓約的場所 導演剪輯版",
+      "price": "HKD 226",
+      "discount": "-33%",
+      "original_price": "HKD 338",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/3/5363a1dd2eaa2565750ad37114a08357868734e8af714eaa5a15da9a9e26f185.jpg",
+      "url": "https://store.nintendo.com.hk/70010000095218",
+      "platform": "Switch"
+    },
+    {
+      "name": "符文工廠 龍之天地",
+      "price": "HKD 226",
+      "discount": "-40%",
+      "original_price": "HKD 378",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/i/file_2_7.jpg",
+      "url": "https://store.nintendo.com.hk/70010000071850",
+      "platform": "Switch"
+    },
+    {
+      "name": "索尼克×夏特 世代重啟",
+      "price": "HKD 185",
+      "discount": "-45%",
+      "original_price": "HKD 338",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/8/88766f71379cf1cfc52905d5aed712e9c8b89349ff173463a84e2e63906be13d_1.jpg",
+      "url": "https://store.nintendo.com.hk/70010000095837",
+      "platform": "Switch"
+    },
+    {
+      "name": "活祭之城  彩結（The Town of Nie Iro musubi）",
+      "price": "HKD 132",
+      "discount": "-50%",
+      "original_price": "HKD 265",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/c/ac92f6b30d04918371ae489d634c5d5ebec29760e1344d4b7af0fc117150c216.jpg",
+      "url": "https://store.nintendo.com.hk/70010000089832",
+      "platform": "Switch"
+    },
+    {
+      "name": "百劍討妖傳綺譚",
+      "price": "HKD 142",
+      "discount": "-40%",
+      "original_price": "HKD 238",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/c/fcbf5244985d5f3ff504fb2280568c1f44e2fafe8bf68d9a163a4a7c9bbbe7c1.jpg",
+      "url": "https://store.nintendo.com.hk/70010000076319",
+      "platform": "Switch"
+    },
+    {
+      "name": "超次元戰記 戰機少女 GameMaker R:Evolution",
+      "price": "HKD 174",
+      "discount": "-50%",
+      "original_price": "HKD 348",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/7/8780e747b39d8915b0b4e7ceab247492aeea1a32a419bd99afdcf6b979362e38.jpg",
+      "url": "https://store.nintendo.com.hk/70010000085620",
+      "platform": "Switch"
+    },
+    {
+      "name": "雪人兄弟2 Special (SNOW BROS. 2 SPECIAL)",
+      "price": "HKD 138",
+      "discount": "-40%",
+      "original_price": "HKD 230",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/d/5d84ef7224d81d623d9310f5ac4604fd942c58613d7d58d8f8014a4ea5f70208.jpg",
+      "url": "https://store.nintendo.com.hk/70010000084495",
+      "platform": "Switch"
+    },
+    {
+      "name": "少女魔役",
+      "price": "HKD 130",
+      "discount": "-35%",
+      "original_price": "HKD 200",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/d/f/dfad21a4f471c745c05354c3dc120523372f2236f6f3f92acc665ff77eb8758c.jpg",
+      "url": "https://store.nintendo.com.hk/70010000091057",
+      "platform": "Switch"
+    },
+    {
+      "name": "優米雅的鍊金工房 ～追憶之鍊金術士與幻創之地～",
+      "price": "HKD 287",
+      "discount": "-40%",
+      "original_price": "HKD 479",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/d/cd766745685c72ad035207898eefc94e3dfed4d24adebb34eb067483a7d4d1f3.jpg",
+      "url": "https://store.nintendo.com.hk/70010000085995",
+      "platform": "Switch"
+    },
+    {
+      "name": "優米雅的鍊金工房 ～追憶之鍊金術士與幻創之地～ 數位豪華版",
+      "price": "HKD 344",
+      "discount": "-40%",
+      "original_price": "HKD 574",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/9/89eb35544b18f4a10dd65447b709b6c7a6af890fb9e19168b4790e403ec25654.jpg",
+      "url": "https://store.nintendo.com.hk/70070000026357",
+      "platform": "Switch"
+    },
+    {
+      "name": "優米雅的鍊金工房 ～追憶之鍊金術士與幻創之地～ 數位豪華版 with 季票",
+      "price": "HKD 531",
+      "discount": "-40%",
+      "original_price": "HKD 885",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/d/ed7e60d61dab8e2bc8f58b9f5adee614cc6ea48f0f5e37eaf7bd567714194a26.jpg",
+      "url": "https://store.nintendo.com.hk/70070000026358",
+      "platform": "Switch"
+    },
+    {
+      "name": "Yu-Gi-Oh! EARLY DAYS COLLECTION",
+      "price": "HKD 144",
+      "discount": "-50%",
+      "original_price": "HKD 288",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/6/9/69480aaa30f6225a77fe5642130b066df2498b609be6644bcb4c39706480a643.jpg",
+      "url": "https://store.nintendo.com.hk/70010000084535",
+      "platform": "Switch"
+    },
+    {
+      "name": "Sid Meier's Civilization® VII (席德·梅爾的文明帝國®VII)",
+      "price": "HKD 280",
+      "discount": "-40%",
+      "original_price": "HKD 468",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/e/eee1009248f482d2fff3a17775545647b4146c36001a6d670af617e8ed4af705.jpg",
+      "url": "https://store.nintendo.com.hk/70010000041428",
+      "platform": "Switch"
+    },
+    {
+      "name": "鐵路日本！軌道之旅EX 登山電車 小田急箱根篇",
+      "price": "HKD 214",
+      "discount": "-40%",
+      "original_price": "HKD 358",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/7/4/74e0c632a64e0719c2fa8b7e77604a4b7a2a8b992c1e31a22166b8eb2523c822.jpg",
+      "url": "https://store.nintendo.com.hk/70010000083781",
+      "platform": "Switch"
+    },
+    {
+      "name": "美德傳奇f Remastered",
+      "price": "HKD 98",
+      "discount": "-67%",
+      "original_price": "HKD 299",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/6/0/6037f435bd60fb82a97e8dd13a794095a285fce778e95efafd35dce5fb8d4213.jpg",
+      "url": "https://store.nintendo.com.hk/70010000072951",
+      "platform": "Switch"
+    },
+    {
+      "name": "FREEDOM WARS Remastered",
+      "price": "HKD 98",
+      "discount": "-67%",
+      "original_price": "HKD 299",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/7/0/70e19e58253934095aac9101500c2f3491c501c32b6ad6f9d99ca8c064fe8d0c.jpg",
+      "url": "https://store.nintendo.com.hk/70010000089467",
+      "platform": "Switch"
+    },
+    {
+      "name": "Gimmick! 2",
+      "price": "HKD 56",
+      "discount": "-50%",
+      "original_price": "HKD 113",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/1/4/142710c58db97f556ae377c87329cbda8bae594e35f4f4ad5b4542dddf5fb9ee.jpg",
+      "url": "https://store.nintendo.com.hk/70010000086636",
+      "platform": "Switch"
+    },
+    {
+      "name": "Steam Prison -Beyond the Steam-",
+      "price": "HKD 144",
+      "discount": "-50%",
+      "original_price": "HKD 288",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/7/c72de6a40af0d98226dfbca69360092fb3d33e23d411cdffe7ad13d10ca0de44.jpg",
+      "url": "https://store.nintendo.com.hk/70010000077110",
+      "platform": "Switch"
+    },
+    {
+      "name": "Mizuchi 白蛇心傳",
+      "price": "HKD 168",
+      "discount": "-30%",
+      "original_price": "HKD 240",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/0/d/0d7fff4261edc965bb670fc9a848cb682dc6ee85a95c67c802b91d816c20f019.jpg",
+      "url": "https://store.nintendo.com.hk/70010000070320",
+      "platform": "Switch"
+    },
+    {
+      "name": "時鐘塔：恐懼重播（Clock Tower: Rewind）",
+      "price": "HKD 79",
+      "discount": "-50%",
+      "original_price": "HKD 159",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/f/9/f976266b6162bc417249efb6ea05ee5f6bd2b1fb5b49dbec69e56758cfffff86.jpg",
+      "url": "https://store.nintendo.com.hk/70010000084379",
+      "platform": "Switch"
+    },
+    {
+      "name": "三國志8 REMAKE",
+      "price": "HKD 287",
+      "discount": "-40%",
+      "original_price": "HKD 479",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/7/d/7dce98fa6ca619986d919b268989c7ad121e094837f6875f682f0ff428abd338.jpg",
+      "url": "https://store.nintendo.com.hk/70010000074592",
+      "platform": "Switch"
+    },
+    {
+      "name": "三國志8 REMAKE 數位豪華版",
+      "price": "HKD 385",
+      "discount": "-40%",
+      "original_price": "HKD 642",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/2/7/270e5127d137b0dafa38535457a30baefa89b8689c7dffd38d66fdca68d4dcad.jpg",
+      "url": "https://store.nintendo.com.hk/70070000024492",
+      "platform": "Switch"
+    },
+    {
+      "name": "Blazing Strike",
+      "price": "HKD 217",
+      "discount": "-30%",
+      "original_price": "HKD 310",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/1/7/1731032f668ec78fa5a541eb4c915b4dc6e53c43246d68c1a227bc6768ef71bf.jpg",
+      "url": "https://store.nintendo.com.hk/70010000055108",
+      "platform": "Switch"
+    },
+    {
+      "name": "超級瑪利歐派對 空前盛會",
+      "price": "HKD 229",
+      "discount": "-30%",
+      "original_price": "HKD 329",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/b/2/b208b0096af37f1503398c7acc67e6f18c853aaaa768d60a9f1b67a43f6ce0d0.jpg",
+      "url": "https://store.nintendo.com.hk/70010000084611",
+      "platform": "Switch"
+    },
+    {
+      "name": "明治東京戀語 Full Moon",
+      "price": "HKD 170",
+      "discount": "-50%",
+      "original_price": "HKD 340",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/f/9f2f4e378e63fbf203f6592e0aaf36613136443ec9dba7f65e6f0b5b0a5390ae.jpg",
+      "url": "https://store.nintendo.com.hk/70010000079188",
+      "platform": "Switch"
+    },
+    {
+      "name": "活祭之城",
+      "price": "HKD 149",
+      "discount": "-50%",
+      "original_price": "HKD 298",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/3/6/3633097f7db5ecae9792932709189013c15d70fb018408ee1f40ce421956d570.jpg",
+      "url": "https://store.nintendo.com.hk/70010000077060",
+      "platform": "Switch"
+    },
+    {
+      "name": "《波斯王子：失落王冠》完全版 (Prince of Persia: The Lost Crown - Complete Edition)",
+      "price": "HKD 118",
+      "discount": "-61%",
+      "original_price": "HKD 308",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/b/eb953c451c88effad39ab7119f9d807f2e94cdc238ad70a83cc23fa99944e11d.jpg",
+      "url": "https://store.nintendo.com.hk/70070000023783",
+      "platform": "Switch"
+    },
+    {
+      "name": "賽馬娘Pretty Derby 熱血喧鬧大感謝祭！",
+      "price": "HKD 65",
+      "discount": "-70%",
+      "original_price": "HKD 218",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/2/7/27db00975dad1ce53ab638717600b0af58df297b3c3d1f884a34c16b0992ddb9.jpg",
+      "url": "https://store.nintendo.com.hk/70010000071499",
+      "platform": "Switch"
+    },
+    {
+      "name": "GUNDAM 創壞者4 數位豪華版",
+      "price": "HKD 244",
+      "discount": "-65%",
+      "original_price": "HKD 699",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/d/4/d42ddc67802a1091307a00b217964593a90e8a5dec5fa97c07209942633cf380.jpg",
+      "url": "https://store.nintendo.com.hk/70070000022372",
+      "platform": "Switch"
+    },
+    {
+      "name": "SNK VS. CAPCOM SVC CHAOS",
+      "price": "HKD 150",
+      "discount": "-20%",
+      "original_price": "HKD 188",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/5/a5b00d85b0401759b6d3ce32fb16089203d9eba2e24c9c6cf20a7fa289235e03.jpg",
+      "url": "https://store.nintendo.com.hk/70010000070137",
+      "platform": "Switch"
+    },
+    {
+      "name": "波與月夜之青蓮",
+      "price": "HKD 69",
+      "discount": "-50%",
+      "original_price": "HKD 138",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/2/3/230f7d1cfd99166e67f0e265d12658634112ec6284a7e6b0e9b99b62b7e34606.jpg",
+      "url": "https://store.nintendo.com.hk/70010000080511",
+      "platform": "Switch"
+    },
+    {
+      "name": "月姬 -A piece of blue glass moon-",
+      "price": "HKD 238",
+      "discount": "-40%",
+      "original_price": "HKD 398",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/a/f/af2e2567bf747157c93024444b850f414243f37ab0da0819be1bb9d4539dc31e.jpg",
+      "url": "https://store.nintendo.com.hk/70010000077995",
+      "platform": "Switch"
+    },
+    {
+      "name": "SPY×FAMILY 間諜家家酒 日記大作戰",
+      "price": "HKD 98",
+      "discount": "-75%",
+      "original_price": "HKD 399",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/f/ef0a529f7144b964fc358952e215c58d49ad2f4a0622e904f25ecf6ee037419b.jpg",
+      "url": "https://store.nintendo.com.hk/70010000064543",
+      "platform": "Switch"
+    },
+    {
+      "name": "超級猴子球 香蕉大亂鬥（Super Monkey Ball Banana Rumble）",
+      "price": "HKD 83",
+      "discount": "-65%",
+      "original_price": "HKD 238",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/e/5eee557cb50e37cfd017b9cbb8bff0eefde15e2497bbe75cd085dc4e073ef08c_1708333854.jpg",
+      "url": "https://store.nintendo.com.hk/70010000057430",
+      "platform": "Switch"
+    },
+    {
+      "name": "超級猴子球 香蕉大亂鬥 數位豪華版（Super Monkey Ball Banana Rumble Digital Deluxe Edition）",
+      "price": "HKD 114",
+      "discount": "-65%",
+      "original_price": "HKD 328",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/4/943ecb007a2e69aba26fe2d5ff5907dd839806ce83f787156ca42ee1553b57a3_1708333838.jpg",
+      "url": "https://store.nintendo.com.hk/70070000020509",
+      "platform": "Switch"
+    },
+    {
+      "name": "深夏時光！ 二十世紀的暑假",
+      "price": "HKD 158",
+      "discount": "-46%",
+      "original_price": "HKD 298",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/6/9/6915ec1e0a52ed03963294e1fb7b53537bf0e2ec14ae1734fe24c2206992ee89.jpg",
+      "url": "https://store.nintendo.com.hk/70010000080136",
+      "platform": "Switch"
+    },
+    {
+      "name": "Everafter Falls",
+      "price": "HKD 120",
+      "discount": "-25%",
+      "original_price": "HKD 160",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/0/c07f910226a044e5ca0641349d9ef232c656fd70e0af564a47161c1e5f87ac47.jpeg",
+      "url": "https://store.nintendo.com.hk/70010000080185",
+      "platform": "Switch"
+    },
+    {
+      "name": "真・女神轉生Ⅴ Vengeance 數位豪華版",
+      "price": "HKD 259",
+      "discount": "-50%",
+      "original_price": "HKD 518",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/4/543a2b7b272f65724da35507fc8c647e5c7e42abf66f4d9a0b595625c78ef69f_1711617036.jpg",
+      "url": "https://store.nintendo.com.hk/70070000020789",
+      "platform": "Switch"
+    },
+    {
+      "name": "Zoeti",
+      "price": "HKD 112",
+      "discount": "-30%",
+      "original_price": "HKD 160",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/9/f/9f4c2c1e072f9667d860c69256aedc5c7b0b12905d7c9f34814876e0ed7631fe.jpg",
+      "url": "https://store.nintendo.com.hk/70010000062066",
+      "platform": "Switch"
+    },
+    {
+      "name": "九魂的久遠",
+      "price": "HKD 79",
+      "discount": "-65%",
+      "original_price": "HKD 226",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/6/862af6d58b9900846a29316040a6e751ced2ea28d4d88e6577322aef55755fb9_1712304664.jpg",
+      "url": "https://store.nintendo.com.hk/70010000068799",
+      "platform": "Switch"
+    },
+    {
+      "name": "MotoGP™24",
+      "price": "HKD 46",
+      "discount": "-85%",
+      "original_price": "HKD 308",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/6/f/6f19488b3ffb3c784c88f6c92680706d27e93b29ad0b87a14218e9bc041285db_1712304695.jpg",
+      "url": "https://store.nintendo.com.hk/70010000079947",
+      "platform": "Switch"
+    },
+    {
+      "name": "El Shaddai ASCENSION OF THE METATRON HD Remaster",
+      "price": "HKD 55",
+      "discount": "-70%",
+      "original_price": "HKD 185",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/4/54aab6aec16f0682a93edbd1aeff5ca82d5ae05dfeca83f1d992a61c4dba376e_1705911424.jpg",
+      "url": "https://store.nintendo.com.hk/70010000057900",
+      "platform": "Switch"
+    },
+    {
+      "name": "巧克甜戀",
+      "price": "HKD 130",
+      "discount": "-50%",
+      "original_price": "HKD 260",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/7/8/78a49c9644394bb71be4f9b263b14585c9a88a5e80e5d709dab8257c882fe4d7_1708416940.jpg",
+      "url": "https://store.nintendo.com.hk/70010000074366",
+      "platform": "Switch"
+    },
+    {
+      "name": "碧姬公主 表演時刻！",
+      "price": "HKD 229",
+      "discount": "-30%",
+      "original_price": "HKD 329",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/h/a/hacp_amjj_chillu01_02_r_ad-2_2.jpg",
+      "url": "https://store.nintendo.com.hk/70010000072184",
+      "platform": "Switch"
+    },
+    {
+      "name": "Contra: Operation Galuga",
+      "price": "HKD 156",
+      "discount": "-50%",
+      "original_price": "HKD 312",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/8/1/8157922adc16d2e4e21ac80a448716d7323ae5fb4292ef4d186ba146deb411d8.jpg",
+      "url": "https://store.nintendo.com.hk/70010000063985",
+      "platform": "Switch"
+    },
+    {
+      "name": "DRAGON BALL FighterZ傳奇版",
+      "price": "HKD 119",
+      "discount": "-75%",
+      "original_price": "HKD 479",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/e/9/e956e2b345b2dac4464de5933b1be6b9371ed1eb1f5b6de319635fdd82e0a529_1709718034.jpg",
+      "url": "https://store.nintendo.com.hk/70070000020795",
+      "platform": "Switch"
+    },
+    {
+      "name": "下載豪華版《聖獸之王》君主版本(Unicorn Overlord Monarch Edition)",
+      "price": "HKD 259",
+      "discount": "-50%",
+      "original_price": "HKD 518",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/1/c/1c6ea7cb9f61578d8dd7bafb1f5e7a175acaaf0de279721a371455da8481b0d3_1704701456.jpg",
+      "url": "https://store.nintendo.com.hk/70070000019285",
+      "platform": "Switch"
+    },
+    {
+      "name": "赤與燈皆有詭異 集冊",
+      "price": "HKD 154",
+      "discount": "-50%",
+      "original_price": "HKD 308",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/5/3/5383bfb26a8ef45602fcddca20197d6cb0379975d4e5ad8552e5afd81e36fc34_1705911450.jpg",
+      "url": "https://store.nintendo.com.hk/70010000067133",
+      "platform": "Switch"
+    },
+    {
+      "name": "英雄傳說 黎之軌跡 for Nintendo Switch",
+      "price": "HKD 278",
+      "discount": "-30%",
+      "original_price": "HKD 398",
+      "img": "https://store.nintendo.com.hk/media/catalog/product/cache/ebd5a33ece56902317c945573bd6ef87/c/0/c08cd3035050731e5df071a1d353c250e1a5ff74339817dbdbcd79aa558d65c4_1705911488.jpg",
+      "url": "https://store.nintendo.com.hk/70010000072777",
+      "platform": "Switch"
+    }
+  ]
 }

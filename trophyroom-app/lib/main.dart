@@ -301,7 +301,7 @@ class _HomePageState extends State<HomePage> {
     List<Map<String, dynamic>> filtered;
     if (_platform == 'newlow') {
       filtered = _deals
-          .where((g) => g['platform']?.toString().toLowerCase() == 'p9_new_lows')
+          .where((g) => g['discount']?.toString().contains('新史低') == true)
           .toList();
     } else {
       filtered = _platform == 'all'

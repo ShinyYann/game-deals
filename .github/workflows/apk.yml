@@ -34,6 +34,7 @@ jobs:
           cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml /tmp/trophyroom/pubspec.yaml
 
           cd /tmp/trophyroom
+          rm -f pubspec.lock
           flutter pub get
 
           ANDROID_MANIFEST="/tmp/trophyroom/android/app/src/main/AndroidManifest.xml"
@@ -51,6 +52,11 @@ jobs:
           ' "$ANDROID_MANIFEST" > "${ANDROID_MANIFEST}.new"
           mv "${ANDROID_MANIFEST}.new" "$ANDROID_MANIFEST"
           grep "permission" "$ANDROID_MANIFEST"
+
+          # Bump minSdkVersion for webview_flutter (requires >=20)
+          BUILD_GRADLE="/tmp/trophyroom/android/app/build.gradle"
+          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "$BUILD_GRADLE"
+          grep "minSdkVersion" "$BUILD_GRADLE"
 
           flutter build apk --release --target-platform android-arm,android-arm64
           cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk

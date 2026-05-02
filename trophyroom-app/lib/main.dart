@@ -380,89 +380,135 @@ class _HomePageState extends State<HomePage>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── 🏆 奖杯屋 — RGB 彩灯流光 ──
+                    // ── 🏆 奖杯屋 — 金橙渐变静态底 + 白色流光 ──
                     SizedBox(
                       height: 30,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            HSLColor.fromAHSL(0.9, 0, 0.8, 0.5).toColor(),         // 红
-                            HSLColor.fromAHSL(0.3, 0, 0.8, 0.5).toColor(),         // 红暗
-                            HSLColor.fromAHSL(0.3, 120, 0.8, 0.5).toColor(),       // 绿暗
-                            HSLColor.fromAHSL(0.9, 120, 0.8, 0.5).toColor(),       // 绿亮
-                            HSLColor.fromAHSL(0.3, 120, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.3, 240, 0.8, 0.5).toColor(),       // 蓝暗
-                            HSLColor.fromAHSL(0.9, 240, 0.8, 0.5).toColor(),       // 蓝亮
-                            HSLColor.fromAHSL(0.3, 240, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.3, 0, 0.8, 0.5).toColor(),         // 回到红
-                            HSLColor.fromAHSL(0.9, 0, 0.8, 0.5).toColor(),
-                          ],
-                          stops: [
-                            0.0,
-                            (r - 0.4).clamp(0.0, 1.0),
-                            (r - 0.2).clamp(0.0, 1.0),
-                            r.clamp(0.0, 1.0),
-                            (r + 0.2).clamp(0.0, 1.0),
-                            (g - 0.2).clamp(0.0, 1.0),
-                            g.clamp(0.0, 1.0),
-                            (g + 0.2).clamp(0.0, 1.0),
-                            (b - 0.1).clamp(0.0, 1.0),
-                            b.clamp(0.0, 1.0),
-                          ],
-                        ).createShader(bounds),
-                        child: const Center(
-                          child: Text(
-                            '🏆 奖杯屋',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2,
-                              color: Colors.white,
+                      child: Stack(
+                        children: [
+                          // 底层：静态金橙渐变
+                          const Center(
+                            child: ShaderMask(
+                              shaderCallback: (bounds) => LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFF8C00), Color(0xFFFF4500)],
+                                stops: [0.0, 0.5, 1.0],
+                              ).createShader(bounds),
+                              child: Text(
+                                '🏆 奖杯屋',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          // 上层：白色流光扫描
+                          Center(
+                            child: ShaderMask(
+                              shaderCallback: (bounds) {
+                                final w = bounds.width;
+                                final lightStart = glow * w;
+                                final lightEnd = lightStart + w * 0.3;
+                                final fadeStart = lightStart - w * 0.15;
+                                final fadeEnd = lightEnd + w * 0.15;
+                                return LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                    Colors.white.withOpacity(0.8),
+                                    Colors.white.withOpacity(0.8),
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                  ],
+                                  stops: [
+                                    0.0,
+                                    (lightStart / w).clamp(0.0, 1.0),
+                                    ((lightStart + 10) / w).clamp(0.0, 1.0),
+                                    ((lightEnd - 10) / w).clamp(0.0, 1.0),
+                                    (lightEnd / w).clamp(0.0, 1.0),
+                                    1.0,
+                                  ],
+                                ).createShader(bounds);
+                              },
+                              child: const Text(
+                                '🏆 奖杯屋',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 4),
-                    // ── trophyroom — RGB 同步 ──
+                    // ── trophyroom — 金橙渐变 + 白色流光 ──
                     SizedBox(
                       height: 14,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            HSLColor.fromAHSL(0.5, 0, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.2, 0, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.2, 120, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.5, 120, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.2, 240, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.5, 240, 0.8, 0.5).toColor(),
-                            HSLColor.fromAHSL(0.2, 0, 0.8, 0.5).toColor(),
-                          ],
-                          stops: [
-                            0.0,
-                            (glow - 0.4).clamp(0.0, 1.0),
-                            (glow - 0.2).clamp(0.0, 1.0),
-                            glow.clamp(0.0, 1.0),
-                            (glow + 0.2).clamp(0.0, 1.0),
-                            (glow + 0.4).clamp(0.0, 1.0),
-                            1.0,
-                          ],
-                        ).createShader(bounds),
-                        child: const Center(
-                          child: Text(
-                            'trophyroom',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w300,
-                              letterSpacing: 4,
-                              color: Colors.white,
+                      child: Stack(
+                        children: [
+                          const Center(
+                            child: ShaderMask(
+                              shaderCallback: (bounds) => LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFF8C00), Color(0xFFFF4500)],
+                                stops: [0.0, 0.5, 1.0],
+                              ).createShader(bounds),
+                              child: Text(
+                                'trophyroom',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w300,
+                                  letterSpacing: 4,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          Center(
+                            child: ShaderMask(
+                              shaderCallback: (bounds) {
+                                final w = bounds.width;
+                                final lightStart = glow * w;
+                                final lightEnd = lightStart + w * 0.25;
+                                return LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                    Colors.white.withOpacity(0.7),
+                                    Colors.white.withOpacity(0.7),
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                  ],
+                                  stops: [
+                                    0.0,
+                                    (lightStart / w).clamp(0.0, 1.0),
+                                    ((lightStart + 6) / w).clamp(0.0, 1.0),
+                                    ((lightEnd - 6) / w).clamp(0.0, 1.0),
+                                    (lightEnd / w).clamp(0.0, 1.0),
+                                    1.0,
+                                  ],
+                                ).createShader(bounds);
+                              },
+                              child: const Text(
+                                'trophyroom',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w300,
+                                  letterSpacing: 4,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

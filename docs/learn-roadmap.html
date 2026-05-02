@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏆 TrophyRoom 零基础学习路线</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    line-height: 1.7;
+    padding: 20px;
+  }
+  .container { max-width: 800px; margin: 0 auto; }
+
+  h1 {
+    font-size: 28px;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 20px;
+    color: #a78bfa;
+    margin: 30px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1e1e3a;
+  }
+  h3 {
+    font-size: 16px;
+    color: #c4b5fd;
+    margin: 20px 0 8px;
+  }
+  .subtitle { color: #8888aa; font-size: 14px; margin-bottom: 24px; }
+
+  .card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid #2a2a4a;
+  }
+  .card.glow {
+    border-color: #a855f7;
+    box-shadow: 0 0 20px rgba(168,85,247,0.1);
+  }
+
+  .phase { margin-bottom: 20px; }
+  .phase-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #a78bfa;
+    margin-bottom: 8px;
+  }
+  .phase-meta { color: #8888aa; font-size: 13px; margin-bottom: 8px; }
+  .phase-goal { color: #6ee7b7; font-size: 14px; margin-bottom: 12px; }
+
+  .video-list { list-style: none; }
+  .video-list li {
+    padding: 10px 12px;
+    background: #12122a;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 3px solid #a855f7;
+  }
+  .video-list .title { font-weight: 600; color: #e0e0ff; }
+  .video-list .desc { font-size: 13px; color: #8888aa; margin-top: 2px; }
+  .video-list .search {
+    display: inline-block;
+    font-size: 12px;
+    color: #6366f1;
+    background: #1a1a3a;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+    font-family: monospace;
+  }
+
+  .tip {
+    background: #1a1a2e;
+    border-left: 3px solid #f59e0b;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  .tip strong { color: #fbbf24; }
+
+  .practice {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 8px;
+    padding: 12px;
+    background: #12122a;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .practice .num {
+    color: #a855f7;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  .practice .content { font-size: 14px; }
+  .practice .code {
+    background: #0a0a1a;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    margin-top: 6px;
+    color: #6ee7b7;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .mindset {
+    background: linear-gradient(135deg, #1a1a3e, #1a1a2e);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .mindset h3 { color: #a78bfa; margin-top: 0; }
+  .mindset li { margin-bottom: 8px; font-size: 14px; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 6px;
+  }
+  .badge-html { background: #e44d26; color: white; }
+  .badge-dart { background: #0175c2; color: white; }
+  .badge-flutter { background: #02569b; color: white; }
+
+  .footer {
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #1e1e3a;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🏆 TrophyRoom 零基础学习路线</h1>
+<div class="subtitle">作者 King 👑 · 每天1小时，一个月够用</div>
+
+<div class="card glow">
+  <strong>🧠 核心心态：你不需要成为程序员</strong><br>
+  你只需要学会三件事：
+  <ol style="margin-top:8px;padding-left:18px">
+    <li>看得懂代码在干嘛</li>
+    <li>能改颜色、改文字、改列表</li>
+    <li>能复制别人的代码改一改用</li>
+  </ol>
+  <div style="margin-top:8px;color:#8888aa;font-size:14px">TrophyRoom 80% 是死套路，20% 才是你要理解的。</div>
+</div>
+
+<!-- 第一阶段 -->
+<div class="phase">
+  <div class="phase-title">📘 第一阶段：HTML + CSS 基础</div>
+  <div class="phase-meta"><span class="badge badge-html">HTML</span> 预计 2-3 天 &nbsp;|&nbsp; 看懂网页端 index.html</div>
+  <div class="phase-goal">🎯 目标：看得懂 <code>&lt;div&gt;</code>、<code>&lt;a&gt;</code>、<code>&lt;style&gt;</code> 在干嘛</div>
+
+  <ul class="video-list">
+    <li>
+      <div class="title">黑马程序员 pink 老师 HTML 入门</div>
+      <div class="desc">看前 10 集就够了：标签、图片、链接</div>
+      <div class="search">B站搜：pink老师 HTML</div>
+    </li>
+    <li>
+      <div class="title">同一系列 CSS 基础</div>
+      <div class="desc">颜色、字体、边距、背景（10-20 集）</div>
+      <div class="search">B站搜：pink老师 CSS</div>
+    </li>
+  </ul>
+</div>
+
+<!-- 第二阶段 -->
+<div class="phase">
+  <div class="phase-title">📗 第二阶段：Dart 语言基础</div>
+  <div class="phase-meta"><span class="badge badge-dart">Dart</span> 预计 3-5 天 &nbsp;|&nbsp; 看懂 main.dart 逻辑</div>
+  <div class="phase-goal">🎯 目标：看得懂变量、List、Map、if、函数、async/await</div>
+
+  <ul class="video-list">
+    <li>
+      <div class="title">Dart 语言快速入门 2024</div>
+      <div class="desc">只看：变量、函数、List、Map、if/else、for 循环、async/await</div>
+      <div class="search">B站搜：Dart 语言快速入门</div>
+    </li>
+    <li>
+      <div class="title">Dart 30 分钟速通（热身）</div>
+      <div class="desc">全部看完，当热身运动</div>
+      <div class="search">B站搜：30分钟学会Dart</div>
+    </li>
+  </ul>
+</div>
+
+<!-- 第三阶段 -->
+<div class="phase">
+  <div class="phase-title">📙 第三阶段：Flutter 入门</div>
+  <div class="phase-meta"><span class="badge badge-flutter">Flutter</span> 预计 1-2 周 &nbsp;|&nbsp; 看懂全部 main.dart</div>
+  <div class="phase-goal">🎯 目标：搭环境跑起来、看懂 Container/ListView/网络请求</div>
+
+  <ul class="video-list">
+    <li>
+      <div class="title">Flutter 零基础入门 — 第一个 APP</div>
+      <div class="desc">跟着搭一次环境，跑起来</div>
+      <div class="search">B站搜：Flutter 零基础入门</div>
+    </li>
+    <li>
+      <div class="title">Flutter 常用组件教程</div>
+      <div class="desc">只看：Container、Text、Image、ListView、Column、Row</div>
+      <div class="search">B站搜：Flutter 常用组件教程</div>
+    </li>
+    <li>
+      <div class="title">Flutter 网络请求（http 包）</div>
+      <div class="desc">看懂怎么从网络拿数据展示</div>
+      <div class="search">B站搜：Flutter http 请求</div>
+    </li>
+    <li>
+      <div class="title">Flutter 实战 — 带列表的 APP</div>
+      <div class="desc">跟着做一个完整的 APP</div>
+      <div class="search">B站搜：Flutter 开发实战 APP</div>
+    </li>
+  </ul>
+</div>
+
+<!-- 第4阶段 -->
+<div class="phase">
+  <div class="phase-title">📕 第四阶段：读懂 TrophyRoom</div>
+  <div class="phase-goal">🎯 目标：能改 TrophyRoom 的代码</div>
+
+  <div class="card">
+    <strong>项目结构（一句话版）</strong>
+    <pre style="margin-top:8px;font-size:14px;color:#6ee7b7">
+trophyroom-app/
+├── lib/
+│   └── main.dart          ← 90% 代码在这（你主要改这个）
+├── android/               ← 安卓相关（不用动）
+├── pubspec.yaml           ← 依赖配置（偶尔动）
+└── test/                  ← 暂时不管
+</pre>
+  </div>
+</div>
+
+<!-- 入门心得 -->
+<h2>✍️ 入门心得</h2>
+
+<div class="mindset">
+  <ol>
+    <li><strong>不要追求"理解了再动手"</strong> — 编程不是数学。先照抄，再理解。改一个颜色、改一句话，都是在进步。</li>
+    <li><strong>遇到 Bug 先读错误</strong> — Flutter 错误提示是中文的。读第一行，80% 能看出哪错了。</li>
+    <li><strong>每次只改一样东西</strong> — 改一行→跑一次→确认没问题→再改下一行。不要一次改 10 行然后跑不动。</li>
+    <li><strong>复制粘贴不丢人</strong> — 90% 的程序员每天都干这个。</li>
+    <li><strong>AI 是你的老师</strong> — 不会的问我，但先自己试试，试不通再来，学得最快。</li>
+  </ol>
+</div>
+
+<!-- 练习 -->
+<h2>🔧 5 个入门练习（从简单到难）</h2>
+
+<div class="practice">
+  <div class="num">1</div>
+  <div class="content">
+    <strong>改标题文字</strong>
+    <div class="code">找到 "🏆 TrophyRoom" → 改成 "🏆 Yann 的游戏屋"</div>
+  </div>
+</div>
+
+<div class="practice">
+  <div class="num">2</div>
+  <div class="content">
+    <strong>改 APP 主题色</strong>
+    <div class="code">找到 Color(0xFFA855F7) → 改成 0xFF00FF00（绿色）</div>
+  </div>
+</div>
+
+<div class="practice">
+  <div class="num">3</div>
+  <div class="content">
+    <strong>加一个折扣游戏</strong>
+    <div class="code">在 _offlineGames 列表里加一条：{"name": "我的游戏", "discount": "99%", "platform": "PSN"}</div>
+  </div>
+</div>
+
+<div class="practice">
+  <div class="num">4</div>
+  <div class="content">
+    <strong>改按钮文字</strong>
+    <div class="code">找到 "首页" → 改成 "主页"；找到 "折扣" → 改成 "特价"</div>
+  </div>
+</div>
+
+<div class="practice">
+  <div class="num">5</div>
+  <div class="content">
+    <strong>加一个新 Tab（进阶）</strong>
+    <div class="code">底部导航加第三个 Tab，显示 "正在开发中"</div>
+  </div>
+</div>
+
+<!-- 最后 -->
+<div class="card" style="margin-top:24px;background:linear-gradient(135deg,#1a1a3e,#0f0f1a)">
+  <p style="font-size:16px">
+  💬 <strong>编程不是写代码，是解决问题。</strong>
+  </p>
+  <p style="color:#8888aa;font-size:14px;margin-top:8px">
+  TrophyRoom 是你自己的 APP，改坏了大不了重来。改对了就能发给你朋友用。<br>
+  <strong style="color:#a78bfa">等你学会了，我们一起写 TrophyRoom v2。🚀</strong>
+  </p>
+</div>
+
+<div class="footer">
+  版本 2026-05-02 · 项目：TrophyRoom · 下次更新：你完成第一阶段后
+</div>
+
+</div>
+</body>
+</html>

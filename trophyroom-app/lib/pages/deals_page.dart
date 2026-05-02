@@ -422,7 +422,7 @@ class _DealsPageState extends State<DealsPage> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          discount.startsWith('-') ? discount : '-$discount',
+                          discount.startsWith('-') ? discount : '-${discount}',
                           style: TextStyle(
                             color: discount.contains('史低')
                                 ? const Color(0xFFFF6B6B)

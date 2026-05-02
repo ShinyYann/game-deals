@@ -720,7 +720,8 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
-}
+  
+  void _showGameDetail(BuildContext context, Map<String, dynamic> game) {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(

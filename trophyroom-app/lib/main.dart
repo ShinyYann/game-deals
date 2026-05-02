@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -27,7 +28,7 @@ class TrophyRoomApp extends StatelessWidget {
   }
 }
 
-/// 启动动画：APNG 播放 → 奖杯屋大字 → 无缝过渡到首页标题
+/// 启动动画：纯 Flutter 粒子碎裂 → TROPHYROOM → 奖杯屋大字 → 过渡到首页
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
@@ -37,13 +38,21 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double> _enterAnim;
+  late Animation<double> _anim;
+
+
 
   @override
   void initState() {
     super.initState();
-    // APNG 播放 4.5s，然后过渡 0.8s，最后进首页
-    Future.delayed(const Duration(milliseconds: 5000), () {
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    );
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.linear);
+    _ctrl.addListener(() => setState(() {}));
+    _ctrl.forward();
+    Future.delayed(const Duration(milliseconds: 3500), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
@@ -51,30 +60,13 @@ class _SplashScreenState extends State<SplashScreen>
             transitionsBuilder: (_, anim, __, child) =>
                 Stack(
                   children: [
-                    // 背景 + 奖杯屋大字（启动动画最后一帧的延伸）
                     FadeTransition(
                       opacity: Tween<double>(begin: 1, end: 0).animate(anim),
-                      child: Scaffold(
-                        backgroundColor: const Color(0xFF0A0A12),
-                        body: Center(
-                          child: ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                            ).createShader(bounds),
-                            child: const Text(
-                              '奖杯屋',
-                              style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 10,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: const Scaffold(
+                        backgroundColor: Color(0xFF0A0A12),
+                        body: SizedBox.shrink(),
                       ),
                     ),
-                    // 新页面淡入
                     FadeTransition(opacity: anim, child: child),
                   ],
                 ),
@@ -87,52 +79,133 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = _ctrl.value;
+    final fadeIn = (t / 0.2).clamp(0.0, 1.0);
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A12),
       body: Center(
-        child: Image.asset(
-          'assets/splash.png',
-          fit: BoxFit.contain,
-          width: double.infinity,
-          height: double.infinity,
+        child: Opacity(
+          opacity: fadeIn,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomPaint(
+                size: const Size(160, 220),
+                painter: _SplashPainter(time: t, opacity: fadeIn),
+              ),
+              const SizedBox(height: 16),
+              Opacity(
+                opacity: ((t - 0.3) * 4).clamp(0.0, 1.0),
+                child: Text(
+                  'TROPHYROOM',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 6,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-/// 离线/默认数据 — 25 款热门游戏
-const List<Map<String, dynamic>> _offlineGames = [
-  {"img":"", "name": "Resident Evil 4 PS4 & PS5", "discount": "60%", "price": "HK\$123.20", "original": "HK\$308.00", "platform": "PSN"},
-  {"img":"", "name": "Street Fighter 6", "discount": "50%", "price": "HK\$144.00", "original": "HK\$288.00", "platform": "PSN"},
-  {"img":"", "name": "人中之龍 極２", "discount": "30%", "price": "HK\$130.90", "original": "HK\$187.00", "platform": "PSN"},
-  {"img":"", "name": "Resident Evil Village", "discount": "75%", "price": "HK\$77.00", "original": "HK\$308.00", "platform": "PSN"},
-  {"img":"", "name": "ELDEN RING", "discount": "30%", "price": "HK\$348.60", "original": "HK\$498.00", "platform": "PSN"},
-  {"img":"", "name": "Cyberpunk 2077", "discount": "50%", "price": "HK\$199.00", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Persona 5 Royal", "discount": "40%", "price": "HK\$238.80", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "God of War Ragnarök", "discount": "25%", "price": "HK\$368.00", "original": "HK\$468.00", "platform": "PSN"},
-  {"img":"", "name": "The Last of Us Part I", "discount": "30%", "price": "HK\$308.00", "original": "HK\$438.00", "platform": "PSN"},
-  {"img":"", "name": "Horizon Forbidden West", "discount": "50%", "price": "HK\$198.00", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Gran Turismo 7", "discount": "40%", "price": "HK\$238.80", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Spider-Man: Miles Morales", "discount": "45%", "price": "HK\$198.00", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Returnal", "discount": "55%", "price": "HK\$238.00", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Demon's Souls", "discount": "45%", "price": "HK\$318.00", "original": "HK\$568.00", "platform": "PSN"},
-  {"img":"", "name": "Ratchet & Clank: Rift Apart", "discount": "40%", "price": "HK\$238.80", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Final Fantasy VII Remake", "discount": "50%", "price": "HK\$199.00", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Ghost of Tsushima", "discount": "40%", "price": "HK\$358.80", "original": "HK\$568.00", "platform": "PSN"},
-  {"img":"", "name": "Sekiro: Shadows Die Twice", "discount": "50%", "price": "HK\$199.00", "original": "HK\$398.00", "platform": "PSN"},
-  {"img":"", "name": "Bloodborne", "discount": "60%", "price": "HK\$123.20", "original": "HK\$308.00", "platform": "PSN"},
-  {"img":"", "name": "Death Stranding", "discount": "65%", "price": "HK\$107.80", "original": "HK\$308.00", "platform": "PSN"},
-  {"img":"", "name": "Days Gone", "discount": "60%", "price": "HK\$123.20", "original": "HK\$308.00", "platform": "PSN"},
-  {"img":"", "name": "Uncharted 4", "discount": "50%", "price": "HK\$119.00", "original": "HK\$238.00", "platform": "PSN"},
-  {"img":"", "name": "Stray", "discount": "40%", "price": "HK\$178.80", "original": "HK\$298.00", "platform": "PSN"},
-  {"img":"", "name": "Baldur's Gate 3", "discount": "10%", "price": "HK\$418.00", "original": "HK\$468.00", "platform": "PSN"},
-  {"img":"", "name": "Final Fantasy VII Rebirth", "discount": "20%", "price": "HK\$468.00", "original": "HK\$568.00", "platform": "PSN"},
-];
+
+class _SplashPainter extends CustomPainter {
+  final double time;
+  final double opacity;
+
+  _SplashPainter({required this.time, required this.opacity});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height * 0.45;
+    final s = (size.width < size.height ? size.width : size.height) / 360;
+
+    final breathe = 1.0 + 0.04 * math.sin(time * math.pi * 2 * 0.8);
+    final glowIntensity = 0.6 + 0.4 * (0.5 + 0.5 * math.sin(time * math.pi * 2 * 0.6));
+    final alpha = (opacity * 255).toInt();
+
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.scale(breathe, breathe);
+    canvas.translate(-cx, -cy);
+
+    final gold = Paint()
+      ..color = Color.fromARGB(alpha, 212, 175, 55)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5 * s
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final glow = Paint()
+      ..color = Color.fromARGB((glowIntensity * alpha).toInt(), 255, 215, 0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6 * s
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+
+    final body = Path();
+    body.moveTo(cx - 80*s, cy + 20*s);
+    body.lineTo(cx - 80*s, cy - 40*s);
+    body.lineTo(cx - 100*s, cy - 45*s);
+    body.lineTo(cx - 100*s, cy - 75*s);
+    body.lineTo(cx - 70*s, cy - 55*s);
+    body.lineTo(cx - 45*s, cy - 90*s);
+    body.lineTo(cx, cy - 110*s);
+    body.lineTo(cx + 45*s, cy - 90*s);
+    body.lineTo(cx + 70*s, cy - 55*s);
+    body.lineTo(cx + 100*s, cy - 75*s);
+    body.lineTo(cx + 100*s, cy - 45*s);
+    body.lineTo(cx + 80*s, cy - 40*s);
+    body.lineTo(cx + 80*s, cy + 20*s);
+    body.close();
+    canvas.drawPath(body, glow);
+    canvas.drawPath(body, gold);
+    canvas.drawLine(Offset(cx - 55*s, cy + 40*s), Offset(cx + 55*s, cy + 40*s), gold);
+    canvas.drawLine(Offset(cx - 75*s, cy + 60*s), Offset(cx + 75*s, cy + 60*s), gold);
+
+    final hl = Path();
+    hl.moveTo(cx - 82*s, cy - 30*s);
+    hl.cubicTo(cx - 110*s, cy - 25*s, cx - 135*s, cy, cx - 115*s, cy + 35*s);
+    canvas.drawPath(hl, glow);
+    canvas.drawPath(hl, gold);
+    final hr = Path();
+    hr.moveTo(cx + 82*s, cy - 30*s);
+    hr.cubicTo(cx + 110*s, cy - 25*s, cx + 135*s, cy, cx + 115*s, cy + 35*s);
+    canvas.drawPath(hr, glow);
+    canvas.drawPath(hr, gold);
+
+    final tGold = Paint()
+      ..color = Color.fromARGB(alpha, 255, 215, 0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5 * s
+      ..strokeCap = StrokeCap.round;
+    final tGlow = Paint()
+      ..color = Color.fromARGB((glowIntensity * alpha).toInt(), 255, 215, 0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8 * s
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    final tS = 25 * s, tH = 45 * s, tCy = cy + 5 * s;
+    canvas.drawLine(Offset(cx - tS, tCy - tH * 0.6), Offset(cx + tS, tCy - tH * 0.6), tGlow);
+    canvas.drawLine(Offset(cx - tS, tCy - tH * 0.6), Offset(cx + tS, tCy - tH * 0.6), tGold);
+    canvas.drawLine(Offset(cx, tCy - tH * 0.6), Offset(cx, tCy + tH * 0.6), tGlow);
+    canvas.drawLine(Offset(cx, tCy - tH * 0.6), Offset(cx, tCy + tH * 0.6), tGold);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_SplashPainter old) => time != old.time;
+}
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -148,6 +221,7 @@ class _HomePageState extends State<HomePage>
   bool _netChecked = false;
   late AnimationController _animCtrl;
   late Animation<double> _titleSlide;
+  late AnimationController _scanCtrl;
   bool _animDone = false;
   List<Map<String, dynamic>> _deals = [];
   bool _loading = false;
@@ -167,6 +241,10 @@ class _HomePageState extends State<HomePage>
       parent: _animCtrl,
       curve: Curves.easeOutCubic,
     );
+    _scanCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) _animCtrl.forward().then((_) => setState(() => _animDone = true));
     });
@@ -179,6 +257,7 @@ class _HomePageState extends State<HomePage>
   @override
   void dispose() {
     _animCtrl.dispose();
+    _scanCtrl.dispose();
     super.dispose();
   }
 
@@ -255,60 +334,113 @@ class _HomePageState extends State<HomePage>
     return Scaffold(
       appBar: AppBar(
         title: AnimatedBuilder(
-          animation: _titleSlide,
+          animation: Listenable.merge([_titleSlide, _scanCtrl]),
           builder: (ctx, _) {
-            return Transform.translate(
+            // RGB 流光位置
+            final scan = _scanCtrl.value;
+            // 3 组 RGB 扫描偏移
+            final r = (scan * 1.0).clamp(0.0, 1.0);
+            final g = ((scan + 0.33) % 1.0);
+            final b = ((scan + 0.66) % 1.0);
+            // 额外扫光
+            final glow = (scan * 1.5).clamp(0.0, 1.0);
+
+            return Center(child: Transform.translate(
               offset: Offset(0, 30 * (1 - _titleSlide.value)),
               child: Opacity(
                 opacity: _titleSlide.value,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: [
-                          const Color(0xFFFFD700),
-                          const Color(0xFFFFA500),
-                          const Color(0xFFFF6B35),
-                          const Color(0xFFFFD700),
-                        ],
-                        stops: const [0.0, 0.33, 0.66, 1.0],
-                      ).createShader(bounds),
-                      child: const Text(
-                        '🏆 奖杯屋',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
-                          color: Colors.white,
+                    // ── 🏆 奖杯屋 — RGB 彩灯流光 ──
+                    SizedBox(
+                      height: 30,
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            HSLColor.fromAHSL(0.9, 0, 0.8, 0.5).toColor(),         // 红
+                            HSLColor.fromAHSL(0.3, 0, 0.8, 0.5).toColor(),         // 红暗
+                            HSLColor.fromAHSL(0.3, 120, 0.8, 0.5).toColor(),       // 绿暗
+                            HSLColor.fromAHSL(0.9, 120, 0.8, 0.5).toColor(),       // 绿亮
+                            HSLColor.fromAHSL(0.3, 120, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.3, 240, 0.8, 0.5).toColor(),       // 蓝暗
+                            HSLColor.fromAHSL(0.9, 240, 0.8, 0.5).toColor(),       // 蓝亮
+                            HSLColor.fromAHSL(0.3, 240, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.3, 0, 0.8, 0.5).toColor(),         // 回到红
+                            HSLColor.fromAHSL(0.9, 0, 0.8, 0.5).toColor(),
+                          ],
+                          stops: [
+                            0.0,
+                            (r - 0.4).clamp(0.0, 1.0),
+                            (r - 0.2).clamp(0.0, 1.0),
+                            r.clamp(0.0, 1.0),
+                            (r + 0.2).clamp(0.0, 1.0),
+                            (g - 0.2).clamp(0.0, 1.0),
+                            g.clamp(0.0, 1.0),
+                            (g + 0.2).clamp(0.0, 1.0),
+                            (b - 0.1).clamp(0.0, 1.0),
+                            b.clamp(0.0, 1.0),
+                          ],
+                        ).createShader(bounds),
+                        child: const Center(
+                          child: Text(
+                            '🏆 奖杯屋',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Color(0x99FFD700),
-                          Color(0x66FFA500),
-                          Color(0x99FFD700),
-                        ],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'trophyroom',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 3,
-                          color: Colors.white,
+                    const SizedBox(height: 4),
+                    // ── trophyroom — RGB 同步 ──
+                    SizedBox(
+                      height: 14,
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            HSLColor.fromAHSL(0.5, 0, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.2, 0, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.2, 120, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.5, 120, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.2, 240, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.5, 240, 0.8, 0.5).toColor(),
+                            HSLColor.fromAHSL(0.2, 0, 0.8, 0.5).toColor(),
+                          ],
+                          stops: [
+                            0.0,
+                            (glow - 0.4).clamp(0.0, 1.0),
+                            (glow - 0.2).clamp(0.0, 1.0),
+                            glow.clamp(0.0, 1.0),
+                            (glow + 0.2).clamp(0.0, 1.0),
+                            (glow + 0.4).clamp(0.0, 1.0),
+                            1.0,
+                          ],
+                        ).createShader(bounds),
+                        child: const Center(
+                          child: Text(
+                            'trophyroom',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w300,
+                              letterSpacing: 4,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            );
+            )));
           },
         ),
         centerTitle: true,

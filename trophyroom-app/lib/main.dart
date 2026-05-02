@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage> {
             if (data is List) {
               list = data.cast<Map<String, dynamic>>();
             } else if (data is Map) {
-              for (final key in ['psn', 'steam', 'switch']) {
+              for (final key in ['psn', 'steam', 'switch', 'p9_new_lows']) {
                 if (data[key] is List) {
                   for (final item in data[key]) {
                     if (item is Map) list.add(Map<String, dynamic>.from(item));
@@ -298,11 +298,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDeals() {
-    final filtered = _platform == 'all'
-        ? _deals
-        : _deals
-            .where((g) => g['platform']?.toString().toLowerCase() == _platform)
-            .toList();
+    List<Map<String, dynamic>> filtered;
+    if (_platform == 'newlow') {
+      filtered = _deals
+          .where((g) => g['platform']?.toString().toLowerCase() == 'p9_new_lows')
+          .toList();
+    } else {
+      filtered = _platform == 'all'
+          ? _deals.where((g) =>
+              g['platform']?.toString().toLowerCase() != 'p9_new_lows').toList()
+          : _deals.where((g) =>
+              g['platform']?.toString().toLowerCase() == _platform).toList();
+    }
 
     return Column(
       children: [
@@ -311,13 +318,12 @@ class _HomePageState extends State<HomePage> {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: ['all', 'psn', 'steam', 'switch'].map((p) {
+              children: ['all', 'psn', 'steam', 'switch', 'newlow'].map((p) {
                 final active = _platform == p;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text(
-                        p == 'all' ? '全部' : p.toUpperCase()),
+                    label: Text(p == 'all' ? '全部' : p == 'newlow' ? '📉 新史低' : p.toUpperCase()),
                     selected: active,
                     onSelected: (_) => setState(() => _platform = p),
                     selectedColor: Colors.purple[700],

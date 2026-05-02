@@ -498,8 +498,8 @@ class _HomePageState extends State<HomePage> {
         _linkCard(
           icon: Icons.local_offer,
           title: 'PSN 优惠专区',
-          subtitle: '港服所有折扣游戏',
-          url: 'https://store.playstation.com/zh-hans-hk/pages/browse/1?category=all_ps5_discounts',
+          subtitle: '完整折扣游戏列表',
+          url: 'https://store.playstation.com/zh-hans-hk/category/3f772501-f6f8-49b7-abac-874a88ca4897/1',
         ),
         const SizedBox(height: 12),
         _linkCard(

@@ -530,7 +530,7 @@ class _GameDetailCard extends StatelessWidget {
                   children: [
                     Text(price, style: TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold,
-                        color: Colors.green[400]),
+                        color: Colors.green[400])),
                     if (original.isNotEmpty) ...[
                       const SizedBox(width: 12),
                       Text(original, style: TextStyle(

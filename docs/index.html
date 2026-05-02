@@ -6,8 +6,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Yann小站">
-<title>Yann 的小站</title>
+<meta name="apple-mobile-web-app-title" content="TrophyRoom">
+<title>TrophyRoom</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="icons.svg">
 </head>
@@ -22,7 +22,7 @@
 </div>
 <div class="tab-accent trophy" id="tab-accent"></div>
 
-<h1>🎮 Yann 的小站</h1>
+<h1>🏆 TrophyRoom</h1>
 <p class="subtitle">PSN 港服 · Steam 国服 · Switch 港服 — 每日自动更新</p>
 <p class="last-update">🔄 上次更新: 2026-05-01 02:05</p>
 
@@ -13391,12 +13391,12 @@ window.onload = function() {
 
 function spawnParticles() {
     var container = document.getElementById('particles');
-    var shapes = ['Yann','✕','◯','△','□','✦','⬡','♢','Yann','✕','◯','△','□','✦','⬡','♢','Yann','✕','◯','△','□','✦','⬡','♢'];
+    var shapes = ['T','✕','◯','△','□','✦','⬡','♢','T','✕','◯','△','□','✦','⬡','♢','T','✕','◯','△','□','✦','⬡','♢'];
     var colors = ['rgba(168,85,247,0.3)','rgba(52,211,153,0.25)','rgba(93,173,226,0.25)','rgba(249,115,22,0.25)','rgba(251,191,36,0.3)','rgba(236,72,153,0.2)'];
     // 首屏立即显示一批 - 无延迟、随机初始透明度
     for (var i = 0; i < 30; i++) {
         var p = document.createElement('div');
-        var isText = shapes[i % shapes.length] === 'Yann';
+        var isText = shapes[i % shapes.length] === 'T';
         p.className = 'particle' + (isText ? ' text-particle' : '');
         p.textContent = shapes[i % shapes.length];
         p.style.left = Math.random() * 100 + '%';
@@ -13416,7 +13416,7 @@ function spawnParticles() {
     setInterval(function() {
         for (var j = 0; j < 10; j++) {
             var p = document.createElement('div');
-            var isText = shapes[j % shapes.length] === 'Yann';
+            var isText = shapes[j % shapes.length] === 'T';
             p.className = 'particle' + (isText ? ' text-particle' : '');
             p.textContent = shapes[j % shapes.length];
             p.style.left = Math.random() * 100 + '%';

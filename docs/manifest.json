@@ -1,6 +1,6 @@
 {
-  "name": "Yann 的小站",
-  "short_name": "Yann小站",
+  "name": "TrophyRoom",
+  "short_name": "TrophyRoom",
   "description": "PSN港服 · Steam国服 · Switch港服 — 每日自动更新游戏折扣",
   "start_url": "https://shinyyann.github.io/game-deals/",
   "scope": "https://shinyyann.github.io/game-deals/",

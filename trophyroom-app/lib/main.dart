@@ -235,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(6),
                           child: SizedBox(
-                            width: 50, height: 65,
+                            width: 50, height: 50,
                             child: imgUrl.isNotEmpty
                                 ? Image.network(imgUrl,
                                     fit: BoxFit.cover,
@@ -378,7 +378,7 @@ class _HomePageState extends State<HomePage> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: SizedBox(
-                                width: 60, height: 80,
+                                width: 60, height: 60,
                                 child: imgUrl.isNotEmpty
                                     ? Image.network(imgUrl,
                                         fit: BoxFit.cover,

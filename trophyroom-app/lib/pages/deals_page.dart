@@ -502,7 +502,7 @@ class _DealsPageState extends State<DealsPage> {
 
   String _cleanPrice(String p) {
     // Handle HK prices — keep prefix
-    if (p.contains('HK$')) {
+    if (p.contains(r'HK$')) {
       return p.replaceAll(RegExp(r'\s+'), '');
     }
     // Japanese Yen or other currencies - just return as-is

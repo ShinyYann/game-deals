@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -70,13 +71,28 @@ class _HomePageState extends State<HomePage> {
   bool _loading = false;
   String _dealsStatus = '';
   String _platform = 'all';
+  late final WebViewController _psnWebCtrl;
+  bool _psnWebLoading = true;
 
   @override
   void initState() {
     super.initState();
     _deals = List.from(_offlineGames);
     _dealsStatus = '${_offlineGames.length} 款内置游戏';
+    _initPSNWebView();
     _checkNetwork();
+  }
+
+  void _initPSNWebView() {
+    _psnWebCtrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) => setState(() => _psnWebLoading = true),
+          onPageFinished: (_) => setState(() => _psnWebLoading = false),
+        ),
+      )
+      ..loadRequest(Uri.parse('https://store.playstation.com/zh-hans-hk'));
   }
 
   /// 遍历多个数据源，只要有数据就用在线数据
@@ -483,31 +499,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// PSN商店页面 — 直接跳转
+  /// PSN商店页面 — WebView 内嵌
   Widget _buildPSNStore() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    final controller = _psnWebCtrl;
+    final loading = _psnWebLoading;
+    return Stack(
       children: [
-        _linkCard(
-          icon: Icons.store,
-          title: 'PSN 港服商店',
-          subtitle: 'PlayStation Store Hong Kong',
-          url: 'https://store.playstation.com/zh-hans-hk',
-        ),
-        const SizedBox(height: 12),
-        _linkCard(
-          icon: Icons.local_offer,
-          title: 'PSN 优惠专区',
-          subtitle: '完整折扣游戏列表',
-          url: 'https://store.playstation.com/zh-hans-hk/category/3f772501-f6f8-49b7-abac-874a88ca4897/1',
-        ),
-        const SizedBox(height: 12),
-        _linkCard(
-          icon: Icons.auto_awesome,
-          title: 'PS Plus 每月游戏',
-          subtitle: '会员免费游戏',
-          url: 'https://store.playstation.com/zh-hans-hk/pages/browse/3?platform=ps5&category=plus_monthly_games',
-        ),
+        WebViewWidget(controller: controller),
+        if (loading)
+          const Center(child: CircularProgressIndicator()),
       ],
     );
   }

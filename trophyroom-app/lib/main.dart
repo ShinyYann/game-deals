@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -148,14 +149,25 @@ class _HomePageState extends State<HomePage> {
             ),
         ],
       ),
-      body: _currentTab == 0 ? _buildHome() : _buildDeals(),
+      body: [
+        _buildHome(),
+        _buildDeals(),
+        _buildPSNStore(),
+        _buildModSearch(),
+        _buildGuide(),
+      ][_currentTab],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentTab,
         onTap: (i) => setState(() => _currentTab = i),
         selectedItemColor: Colors.purple[300],
+        unselectedItemColor: Colors.grey[600],
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
           BottomNavigationBarItem(icon: Icon(Icons.local_offer), label: '折扣'),
+          BottomNavigationBarItem(icon: Icon(Icons.store), label: 'PSN商店'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Mod'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '攻略'),
         ],
       ),
     );
@@ -465,7 +477,250 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showGameDetail(BuildContext context, Map<String, dynamic> game) {
+  /// PSN商店页面 — 直接跳转
+  Widget _buildPSNStore() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _linkCard(
+          icon: Icons.store,
+          title: 'PSN 港服商店',
+          subtitle: 'PlayStation Store Hong Kong',
+          url: 'https://store.playstation.com/zh-hans-hk',
+        ),
+        const SizedBox(height: 12),
+        _linkCard(
+          icon: Icons.local_offer,
+          title: 'PSN 优惠专区',
+          subtitle: '港服所有折扣游戏',
+          url: 'https://store.playstation.com/zh-hans-hk/pages/browse/1?category=all_ps5_discounts',
+        ),
+        const SizedBox(height: 12),
+        _linkCard(
+          icon: Icons.auto_awesome,
+          title: 'PS Plus 每月游戏',
+          subtitle: '会员免费游戏',
+          url: 'https://store.playstation.com/zh-hans-hk/pages/browse/3?platform=ps5&category=plus_monthly_games',
+        ),
+      ],
+    );
+  }
+
+  /// Mod搜索页面
+  Widget _buildModSearch() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _linkCard(
+          icon: Icons.extension,
+          title: 'Nexus Mods',
+          subtitle: '最大的游戏模组社区',
+          url: 'https://www.nexusmods.com',
+        ),
+        const SizedBox(height: 12),
+        _linkCard(
+          icon: Icons.gamepad,
+          title: 'Steam 创意工坊',
+          subtitle: 'Steam Workshop',
+          url: 'https://steamcommunity.com/app/570/workshop/',
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('快速搜索', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: '搜索游戏模组...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onSubmitted: (q) async {
+                  final encoded = Uri.encodeComponent(q);
+                  final url = 'https://www.nexusmods.com/search/?q=$encoded';
+                  await _launchUrl(url);
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 攻略入口页面
+  Widget _buildGuide() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _guideCard(
+          icon: '🐉',
+          title: '宝可梦殿堂',
+          subtitle: '图鉴 / 队伍 / 闪符 / 配队 / 闪值排行',
+          color: const Color(0xFFE53935),
+        ),
+        const SizedBox(height: 12),
+        _guideCard(
+          icon: '🌿',
+          title: '黑神话悟空',
+          subtitle: '精魄 / 葫芦 / 结局记录',
+          color: const Color(0xFF2E7D32),
+        ),
+        const SizedBox(height: 12),
+        _guideCard(
+          icon: '🗡️',
+          title: '艾尔登法环',
+          subtitle: '追忆 / 流派 / 全收集',
+          color: const Color(0xFFFDD835),
+        ),
+        const SizedBox(height: 12),
+        _guideCard(
+          icon: '🐾',
+          title: '怪物猎人荒野',
+          subtitle: '金冠 / 武器 / 名片',
+          color: const Color(0xFF1565C0),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Text(
+            '攻略站数据建设中...\n即将推出各游戏专属攻略内容',
+            style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.5),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 链接卡片
+  Widget _linkCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String url,
+  }) {
+    return InkWell(
+      onTap: () => _launchUrl(url),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey[850]!, Colors.grey[900]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[800]!),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.purple[300], size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                ],
+              ),
+            ),
+            Icon(Icons.open_in_new, color: Colors.grey[600], size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 攻略卡片
+  Widget _guideCard({
+    required String icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return InkWell(
+      onTap: () {
+        // TODO: 跳转到具体攻略页
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$title — 攻略制作中'), duration: const Duration(seconds: 2)),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.2), Colors.grey[900]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 32)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 打开外部链接
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF1A1A2E),
+            title: const Text('打开链接'),
+            content: Text('请复制链接到浏览器打开:\n$url',
+                style: const TextStyle(fontSize: 12)),
+            actions: [
+              TextButton(
+                child: const Text('关闭'),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+}
     showDialog(
       context: context,
       builder: (ctx) => Dialog(

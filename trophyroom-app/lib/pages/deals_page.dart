@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/app_theme.dart';
 import '../services/data_service.dart';
@@ -11,18 +10,17 @@ class DealsPage extends StatefulWidget {
 }
 
 class _DealsPageState extends State<DealsPage> {
-  int _selectedTab = 0;
+  int _selectedPlatform = 0;
   bool _loading = true;
-  bool _error = false;
-  Map<String, dynamic> _dealData = {};
+  List<Map<String, dynamic>> _deals = [];
   final DataService _data = DataService();
 
-  final List<DealTab> _tabs = [
-    DealTab(label: '🔥 热门', icon: '🔥', key: 'hot'),
-    DealTab(label: '💸 史低', icon: '💸', key: 'new_low'),
-    DealTab(label: 'PSN', icon: '🎮', key: 'psn'),
-    DealTab(label: 'Steam', icon: '💨', key: 'steam'),
-    DealTab(label: 'Switch', icon: '🕹️', key: 'switch'),
+  final List<Map<String, dynamic>> _platforms = [
+    {'name': '🔥 热门', 'icon': '🔥'},  
+    {'name': 'PSN', 'icon': '🎮'},
+    {'name': 'Steam', 'icon': '💨'},
+    {'name': 'Switch', 'icon': '🕹️'},
+    {'name': 'Epic', 'icon': '🎁'},
   ];
 
   @override
@@ -32,70 +30,14 @@ class _DealsPageState extends State<DealsPage> {
   }
 
   Future<void> _loadDeals() async {
-    setState(() {
-      _loading = true;
-      _error = false;
-    });
+    setState(() => _loading = true);
     final deals = await _data.fetchDeals();
     if (mounted) {
       setState(() {
-        if (deals.isNotEmpty) {
-          _dealData = deals;
-        } else {
-          _error = true;
-        }
+        _deals = deals;
         _loading = false;
       });
     }
-  }
-
-  List<Map<String, dynamic>> _getCurrentDeals() {
-    final tabKey = _tabs[_selectedTab].key;
-
-    if (tabKey == 'hot') {
-      // Build hot list: combine all platforms, sort by discount
-      final all = <Map<String, dynamic>>[];
-      final seen = <String>{};
-      for (final plat in ['psn', 'steam', 'switch']) {
-        final items = _getPlatformDeals(plat);
-        for (final g in items) {
-          final name = (g['name'] as String?)?.trim().toLowerCase() ?? '';
-          if (name.isEmpty || seen.contains(name)) continue;
-          seen.add(name);
-          final disc = _parseDiscount(g['discount'] as String? ?? '');
-          g['_sort_discount'] = disc;
-          all.add(g);
-        }
-      }
-      all.sort((a, b) => (b['_sort_discount'] as num? ?? 0)
-          .compareTo(a['_sort_discount'] as num? ?? 0));
-      return all.take(50).toList();
-    }
-
-    if (tabKey == 'new_low') {
-      final items = _getPlatformDeals('p9_new_lows');
-      return items.take(50).toList();
-    }
-
-    return _getPlatformDeals(tabKey);
-  }
-
-  List<Map<String, dynamic>> _getPlatformDeals(String platform) {
-    try {
-      final raw = _dealData[platform];
-      if (raw is List) {
-        return raw.cast<Map<String, dynamic>>();
-      }
-      return [];
-    } catch (_) {
-      return [];
-    }
-  }
-
-  num _parseDiscount(String disc) {
-    if (disc.isEmpty) return 0;
-    disc = disc.replaceAll('%', '').replaceAll('-', '').trim();
-    return num.tryParse(disc) ?? 0;
   }
 
   @override
@@ -105,165 +47,130 @@ class _DealsPageState extends State<DealsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          _buildHeader(),
-          const SizedBox(height: 16),
-          _buildTabs(),
-          const SizedBox(height: 16),
-          Expanded(child: _buildBody()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '游戏折扣',
-                style: TextStyle(
-                  color: AppTheme.text,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '游戏折扣',
+                      style: TextStyle(
+                        color: AppTheme.text,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '每日更新 · 全平台比价',
+                      style: TextStyle(color: AppTheme.text2, fontSize: 13),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '每日更新 · 全平台比价',
-                style: TextStyle(color: AppTheme.text2, fontSize: 13),
-              ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.accent3.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppTheme.accent3.withOpacity(0.2)),
-            ),
-            child: Text(
-              '昨日更新',
-              style: TextStyle(
-                color: AppTheme.accent3,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabs() {
-    return SizedBox(
-      height: 36,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _tabs.length,
-        itemBuilder: (context, index) {
-          final isActive = _selectedTab == index;
-          final tab = _tabs[index];
-          return GestureDetector(
-            onTap: () => setState(() => _selectedTab = index),
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: isActive ? AppTheme.card : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isActive ? AppTheme.accent2.withOpacity(0.3) : AppTheme.border,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(tab.icon, style: const TextStyle(fontSize: 14)),
-                  const SizedBox(width: 6),
-                  Text(
-                    tab.label,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accent3.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.accent3.withOpacity(0.2)),
+                  ),
+                  child: Text(
+                    '昨日更新',
                     style: TextStyle(
-                      color: isActive ? AppTheme.accent2 : AppTheme.text2,
-                      fontSize: 13,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: AppTheme.accent3,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  if (_tabCount(index) > 0)
-                    Container(
-                      margin: const EdgeInsets.only(left: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: isActive ? AppTheme.accent2.withOpacity(0.15) : AppTheme.border,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${_tabCount(index)}',
-                        style: TextStyle(
-                          color: isActive ? AppTheme.accent2 : AppTheme.text2,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Platform tabs
+          SizedBox(
+            height: 36,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _platforms.length,
+              itemBuilder: (context, index) {
+                final isActive = _selectedPlatform == index;
+                final plat = _platforms[index];
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedPlatform = index),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isActive ? AppTheme.card : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isActive
+                            ? AppTheme.accent2.withOpacity(0.3)
+                            : AppTheme.border,
                       ),
                     ),
-                ],
-              ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          plat['icon'] as String,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          plat['name'] as String,
+                          style: TextStyle(
+                            color: isActive ? AppTheme.accent2 : AppTheme.text2,
+                            fontSize: 13,
+                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+          const SizedBox(height: 16),
+          // Deals list
+          Expanded(
+            child: _loading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('📡', style: TextStyle(fontSize: 48)),
+                        SizedBox(height: 12),
+                        Text(
+                          '正在获取数据...',
+                          style: TextStyle(color: AppTheme.text2, fontSize: 14),
+                        ),
+                        SizedBox(height: 12),
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.accent2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : _deals.isEmpty
+                    ? _buildEmptyState()
+                    : _buildDealsList(),
+          ),
+        ],
       ),
     );
-  }
-
-  int _tabCount(int index) {
-    if (index == 0 && _dealData.isNotEmpty) return _getCurrentDeals().length;
-    final tabKey = _tabs[index].key;
-    if (tabKey == 'hot') return _getCurrentDeals().length;
-    return _getPlatformDeals(tabKey).length;
-  }
-
-  Widget _buildBody() {
-    if (_loading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('📡', style: TextStyle(fontSize: 48)),
-            SizedBox(height: 12),
-            Text(
-              '正在获取数据...',
-              style: TextStyle(color: AppTheme.text2, fontSize: 14),
-            ),
-            SizedBox(height: 12),
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppTheme.accent2,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_error || _dealData.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    final deals = _getCurrentDeals();
-    if (deals.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return _buildDealsList(deals);
   }
 
   Widget _buildEmptyState() {
@@ -300,43 +207,42 @@ class _DealsPageState extends State<DealsPage> {
     );
   }
 
-  Widget _buildDealsList(List<Map<String, dynamic>> deals) {
+  Widget _buildDealsList() {
     return RefreshIndicator(
       onRefresh: _loadDeals,
       color: AppTheme.accent1,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         physics: const BouncingScrollPhysics(),
-        itemCount: deals.length,
+        itemCount: _deals.length,
         itemBuilder: (context, index) {
-          return _dealCard(deals[index], index);
+          final deal = _deals[index];
+          return _dealCard(deal, index);
         },
       ),
     );
   }
 
   Widget _dealCard(Map<String, dynamic> deal, int index) {
-    final name = deal['name'] as String? ?? deal['title'] as String? ?? '未知游戏';
-    final originalPrice = deal['original_price'] as String? ?? '';
-    final price = deal['price'] as String? ?? '';
-    final discount = deal['discount'] as String? ?? '';
-    final image = deal['img'] as String? ?? deal['image'] as String? ?? '';
-    final platform = _getPlatform(deal);
-
-    // P9 史低额外字段
-    final rating = deal['rating'] as String? ?? '';
-    final deadline = deal['deadline'] as String? ?? '';
-    final playerCount = deal['player_count'] as String? ?? '';
+    final name = deal['name'] ?? deal['title'] ?? '未知游戏';
+    final originalPrice = deal['original_price'] ?? deal['price'] ?? '--';
+    final discountPrice = deal['discount_price'] ?? deal['sale_price'] ?? '';
+    final discount = deal['discount'] ?? '';
+    final platform = deal['platform'] ?? '';
+    final image = deal['image'] ?? deal['img'] ?? '';
 
     Color platColor;
     switch (platform) {
       case 'PSN':
+      case 'psn':
         platColor = AppTheme.accent1;
         break;
       case 'Steam':
+      case 'steam':
         platColor = AppTheme.accent2;
         break;
       case 'Switch':
+      case 'switch':
         platColor = AppTheme.accent3;
         break;
       default:
@@ -360,25 +266,9 @@ class _DealsPageState extends State<DealsPage> {
               width: 56,
               height: 56,
               color: platColor.withOpacity(0.1),
-              child: image.isNotEmpty
-                  ? Image.network(
-                      image,
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Center(
-                        child: Text(
-                          name.isNotEmpty ? name.substring(0, 1) : '?',
-                          style: TextStyle(fontSize: 20, color: platColor),
-                        ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        name.isNotEmpty ? name.substring(0, 1) : '?',
-                        style: TextStyle(fontSize: 20, color: platColor),
-                      ),
-                    ),
+              child: Center(
+                child: Text(name.substring(0, 1), style: TextStyle(fontSize: 20, color: platColor)),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -412,49 +302,20 @@ class _DealsPageState extends State<DealsPage> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    if (discount.isNotEmpty)
+                    if (discount != '')
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: discount.contains('史低')
-                              ? const Color(0xFFFF6B6B).withOpacity(0.15)
-                              : AppTheme.accent3.withOpacity(0.15),
+                          color: AppTheme.accent3.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          discount.startsWith('-') ? discount : '-${discount}',
-                          style: TextStyle(
-                            color: discount.contains('史低')
-                                ? const Color(0xFFFF6B6B)
-                                : AppTheme.accent3,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          '-${discount}',
+                          style: const TextStyle(color: AppTheme.accent3, fontSize: 10, fontWeight: FontWeight.w700),
                         ),
                       ),
-                    if (deadline.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        '⏰$deadline',
-                        style: TextStyle(
-                          color: AppTheme.text2.withOpacity(0.6),
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
-                if (rating.isNotEmpty || playerCount.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      '${rating.isNotEmpty ? rating : ''}${playerCount.isNotEmpty ? " · $playerCount" : ''}',
-                      style: TextStyle(
-                        color: AppTheme.text2.withOpacity(0.6),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -462,18 +323,18 @@ class _DealsPageState extends State<DealsPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (price.isNotEmpty)
+              if (discountPrice != '')
                 Text(
-                  _cleanPrice(price),
+                  '¥${discountPrice}',
                   style: const TextStyle(
                     color: AppTheme.accent2,
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-              if (originalPrice.isNotEmpty)
+              if (originalPrice != '')
                 Text(
-                  _cleanPrice(originalPrice),
+                  '¥${originalPrice}',
                   style: TextStyle(
                     color: AppTheme.text2.withOpacity(0.5),
                     fontSize: 12,
@@ -486,38 +347,4 @@ class _DealsPageState extends State<DealsPage> {
       ),
     );
   }
-
-  String _getPlatform(Map<String, dynamic> deal) {
-    // Check explicit platform field
-    final plat = deal['platform'] as String?;
-    if (plat != null && plat.isNotEmpty) return plat;
-
-    // Check if it came from p9_new_lows
-    if (deal.containsKey('deadline') || deal.containsKey('player_count') || deal.containsKey('rating')) {
-      return deal['platform'] as String? ?? 'PSN';
-    }
-
-    return 'PSN';
-  }
-
-  String _cleanPrice(String p) {
-    // Handle HK prices — keep prefix
-    if (p.contains(r'HK$')) {
-      return p.replaceAll(RegExp(r'\s+'), '');
-    }
-    // Japanese Yen or other currencies - just return as-is
-    return p.replaceAll(RegExp(r'\s+'), '');
-  }
-}
-
-class DealTab {
-  final String label;
-  final String icon;
-  final String key;
-
-  const DealTab({
-    required this.label,
-    required this.icon,
-    required this.key,
-  });
 }

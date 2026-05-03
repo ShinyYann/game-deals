@@ -67,10 +67,20 @@ jobs:
       - name: Capture build logs
         if: failure()
         run: |
-          echo "=== Build failed - checking what happened ==="
+          echo "=== Build failed - running flutter analyze ==="
           cd /tmp/tbuild
-          flutter pub get 2>&1 | tail -20 || true
-          flutter build apk --release --target-platform android-arm,android-arm64 2>&1 | tail -40 || true
+          flutter analyze 2>&1 | tee /tmp/flutter_analyze.log || true
+          echo "=== Running flutter build ===" | tee -a /tmp/flutter_analyze.log
+          flutter build apk --release --target-platform android-arm,android-arm64 2>&1 | tee -a /tmp/flutter_analyze.log || true
+          echo "=== Log saved ==="
+          wc -l /tmp/flutter_analyze.log
+      
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-error-log
+          path: /tmp/flutter_analyze.log
+          retention-days: 1
       
       - name: Copy and release
         run: |

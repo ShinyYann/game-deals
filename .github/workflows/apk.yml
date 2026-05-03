@@ -28,11 +28,16 @@ jobs:
         run: |
           mkdir -p /tmp/tbuild
           cp -r ${{ github.workspace }}/trophyroom-app/* /tmp/tbuild/
+          # 先保存 pubspec.yaml（flutter create 会覆盖）
+          cp /tmp/tbuild/pubspec.yaml /tmp/tbuild/pubspec.yaml.orig
           cd /tmp/tbuild
           
           # 彻底避免 advisory bug：先初始化最小项目
           rm -rf android lib test
           flutter create --org com.trophyroom --project-name trophyroom .
+          
+          # 还原 pubspec.yaml（保留我们的依赖）
+          cp /tmp/tbuild/pubspec.yaml.orig /tmp/tbuild/pubspec.yaml
           
           # 还原我们的代码
           rm -f lib/main.dart

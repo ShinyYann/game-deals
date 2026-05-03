@@ -99,5 +99,7 @@ jobs:
           name: "TrophyRoom Latest"
           body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }}"
           artifacts: ${{ github.workspace }}/TrophyRoom.apk
-          allowUpdates: false
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}

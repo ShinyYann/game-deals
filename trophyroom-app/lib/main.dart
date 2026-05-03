@@ -1098,6 +1098,20 @@ class _HomePageState extends State<HomePage>
                       ? Colors.grey[500]
                       : Colors.grey[700]),
             ),
+          // Tips button
+          GestureDetector(
+            onTap: () => _showTrophyTips(context, trophy['id']?.toString() ?? ''),
+            child: Container(
+              margin: const EdgeInsets.only(left: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey[800]!.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text('💡',
+                  style: TextStyle(fontSize: 12)),
+            ),
+          ),
         ],
       ),
     );
@@ -1226,6 +1240,254 @@ class _HomePageState extends State<HomePage>
       }
     } catch (_) {}
     return {'trophies': [], 'summary': {}, 'sections': []};
+  }
+
+  void _showTrophyTips(BuildContext context, String trophyId) {
+    if (trophyId.isEmpty) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1A1A2E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return FutureBuilder(
+              future: _fetchTrophyTips(trophyId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: 40),
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('加载奖杯心得...', style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  );
+                }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: 40),
+                        Icon(Icons.error_outline, size: 40, color: Colors.red),
+                        SizedBox(height: 12),
+                        Text('加载失败', style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  );
+                }
+
+                final data = snapshot.data as Map<String, dynamic>;
+                final tips = data['tips'] as List<dynamic>? ?? [];
+                final count = tips.length;
+
+                return Column(
+                  children: [
+                    // Drag handle
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[600],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Row(
+                        children: [
+                          Text(
+                            '奖杯心得',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[700],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$count',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[300]),
+                            ),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Icon(Icons.close, color: Colors.grey[500], size: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(color: Color(0xFF2A2A3E), height: 1),
+                    // Tips list
+                    Expanded(
+                      child: tips.isEmpty
+                          ? Center(
+                              child: Text(
+                                '暂无心得',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            )
+                          : ListView.builder(
+                              controller: scrollController,
+                              padding: const EdgeInsets.all(16),
+                              itemCount: tips.length,
+                              itemBuilder: (context, index) {
+                                final tip = tips[index] as Map<String, dynamic>;
+                                final user = tip['user']?.toString() ?? '';
+                                final avatar = tip['avatar']?.toString() ?? '';
+                                final content = tip['content']?.toString() ?? '';
+                                final date = tip['date']?.toString() ?? '';
+                                final location = tip['location']?.toString() ?? '';
+                                final replies = tip['replies'] as List<dynamic>? ?? [];
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF151529),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // User info row
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 16,
+                                            backgroundColor: Colors.grey[800],
+                                            backgroundImage: avatar.isNotEmpty
+                                                ? NetworkImage(avatar)
+                                                : null,
+                                            child: avatar.isEmpty
+                                                ? Icon(Icons.person, size: 16, color: Colors.grey[500])
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            user,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[300],
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          if (location.isNotEmpty)
+                                            Text(
+                                              location,
+                                              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                            ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            date,
+                                            style: TextStyle(fontSize: 10, color: Colors.grey[700]),
+                                          ),
+                                        ],
+                                      ),
+                                      if (content.isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          content,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[300],
+                                            height: 1.4,
+                                          ),
+                                        ),
+                                      ],
+                                      // Replies
+                                      if (replies.isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        ...replies.map((reply) {
+                                          final r = reply as Map<String, dynamic>;
+                                          return Container(
+                                            margin: const EdgeInsets.only(top: 6),
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[850]!.withOpacity(0.5),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      r['user']?.toString() ?? '',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: Colors.grey[400],
+                                                      ),
+                                                    ),
+                                                    const Spacer(),
+                                                    Text(
+                                                      r['date']?.toString() ?? '',
+                                                      style: TextStyle(fontSize: 10, color: Colors.grey[700]),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  r['content']?.toString() ?? '',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[400],
+                                                    height: 1.3,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }),
+                                      ],
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> _fetchTrophyTips(String trophyId) async {
+    try {
+      final resp = await http
+          .get(Uri.parse('http://8.153.97.56/api/psn_trophy_tips?trophy_id=$trophyId'))
+          .timeout(const Duration(seconds: 15));
+      if (resp.statusCode == 200) {
+        return json.decode(resp.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      return {'tips': [], 'error': e.toString()};
+    }
+    return {'tips': []};
   }
 
   Future<Map<String, dynamic>> _fetchFullPsnData() async {

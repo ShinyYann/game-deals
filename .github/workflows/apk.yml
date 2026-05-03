@@ -74,7 +74,15 @@ jobs:
       
       - name: Copy and release
         run: |
-          cp /tmp/tbuild/build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
+          # Find the APK - path varies by Flutter version
+          APK_PATH=$(find /tmp/tbuild/build -name "*.apk" -not -name "*unaligned*" 2>/dev/null | head -1)
+          if [ -z "$APK_PATH" ]; then
+            echo "❌ No APK found! Listing build tree:"
+            find /tmp/tbuild/build -type f 2>/dev/null | head -20
+            exit 1
+          fi
+          echo "Found APK: $APK_PATH"
+          cp "$APK_PATH" ${{ github.workspace }}/TrophyRoom.apk
           echo "APK_SIZE=$(ls -lh ${{ github.workspace }}/TrophyRoom.apk | awk '{print $5}')" >> $GITHUB_ENV
           rm -rf /tmp/tbuild
 

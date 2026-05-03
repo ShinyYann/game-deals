@@ -21,58 +21,51 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
           channel: 'stable'
           cache: true
 
-      - name: Analyze code
+      - name: Copy code and generate Android project
         run: |
-          cd ${{ github.workspace }}/trophyroom-app
-          PUB_DISABLE_ADVISORIES=true flutter pub get
-          flutter analyze --no-fatal-infos --no-fatal-warnings || echo '⚠️ 分析发现潜在问题'
-
-      - name: Build APK
-        run: |
-          # 全新 clone 到独立目录，避免 watch 冲突
-          TMPDIR=$(mktemp -d)
-          cd "$TMPDIR"
+          mkdir -p /tmp/tbuild
+          cp -r ${{ github.workspace }}/trophyroom-app/* /tmp/tbuild/
+          cd /tmp/tbuild
           
-          # 直接把整个 trophyroom-app 复制过去
-          mkdir -p trophyroom/lib
-          cp -r ${{ github.workspace }}/trophyroom-app/* trophyroom/
-          
-          # 生成 Android 项目结构
-          cd trophyroom
-          rm -rf android
+          # 彻底避免 advisory bug：先初始化最小项目
+          rm -rf android lib test
           flutter create --org com.trophyroom --project-name trophyroom .
           
-          # 恢复用户代码
+          # 还原我们的代码
           rm -f lib/main.dart
           cp -r ${{ github.workspace }}/trophyroom-app/lib/* lib/
+          mkdir -p assets
+          cp -r ${{ github.workspace }}/trophyroom-app/assets/* assets/ 2>/dev/null || true
           
-          # 添加权限
-          ANDROID_MANIFEST="android/app/src/main/AndroidManifest.xml"
-          awk '
-          /<application/ {
+          # 权限
+          awk '/<application/ {
             print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
             print "    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
             print "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>"
-            print ""
-            print $0
-            next
-          }
-          { print }
-          ' "$ANDROID_MANIFEST" > "${ANDROID_MANIFEST}.new"
-          mv "${ANDROID_MANIFEST}.new" "$ANDROID_MANIFEST"
+            print ""; print $0; next
+          } {print}' android/app/src/main/AndroidManifest.xml > AndroidManifest.xml.new
+          mv AndroidManifest.xml.new android/app/src/main/AndroidManifest.xml
           
-          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "android/app/build.gradle"
+          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' android/app/build.gradle
           
-                              PUB_DISABLE_ADVISORIES=true flutter pub get
-          flutter build apk --release --target-platform android-arm,android-arm64
-          
-          cp build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
+          echo "code prepared"
+
+      - name: Build APK
+        run: |
+          cd /tmp/tbuild
+          # 离线模式避 advisory bug
+          flutter pub get --offline 2>/dev/null || true
+          flutter pub get
+          flutter build apk --release
+      
+      - name: Copy and release
+        run: |
+          cp /tmp/tbuild/build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
           echo "APK_SIZE=$(ls -lh ${{ github.workspace }}/TrophyRoom.apk | awk '{print $5}')" >> $GITHUB_ENV
-          rm -rf "$TMPDIR"
+          rm -rf /tmp/tbuild
 
       - uses: actions/upload-artifact@v4
         with:

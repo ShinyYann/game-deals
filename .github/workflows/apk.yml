@@ -60,9 +60,17 @@ jobs:
         run: |
           cd /tmp/tbuild
           # 离线模式避 advisory bug
-          flutter pub get --offline 2>/dev/null || true
-          flutter pub get
-          flutter build apk --release --target-platform android-arm,android-arm64
+          flutter pub get --offline 2>&1 || true
+          flutter pub get 2>&1 | tee /tmp/pubget.log
+          flutter build apk --release --target-platform android-arm,android-arm64 2>&1 | tee /tmp/build.log
+    
+      - name: Capture build logs
+        if: failure()
+        run: |
+          echo "=== PUB GET LOG ===" 
+          cat /tmp/pubget.log 2>/dev/null | tail -20
+          echo "=== BUILD LOG ==="
+          cat /tmp/build.log 2>/dev/null | tail -40
       
       - name: Copy and release
         run: |

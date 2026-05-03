@@ -4,19 +4,17 @@ on:
   push:
     branches: [main]
     paths:
-      - 'trophyroom-app/**'
+      - 'trophyroom-app/lib/**'
+      - 'trophyroom-app/pubspec.yaml'
       - '.github/workflows/apk.yml'
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: trophyroom-app
+    permissions:
+      contents: write
+      actions: read
 
     steps:
       - uses: actions/checkout@v4
@@ -26,22 +24,46 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Copy code and generate Android project
+        run: |
+          mkdir -p /tmp/tbuild
+          cp -r ${{ github.workspace }}/trophyroom-app/* /tmp/tbuild/
+          cd /tmp/tbuild
+          rm -rf android lib test
+          flutter create --org com.trophyroom --project-name trophyroom .
+          rm -f lib/main.dart
+          cp -r ${{ github.workspace }}/trophyroom-app/lib/* lib/
+          mkdir -p assets
+          cp -r ${{ github.workspace }}/trophyroom-app/assets/* assets/ 2>/dev/null || true
+          # Add internet permissions
+          awk '/<application/ {
+            print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
+            print "    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
+            print "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>"
+            print ""; print $0; next
+          } {print}' android/app/src/main/AndroidManifest.xml > AndroidManifest.xml.new
+          mv AndroidManifest.xml.new android/app/src/main/AndroidManifest.xml
+          # RESTORE pubspec.yaml (flutter create overwrites it!)
+          cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml pubspec.yaml
+          echo "code prepared"
 
       - name: Build APK
-        run: flutter build apk --release --target-platform android-arm,android-arm64
-
-      - name: Prepare APK
         run: |
-          APK_PATH=$(find build -name "*.apk" -not -name "*unaligned*" 2>/dev/null | head -1)
-          cp "$APK_PATH" release.apk
-          echo "APK_SIZE=$(stat -c%s release.apk)" >> $GITHUB_ENV
+          cd /tmp/tbuild
+          flutter pub get --offline 2>/dev/null || true
+          flutter pub get
+          flutter build apk --release --target-platform android-arm,android-arm64
+      
+      - name: Copy and release
+        run: |
+          cp /tmp/tbuild/build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
+          echo "APK_SIZE=$(ls -lh ${{ github.workspace }}/TrophyRoom.apk | awk '{print $5}')" >> $GITHUB_ENV
+          rm -rf /tmp/tbuild
 
       - uses: actions/upload-artifact@v4
         with:
           name: TrophyRoom-APK
-          path: trophyroom-app/release.apk
+          path: ${{ github.workspace }}/TrophyRoom.apk
           retention-days: 1
 
       - name: Create Release
@@ -49,8 +71,8 @@ jobs:
         with:
           tag: latest
           name: "TrophyRoom Latest"
-          body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }} bytes"
-          artifacts: trophyroom-app/release.apk
+          body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }}"
+          artifacts: ${{ github.workspace }}/TrophyRoom.apk
           allowUpdates: true
           removeArtifacts: true
           replacesArtifacts: true

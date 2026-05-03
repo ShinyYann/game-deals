@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -297,8 +296,6 @@ class _HomePageState extends State<HomePage>
   List<Map<String, dynamic>> _deals = [];
   String _dealsStatus = '';
   String _platform = 'all';
-  late final WebViewController _psnWebCtrl;
-  bool _psnWebLoading = true;
   String _psnId = '';
   String _steamId = '';
   bool _accountsLoaded = false;
@@ -324,7 +321,7 @@ class _HomePageState extends State<HomePage>
     });
     _deals = List.from(_offlineGames);
     _dealsStatus = '${_offlineGames.length} 款内置游戏';
-    _initPSNWebView();
+    // PSN tab disabled
     _checkNetwork();
     _loadAccounts();
   }
@@ -336,17 +333,7 @@ class _HomePageState extends State<HomePage>
     super.dispose();
   }
 
-  void _initPSNWebView() {
-    _psnWebCtrl = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (_) => setState(() => _psnWebLoading = true),
-          onPageFinished: (_) => setState(() => _psnWebLoading = false),
-        ),
-      )
-      ..loadRequest(Uri.parse('https://store.playstation.com/zh-hans-hk'));
-  }
+  // removed
 
   /// 遍历多个数据源，只要有数据就用在线数据
   Future<void> _checkNetwork() async {
@@ -1697,16 +1684,22 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-    /// 内嵌 PSN 商店网页
+    /// PSN 商店占位（WebView 移除）
   Widget _buildPSNStore() {
-    return Stack(
-      children: [
-        WebViewWidget(controller: _psnWebCtrl),
-        if (_psnWebLoading)
-          const Center(
-            child: CircularProgressIndicator(),
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.store, size: 48, color: Colors.grey[600]),
+          const SizedBox(height: 12),
+          Text('PSN 商店', style: TextStyle(fontSize: 16, color: Colors.grey[400])),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => _launchUrl('https://store.playstation.com/zh-hans-hk'),
+            child: const Text('在浏览器打开 →'),
           ),
-      ],
+        ],
+      ),
     );
   }
 

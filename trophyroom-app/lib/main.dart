@@ -95,10 +95,16 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CustomPaint(
-                size: const Size(160, 220),
-                painter: _SplashPainter(time: t, opacity: fadeIn),
-              ),
+              // ── Logo 图片 ──
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Image.asset(
+              'assets/logo/logo_yann_design.png',
+              width: 160,
+              height: 160,
+              fit: BoxFit.contain,
+            ),
+          ),
               const SizedBox(height: 16),
               Opacity(
                 opacity: ((t - 0.3) * 4).clamp(0.0, 1.0),
@@ -366,14 +372,12 @@ class _HomePageState extends State<HomePage>
           builder: (ctx, _) {
             // RGB 流光位置
             final scan = _scanCtrl.value;
-            // 3 组 RGB 扫描偏移
             final r = (scan * 1.0).clamp(0.0, 1.0);
             final g = ((scan + 0.33) % 1.0);
             final b = ((scan + 0.66) % 1.0);
-            // 额外扫光
             final glow = (scan * 1.5).clamp(0.0, 1.0);
 
-            return Center(child: Transform.translate(
+            return Transform.translate(
               offset: Offset(0, 30 * (1 - _titleSlide.value)),
               child: Opacity(
                 opacity: _titleSlide.value,
@@ -517,7 +521,7 @@ class _HomePageState extends State<HomePage>
             ));
           },
         ),
-        centerTitle: false,
+        centerTitle: true,
         actions: [
           if (_netChecked)
             Padding(

@@ -888,31 +888,32 @@ def parse_steam_item(item):
     }
 
 def parse_switch():
-    """Get Switch deals from Nintendo HK eShop — full pagination."""
+    """Get Switch deals from multiple Nintendo sources."""
     import re
+    from datetime import datetime
     games = []
     seen = set()
     
-    # Try API first
-    api_url = "https://store.nintendo.com.hk/api/v2/products"
-    params = "filter%5Bcategory%5D=all&filter%5Bplatform%5D=switch&page%5Bnumber%5D=1&page%5Bsize%5D=50&sort=discount_rate"
-    data = fetch_json(f"{api_url}?{params}")
-    if data and data.get('data'):
+    fallback_idx = 0
+    sources = []
+    
+    # ── Source 1: Nintendo HK API ──
+    def try_hk_api():
+        n = 0
+        api_url = "https://store.nintendo.com.hk/api/v2/products"
+        params = "filter%5Bcategory%5D=all&filter%5Bplatform%5D=switch&page%5Bnumber%5D=1&page%5Bsize%5D=50&sort=discount_rate"
+        data = fetch_json(f"{api_url}?{params}")
+        if not data or not data.get('data'):
+            return []
         total_pages = data.get('meta', {}).get('page', {}).get('total_pages', 1)
+        out = []
         for page in range(1, min(total_pages + 1, 20)):
-            if page > 1:
-                html_or_json = fetch(f"{api_url}?filter%5Bcategory%5D=all&filter%5Bplatform%5D=switch&page%5Bnumber%5D={page}&page%5Bsize%5D=50&sort=discount_rate")
+            if page == 1:
+                products = data['data']
             else:
-                html_or_json = None  # already have it
-            
-            if page > 1:
-                if not html_or_json: break
-                d2 = json.loads(html_or_json) if isinstance(html_or_json, str) else None
+                d2 = fetch_json(f"{api_url}?filter%5Bcategory%5D=all&filter%5Bplatform%5D=switch&page%5Bnumber%5D={page}&page%5Bsize%5D=50&sort=discount_rate")
                 if not d2 or not d2.get('data'): break
                 products = d2['data']
-            else:
-                products = data['data']
-            
             for p in products:
                 attrs = p.get('attributes', {})
                 name = attrs.get('name', '')
@@ -921,32 +922,119 @@ def parse_switch():
                 price = attrs.get('formatted_price', '') or ''
                 old_price = attrs.get('formatted_original_price', '') or ''
                 if not old_price: continue
-                disc_pct = ''
-                if old_price and price:
-                    try:
-                        p_val = float(price.replace('HK$', '').replace(',', ''))
-                        o_val = float(old_price.replace('HK$', '').replace(',', ''))
-                        if o_val > 0:
-                            disc_pct = f'-{(1 - p_val/o_val)*100:.0f}%'
-                    except: pass
+                try:
+                    p_val = float(price.replace('HK$', '').replace(',', ''))
+                    o_val = float(old_price.replace('HK$', '').replace(',', ''))
+                    disc_pct = f'-{(1 - p_val/o_val)*100:.0f}%' if o_val > 0 else ''
+                except:
+                    disc_pct = ''
                 img = attrs.get('image', '') or ''
                 has_cn = bool(re.search(r'[\u4e00-\u9fff]', name))
-                games.append({
-                    'name': name,
-                    'price': f'HK${price}' if 'HK$' not in price else price,
-                    'discount': disc_pct,
-                    'original_price': f'HK${old_price}' if 'HK$' not in old_price else old_price,
-                    'has_cn': has_cn,
-                    'img': img
+                out.append({
+                    'name': name, 'price': f'HK${price}' if 'HK$' not in price else price,
+                    'discount': disc_pct, 'original_price': f'HK${old_price}' if 'HK$' not in old_price else old_price,
+                    'has_cn': has_cn, 'img': img, 'platform': 'Switch'
                 })
+                n += 1
             time.sleep(0.3)
-    else:
-        # Fallback: scrape from HTML pages
-        for page in range(1, 8):
-            url = f"https://store.nintendo.com.hk/games/all-released-games?p={page}"
-            raw = fetch(url)
+        return out
+    
+    # ── Source 2: Nintendo JP eShop (has ongoing deals) ──
+    def try_jp_eshop():
+        """Scrape Nintendo JP My Nintendo Store for Switch deals."""
+        import urllib.parse
+        jp_games = []
+        jp_url = "https://store-jp.nintendo.com/list/games.html?q=:score-desc&sort=score-desc&pageSize=48&promotion=active"
+        raw = fetch(jp_url)
+        if not raw: return []
+        
+        # Extract JSON from script tags
+        for m in re.finditer(r'window\.__INITIAL_STATE__\s*=\s*({.*?});', raw):
+            try:
+                import json
+                state = json.loads(m.group(1))
+                products = state.get('products', state.get('items', []))
+                for item in products:
+                    name = item.get('name', '')
+                    if not name or name in seen: continue
+                    seen.add(name)
+                    price_str = str(item.get('price', item.get('salePrice', '') or '')).replace(',', '')
+                    orig_str = str(item.get('originalPrice', item.get('listPrice', '') or '')).replace(',', '')
+                    if not orig_str or not price_str: continue
+                    disc = ''
+                    try:
+                        pv, ov = float(price_str), float(orig_str)
+                        if ov > 0: disc = f'-{(1 - pv/ov)*100:.0f}%'
+                    except: pass
+                    img = item.get('image', item.get('imgUrl', '') or '')
+                    jp_games.append({
+                        'name': name, 'price': f'¥{price_str}', 'discount': disc,
+                        'original_price': f'¥{orig_str}', 'has_cn': False,
+                        'img': img, 'platform': 'Switch'
+                    })
+            except: pass
+        return jp_games
+    
+    # ── Source 3: deku deal RSS/API (community-driven deal aggregator) ──
+    def try_deku_deals():
+        dd_games = []
+        # Try Nintendo Switch UK eShop deals
+        dd_urls = [
+            "https://www.dekudeals.com/nintendo-switch/deals?format=json",
+        ]
+        for dd_url in dd_urls:
+            raw = fetch(dd_url)
             if not raw: continue
-            # Nintendo HK uses standard product listing
+            try:
+                import json
+                items = json.loads(raw)
+                if isinstance(items, list):
+                    pass
+                elif isinstance(items, dict):
+                    items = items.get('items', items.get('deals', []))
+                for item in items:
+                    name = item.get('name', item.get('title', ''))
+                    if not name or name in seen: continue
+                    seen.add(name)
+                    price = str(item.get('price', item.get('salePrice', '') or ''))
+                    old_price = str(item.get('originalPrice', item.get('msrp', item.get('regularPrice', '') or '')))
+                    if not old_price: continue
+                    disc = item.get('discount', '')
+                    img = item.get('image', item.get('imgUrl', '') or '')
+                    dd_games.append({
+                        'name': name, 'price': price, 'discount': disc,
+                        'original_price': old_price, 'has_cn': False,
+                        'img': img, 'platform': 'Switch'
+                    })
+            except: pass
+        return dd_games
+    
+    # ── Try sources in order ──
+    # Source 1: HK API
+    result = try_hk_api()
+    if result:
+        print(f"  [Switch] Nintendo HK API: {len(result)} games")
+        games.extend(result)
+    else:
+        # Source 2: JP eShop
+        result = try_jp_eshop()
+        if result:
+            print(f"  [Switch] Nintendo JP store: {len(result)} games")
+            games.extend(result)
+        else:
+            # Source 3: Deku Deals
+            result = try_deku_deals()
+            if result:
+                print(f"  [Switch] Deku Deals: {len(result)} games")
+                games.extend(result)
+            else:
+                print("  [Switch] All sources failed!")
+    
+    # Mark as switch
+    for g in games:
+        g['platform'] = 'Switch'
+    
+    return games[:100]  # limit to 100 games
             # Extract JSON-LD or product data
             items = re.findall(r'<li class="[^"]*product[^"]*"[^>]*>.*?</li>', raw, re.DOTALL)
             if not items:

@@ -790,7 +790,7 @@ class _HomePageState extends State<HomePage>
                                       style: const TextStyle(fontSize: 10))
                                 else
                                   Text(g.unlockedAchievements.toString() + '/' + g.totalAchievements.toString(),
-                                      style: const TextStyle(fontSize: 12, color: Colors.green[300])),
+                                      style: TextStyle(fontSize: 12, color: Colors.green[300])),
                                 if (g.completionRate > 0)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 4, left: 16, right: 16),

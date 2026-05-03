@@ -27,6 +27,7 @@ jobs:
 
       - name: Build APK
         run: |
+          rm -rf /tmp/trophyroom
           cd /tmp
           flutter create --org com.trophyroom --project-name trophyroom --platforms android trophyroom
 

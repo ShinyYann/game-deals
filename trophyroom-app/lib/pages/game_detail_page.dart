@@ -48,7 +48,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
 
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
-        if (data is Map && data['error'] == null) {
+        if (data is Map<String, dynamic> && data['error'] == null) {
           setState(() {
             _data = data;
             _loading = false;

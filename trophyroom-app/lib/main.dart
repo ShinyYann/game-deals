@@ -831,10 +831,7 @@ class _HomePageState extends State<HomePage>
             context,
             MaterialPageRoute(
               builder: (_) => GameDetailPage(
-                gameName: g['name'] ?? '',
                 gameId: g['game_id'] ?? '',
-                psnId: psnId,
-                coverUrl: g['cover_url'],
               ),
             ),
           );

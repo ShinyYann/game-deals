@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'models/trophy.dart';
-import 'pages/game_list_page.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -296,7 +294,6 @@ class _HomePageState extends State<HomePage>
   late AnimationController _scanCtrl;
   bool _animDone = false;
   List<Map<String, dynamic>> _deals = [];
-  bool _loading = false;
   String _dealsStatus = '';
   String _platform = 'all';
   late final WebViewController _psnWebCtrl;
@@ -304,8 +301,10 @@ class _HomePageState extends State<HomePage>
   String _psnId = '';
   String _steamId = '';
   bool _accountsLoaded = false;
-  List<TrophyGame> _trophyGames = [];
   String _error = '';
+  String? _expandedGameId;
+  Map<String, List<dynamic>> _gameTrophies = {};
+  Map<String, bool> _expandedLoading = {};
 
   @override
   void initState() {
@@ -402,9 +401,8 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _reloadDeals() async {
-    setState(() => _loading = true);
+    setState(() => _dealsStatus = '刷新中...');
     await _checkNetwork();
-    setState(() => _loading = false);
   }
 
   Future<void> _loadAccounts() async {
@@ -589,9 +587,7 @@ class _HomePageState extends State<HomePage>
       ),
       body: [
         _buildHome(),
-        const GameListPage(),
-        _buildPSNStore(),
-        _buildModSearch(),
+        _buildDeals(),
         _buildGuide(),
         const SettingsPage(),
       ][_currentTab],
@@ -603,9 +599,7 @@ class _HomePageState extends State<HomePage>
         unselectedItemColor: Colors.grey[600],
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
-          BottomNavigationBarItem(icon: Icon(Icons.games), label: '🎮 游戏'),
-          BottomNavigationBarItem(icon: Icon(Icons.store), label: 'PSN商店'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Mod'),
+          BottomNavigationBarItem(icon: Icon(Icons.local_offer), label: '折扣'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '攻略'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: '设置'),
         ],
@@ -639,14 +633,13 @@ class _HomePageState extends State<HomePage>
                 backgroundColor: Colors.purple[700],
                 foregroundColor: Colors.white,
               ),
-              onPressed: () => setState(() => _currentTab = 5),
+              onPressed: () => setState(() => _currentTab = 3),
             ),
           ],
         ),
       );
     }
 
-    // 从 API 获取完整数据：概要 + 游戏列表
     return FutureBuilder<Map<String, dynamic>>(
       future: _fetchFullPsnData(),
       builder: (context, snapshot) {
@@ -667,78 +660,130 @@ class _HomePageState extends State<HomePage>
           );
         }
         final data = snapshot.data!;
-        final profile = data['profile'] as Map<String, dynamic>?;
+        final psnId = data['psn_id']?.toString() ?? '';
+        final level = data['level']?.toString() ?? '?';
+        final platinum = data['platinum'] ?? 0;
+        final gold = data['gold'] ?? 0;
+        final silver = data['silver'] ?? 0;
+        final bronze = data['bronze'] ?? 0;
+        final totalGames = data['total_games'] ?? 0;
+        final perfectGames = data['perfect_games'] ?? 0;
+        final completionRate = data['completion_rate'] ?? 0;
+        final totalTrophies = (platinum as num).toInt() +
+            (gold as num).toInt() +
+            (silver as num).toInt() +
+            (bronze as num).toInt();
         final games = data['games'] as List<dynamic>? ?? [];
+        final hasData = psnId.isNotEmpty;
 
         return RefreshIndicator(
           color: Colors.purple[300],
           onRefresh: () async {
+            _expandedGameId = null;
+            _gameTrophies.clear();
+            _expandedLoading.clear();
             setState(() {});
           },
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // ── 概要统计卡片 ──
-              if (profile != null) ...[
+              // ── Profile Summary Card ──
+              if (hasData) ...[
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.purple[900]!, Colors.indigo[900]!],
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7C3AED).withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      // 玩家 ID
-                      Text(
-                        profile['psn_id'] ?? '',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                      // Row 1: PSN ID + Level badge
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              psnId,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Lv $level',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      // 等级
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Lv ${profile['level'] ?? '?'}',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      const SizedBox(height: 16),
+                      // Purple level progress bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: 0.75,
+                          minHeight: 8,
+                          backgroundColor: Colors.white.withOpacity(0.15),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFA855F7),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // 四色奖杯统计
+                      // Row 2: 4 trophy stat columns
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _trophyStat('🏆', '${profile['platinum'] ?? 0}', Colors.cyan[300]!),
-                          _trophyStat('🥇', '${profile['gold'] ?? 0}', Colors.amber[400]!),
-                          _trophyStat('🥈', '${profile['silver'] ?? 0}', Colors.grey[400]!),
-                          _trophyStat('🥉', '${profile['bronze'] ?? 0}', Colors.orange[400]!),
+                          _trophyStat(
+                              '🏆', '$platinum', Colors.cyan[300]!),
+                          _trophyStat(
+                              '🥇', '$gold', Colors.amber[400]!),
+                          _trophyStat(
+                              '🥈', '$silver', Colors.grey[400]!),
+                          _trophyStat(
+                              '🥉', '$bronze', Colors.orange[400]!),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      // 完成率进度条
-                      Row(
-                        children: [
-                          Text('完成率 ${profile['completion_rate'] ?? '0'}%',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: LinearProgressIndicator(
-                              value: double.tryParse((profile['completion_rate'] ?? '0').toString())?.clamp(0, 100) ?? 0 / 100,
-                              backgroundColor: Colors.white.withOpacity(0.1),
-                              color: Colors.green[400],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('${profile['total_games'] ?? 0}个游戏',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-                        ],
+                      const SizedBox(height: 16),
+                      // Row 3: Total Games | Perfect Games | Completion Rate | Total Trophies
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _statItem('📊', '$totalGames', '游戏'),
+                            _statItem('🏅', '$perfectGames', '完美'),
+                            _statItem('🎯', '$completionRate%', '完成率'),
+                            _statItem('🏆', '$totalTrophies', '总数'),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -746,41 +791,48 @@ class _HomePageState extends State<HomePage>
                 const SizedBox(height: 20),
               ],
 
-              // ── 游戏列表 ──
-              if (profile != null)
-                Text('📋 我的游戏 (${games.length})',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              if (games.isEmpty)
+              // ── Game List Title ──
+              if (hasData)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    '📋 我的游戏 (${games.length})',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+              // ── Game List ──
+              if (games.isEmpty && hasData)
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.all(40),
                     child: Column(
                       children: [
-                        Icon(Icons.games_outlined, size: 48, color: Colors.grey[600]),
+                        Icon(Icons.games_outlined,
+                            size: 48, color: Colors.grey[600]),
                         const SizedBox(height: 12),
-                        Text(_error.isNotEmpty ? _error : '暂无游戏数据',
-                            style: TextStyle(color: Colors.grey[500])),
+                        Text(
+                            _error.isNotEmpty
+                                ? _error
+                                : '暂无游戏数据',
+                            style:
+                                TextStyle(color: Colors.grey[500])),
                       ],
                     ),
                   ),
                 )
               else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: games.length,
-                  itemBuilder: (ctx, i) {
-                    final g = games[i] as Map<String, dynamic>;
-                    return _buildGameCard(g, psnId: _psnId);
-                  },
-                ),
+                ...games.map((g) {
+                  final game = g as Map<String, dynamic>;
+                  final gameId = game['game_id']?.toString() ?? '';
+                  final isExpanded = _expandedGameId == gameId;
+                  return _buildExpandableGameCard(game,
+                      isExpanded: isExpanded);
+                }),
+              const SizedBox(height: 20),
             ],
           ),
         );
@@ -788,25 +840,18 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _quickBtn(IconData icon, String label, VoidCallback onTap) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: Colors.purple[300], size: 28),
-              const SizedBox(height: 8),
-              Text(label, style: const TextStyle(fontSize: 14)),
-            ],
-          ),
-        ),
-      ),
+  Widget _statItem(String emoji, String value, String label) {
+    return Column(
+      children: [
+        Text('$emoji $value',
+            style: const TextStyle(
+                fontSize: 15, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withOpacity(0.7))),
+      ],
     );
   }
 
@@ -815,79 +860,329 @@ class _HomePageState extends State<HomePage>
       children: [
         Text(emoji, style: const TextStyle(fontSize: 24)),
         const SizedBox(height: 4),
-        Text(count, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+        Text(count,
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color)),
       ],
     );
   }
 
-  Widget _buildGameCard(Map<String, dynamic> g, {required String psnId}) {
+  Widget _buildExpandableGameCard(Map<String, dynamic> game,
+      {required bool isExpanded}) {
+    final gameId = game['game_id']?.toString() ?? '';
+    final name = game['name']?.toString() ?? '';
+    final coverUrl = game['cover_url']?.toString() ?? '';
+    final platform = game['platform']?.toString() ?? '';
+    final cr = ((game['completion_rate'] ?? 0) as num).toDouble();
+    final platinum = game['platinum'] ?? 0;
+    final gold = game['gold'] ?? 0;
+    final silver = game['silver'] ?? 0;
+    final bronze = game['bronze'] ?? 0;
+
     return Card(
-      color: Colors.grey[900],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color(0xFF1A1A2E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isExpanded
+              ? Colors.purple[400]!.withOpacity(0.5)
+              : Colors.grey[800]!,
+        ),
+      ),
+      margin: const EdgeInsets.only(bottom: 10),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => GameDetailPage(
-                gameId: g['game_id'] ?? '',
-              ),
-            ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 封面
-            Expanded(
-              child: g['cover_url'] != null
-                  ? Image.network(g['cover_url'], fit: BoxFit.cover, width: double.infinity,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: Colors.grey[850],
-                        child: Center(child: Icon(Icons.image, color: Colors.grey[700], size: 40)),
-                      ))
-                  : Container(
-                      color: Colors.grey[850],
-                      child: Center(child: Icon(Icons.image, color: Colors.grey[700], size: 40)),
-                    ),
-            ),
-            // 名称
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-              child: Text(
-                g['name'] ?? '',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-              ),
-            ),
-            // 完成率
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-              child: Column(
+      child: Column(
+        children: [
+          // Header (always visible)
+          InkWell(
+            onTap: () => _toggleGame(gameId),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
                 children: [
-                  Row(
+                  // Cover image
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: coverUrl.isNotEmpty
+                          ? Image.network(coverUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  Container(
+                                    color: Colors.grey[850],
+                                    child: Icon(Icons.image,
+                                        color: Colors.grey[700],
+                                        size: 24),
+                                  ))
+                          : Container(
+                              color: Colors.grey[850],
+                              child: Icon(Icons.image,
+                                  color: Colors.grey[700],
+                                  size: 24),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Name + Platform
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        if (platform.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: platform == 'PS5'
+                                  ? Colors.blue[800]
+                                  : platform == 'PS4'
+                                      ? Colors.indigo[800]
+                                      : Colors.grey[700],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(platform,
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Trophy counts
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Icon(Icons.check_circle, size: 12, color: Colors.green[400]),
-                      const SizedBox(width: 4),
-                      Text('${g['completion_rate'] ?? 0}%',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                      Text('🥇$gold 🥈$silver 🥉$bronze',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[400])),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 80,
+                        child: LinearProgressIndicator(
+                          value: cr / 100,
+                          minHeight: 4,
+                          backgroundColor: Colors.grey[800],
+                          color: cr >= 100
+                              ? Colors.amber
+                              : Colors.purple[300],
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: ((g['completion_rate'] ?? 0) as num).toDouble() / 100,
-                    backgroundColor: Colors.grey[800],
-                    color: Colors.purple[300],
+                  const SizedBox(width: 8),
+                  Icon(
+                    isExpanded
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    color: Colors.grey[500],
+                    size: 20,
                   ),
                 ],
               ),
             ),
+          ),
+
+          // Expanded content (trophy list)
+          if (isExpanded) ...[
+            const Divider(height: 1, color: Colors.grey),
+            if (_expandedLoading[gameId] == true)
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (_gameTrophies.containsKey(gameId))
+              ...(_gameTrophies[gameId] as List<dynamic>).map((t) {
+                final trophy = t as Map<String, dynamic>;
+                return _buildTrophyRow(trophy);
+              })
+            else
+              const SizedBox.shrink(),
           ],
-        ),
+        ],
       ),
     );
+  }
+
+  Widget _buildTrophyRow(Map<String, dynamic> trophy) {
+    final type = trophy['type']?.toString().toLowerCase() ?? '';
+    final name = trophy['name']?.toString() ?? '';
+    final description = trophy['description']?.toString() ?? '';
+    final earned = trophy['earned'] == true;
+    final iconUrl = trophy['icon_url']?.toString() ?? '';
+    final isPlatinum = type == 'platinum';
+
+    IconData icon;
+    Color iconColor;
+    if (isPlatinum) {
+      icon = Icons.star;
+      iconColor = Colors.cyan[300]!;
+    } else if (type == 'gold') {
+      icon = Icons.emoji_events;
+      iconColor = Colors.amber[400]!;
+    } else if (type == 'silver') {
+      icon = Icons.workspace_premium;
+      iconColor = Colors.grey[400]!;
+    } else {
+      icon = Icons.circle;
+      iconColor = Colors.orange[400]!;
+    }
+
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+              color: Colors.grey[850]!, width: 0.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Trophy icon
+          if (iconUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                iconUrl,
+                width: 28,
+                height: 28,
+                fit: BoxFit.cover,
+                color: earned ? null : Colors.grey,
+                colorBlendMode:
+                    earned ? null : BlendMode.saturation,
+                errorBuilder: (_, __, ___) => Icon(
+                  icon,
+                  size: 24,
+                  color: earned
+                      ? iconColor
+                      : iconColor.withOpacity(0.3),
+                ),
+              ),
+            )
+          else
+            Icon(
+              icon,
+              size: 24,
+              color: earned
+                  ? iconColor
+                  : iconColor.withOpacity(0.3),
+            ),
+          const SizedBox(width: 12),
+          // Trophy name
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: earned
+                        ? Colors.white
+                        : Colors.grey[600],
+                  ),
+                ),
+                if (description.isNotEmpty)
+                  Text(
+                    description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: earned
+                          ? Colors.grey[500]
+                          : Colors.grey[700],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Trophy type badge
+          if (isPlatinum)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.cyan[800]!.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text('P',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.cyan[300])),
+            )
+          else
+            Text(
+              type.isNotEmpty ? type[0].toUpperCase() : '?',
+              style: TextStyle(
+                  fontSize: 11,
+                  color: earned
+                      ? Colors.grey[500]
+                      : Colors.grey[700]),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleGame(String gameId) async {
+    if (_expandedGameId == gameId) {
+      setState(() => _expandedGameId = null);
+      return;
+    }
+
+    setState(() {
+      _expandedGameId = gameId;
+    });
+
+    if (!_gameTrophies.containsKey(gameId)) {
+      setState(() => _expandedLoading[gameId] = true);
+      try {
+        final resp = await http
+            .get(Uri.parse(
+                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          final trophies = data['trophies'] as List<dynamic>? ?? [];
+          setState(() {
+            _gameTrophies[gameId] = trophies;
+            _expandedLoading[gameId] = false;
+          });
+        } else {
+          setState(() => _expandedLoading[gameId] = false);
+        }
+      } catch (e) {
+        setState(() => _expandedLoading[gameId] = false);
+      }
+    }
   }
 
   Future<Map<String, dynamic>> _fetchFullPsnData() async {
@@ -957,7 +1252,7 @@ class _HomePageState extends State<HomePage>
               Text(_dealsStatus,
                   style: TextStyle(color: Colors.grey[500], fontSize: 12)),
               const Spacer(),
-              if (_loading)
+              if (_dealsStatus == '刷新中...')
                 const SizedBox(
                     width: 16,
                     height: 16,
@@ -1097,73 +1392,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// PSN商店页面 — WebView 内嵌
-  Widget _buildPSNStore() {
-    final controller = _psnWebCtrl;
-    final loading = _psnWebLoading;
-    return Stack(
-      children: [
-        WebViewWidget(controller: controller),
-        if (loading)
-          const Center(child: CircularProgressIndicator()),
-      ],
-    );
-  }
-
-  /// Mod搜索页面
-  Widget _buildModSearch() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _linkCard(
-          icon: Icons.extension,
-          title: 'Nexus Mods',
-          subtitle: '最大的游戏模组社区',
-          url: 'https://www.nexusmods.com',
-        ),
-        const SizedBox(height: 12),
-        _linkCard(
-          icon: Icons.gamepad,
-          title: 'Steam 创意工坊',
-          subtitle: 'Steam Workshop',
-          url: 'https://steamcommunity.com/app/570/workshop/',
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('快速搜索', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: '搜索游戏模组...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.grey[850],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                onSubmitted: (q) async {
-                  final encoded = Uri.encodeComponent(q);
-                  final url = 'https://www.nexusmods.com/search/?q=$encoded';
-                  await _launchUrl(url);
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   /// 攻略入口页面
   Widget _buildGuide() {
     return ListView(
@@ -1209,47 +1437,6 @@ class _HomePageState extends State<HomePage>
           ),
         ),
       ],
-    );
-  }
-
-  /// 链接卡片
-  Widget _linkCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String url,
-  }) {
-    return InkWell(
-      onTap: () => _launchUrl(url),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.grey[850]!, Colors.grey[900]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[800]!),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.purple[300], size: 32),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                ],
-              ),
-            ),
-            Icon(Icons.open_in_new, color: Colors.grey[600], size: 20),
-          ],
-        ),
-      ),
     );
   }
 

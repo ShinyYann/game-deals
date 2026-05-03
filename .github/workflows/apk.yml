@@ -21,7 +21,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          flutter-version: '3.29.2'
           channel: 'stable'
           cache: true
 
@@ -61,9 +61,7 @@ jobs:
           
           sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "android/app/build.gradle"
           
-          export PUB_HOSTED_URL=https://pub.flutter-io.cn
-          export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
-          flutter pub get
+                              flutter pub get
           flutter build apk --release --target-platform android-arm,android-arm64
           
           cp build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk

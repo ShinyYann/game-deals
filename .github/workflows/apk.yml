@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: write
       actions: read
@@ -24,6 +24,13 @@ jobs:
           flutter-version: '3.27.0'
           channel: 'stable'
           cache: true
+
+      - name: Set up Android SDK
+        run: |
+          # macOS runners have Android SDK pre-installed, we just need to accept licenses
+          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
 
       - name: Build APK
         run: |

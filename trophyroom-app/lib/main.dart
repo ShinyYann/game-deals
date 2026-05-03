@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'models/trophy.dart';
+import 'pages/game_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -642,7 +643,7 @@ class _HomePageState extends State<HomePage>
       ),
       body: [
         _buildHome(),
-        _buildDeals(),
+        const GameListPage(),
         _buildPSNStore(),
         _buildModSearch(),
         _buildGuide(),
@@ -656,7 +657,7 @@ class _HomePageState extends State<HomePage>
         unselectedItemColor: Colors.grey[600],
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
-          BottomNavigationBarItem(icon: Icon(Icons.local_offer), label: '折扣'),
+          BottomNavigationBarItem(icon: Icon(Icons.games), label: '🎮 游戏'),
           BottomNavigationBarItem(icon: Icon(Icons.store), label: 'PSN商店'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Mod'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '攻略'),

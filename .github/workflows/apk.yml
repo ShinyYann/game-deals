@@ -58,19 +58,19 @@ jobs:
 
       - name: Build APK
         run: |
+          set -o pipefail
           cd /tmp/tbuild
-          # 离线模式避 advisory bug
-          flutter pub get --offline 2>&1 || true
-          flutter pub get 2>&1 | tee /tmp/pubget.log
-          flutter build apk --release --target-platform android-arm,android-arm64 2>&1 | tee /tmp/build.log
+          flutter pub get --offline 2>/dev/null || true
+          flutter pub get
+          flutter build apk --release --target-platform android-arm,android-arm64
     
       - name: Capture build logs
         if: failure()
         run: |
-          echo "=== PUB GET LOG ===" 
-          cat /tmp/pubget.log 2>/dev/null | tail -20
-          echo "=== BUILD LOG ==="
-          cat /tmp/build.log 2>/dev/null | tail -40
+          echo "=== Build failed - checking what happened ==="
+          cd /tmp/tbuild
+          flutter pub get 2>&1 | tail -20 || true
+          flutter build apk --release --target-platform android-arm,android-arm64 2>&1 | tail -40 || true
       
       - name: Copy and release
         run: |

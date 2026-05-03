@@ -972,6 +972,7 @@ class _HomePageState extends State<HomePage>
     final earned = trophy['earned'] == true;
     final iconUrl = trophy['icon_url']?.toString() ?? '';
     final isPlatinum = type == 'platinum';
+    final earnedDate = trophy['earned_date']?.toString() ?? '';
 
     IconData icon;
     Color iconColor;
@@ -1057,6 +1058,17 @@ class _HomePageState extends State<HomePage>
                       color: earned
                           ? Colors.grey[500]
                           : Colors.grey[700],
+                    ),
+                  ),
+                if (earnedDate.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      earnedDate,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[700],
+                      ),
                     ),
                   ),
               ],

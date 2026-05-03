@@ -450,19 +450,18 @@ class _HomePageState extends State<HomePage>
             .timeout(const Duration(seconds: 10));
         if (resp.statusCode == 200) {
           final data = json.decode(resp.body);
-          if (data['status'] == 'ok') {
-            // PSN 返回的是统计数据，转成 TrophyGame
-            if (data['level'] != null) {
-              _trophyGames.add(TrophyGame(
-                name: 'PSN: $psnId',
-                platform: 'psn',
-                platinum: data['platinum'] ?? 0,
-                gold: data['gold'] ?? 0,
-                silver: data['silver'] ?? 0,
-                bronze: data['bronze'] ?? 0,
-                completionRate: 100,
-              ));
-            }
+          if (data['psn_id'] != null) {
+            _trophyGames.add(TrophyGame(
+              name: 'PSN: $psnId',
+              platform: 'psn',
+              platinum: data['platinum'] ?? 0,
+              gold: data['gold'] ?? 0,
+              silver: data['silver'] ?? 0,
+              bronze: data['bronze'] ?? 0,
+              completionRate: double.tryParse((data['completion_rate'] ?? '0').toString()) ?? 0,
+            ));
+          } else if (data['error'] != null) {
+            _error = 'PSN: ${data['error']}';
           }
         }
       }

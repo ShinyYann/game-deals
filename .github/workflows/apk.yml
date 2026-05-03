@@ -52,19 +52,21 @@ jobs:
           { print }
           ' "$ANDROID_MANIFEST" > "${ANDROID_MANIFEST}.new"
           mv "${ANDROID_MANIFEST}.new" "$ANDROID_MANIFEST"
-          grep "permission" "$ANDROID_MANIFEST"
 
           BUILD_GRADLE="/tmp/trophyroom/android/app/build.gradle"
           sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "$BUILD_GRADLE"
-          grep "minSdkVersion" "$BUILD_GRADLE"
 
           flutter build apk --release --target-platform android-arm,android-arm64
-          cp build/app/outputs/flutter-apk/app-release.apk /tmp/TrophyRoom.apk
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Copy APK to workspace
+        run: |
+          cp /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: TrophyRoom-APK
-          path: /tmp/TrophyRoom.apk
+          path: ${{ github.workspace }}/TrophyRoom.apk
           retention-days: 1
 
       - name: Create Release
@@ -74,11 +76,7 @@ jobs:
           name: "TrophyRoom v1.0.0"
           body: |
             TrophyRoom APK — 离线数据 + 联网更新
-            
-            - 内置 25 款热门折扣游戏
-            - 自动从 Gitee/GitHub 更新数据
-            - 无论联网与否都能用
-          artifacts: /tmp/TrophyRoom.apk
+          artifacts: ${{ github.workspace }}/TrophyRoom.apk
           allowUpdates: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +88,6 @@ jobs:
           username: root
           key: ${{ secrets.ALIYUN_SSH_KEY }}
           port: 22
-          source: /tmp/TrophyRoom.apk
+          source: "TrophyRoom.apk"
           target: /var/www/apk/
-          strip_components: 2
-          rm: true
+          strip_components: 0

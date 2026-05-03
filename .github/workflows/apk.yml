@@ -1,12 +1,10 @@
-name: Build APK
+name: Build TrophyRoom APK
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'trophyroom-app/**'
-      - '.github/workflows/apk.yml'
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -14,45 +12,23 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: trophyroom-app
-
     steps:
       - uses: actions/checkout@v4
-
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'
           channel: 'stable'
           cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release --target-platform android-arm,android-arm64
-
-      - name: Prepare APK
-        run: |
-          APK_PATH=$(find build -name "*.apk" -not -name "*unaligned*" 2>/dev/null | head -1)
-          cp "$APK_PATH" release.apk
-          echo "APK_SIZE=$(stat -c%s release.apk)" >> $GITHUB_ENV
-
-      - uses: actions/upload-artifact@v4
+      - name: Run build script
+        run: bash .github/workflows/build-trophyroom.sh "${{ github.workspace }}" ${{ github.run_number }}
+      - uses: softprops/action-gh-release@v2
         with:
-          name: TrophyRoom-APK
-          path: trophyroom-app/release.apk
-          retention-days: 1
-
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: latest
-          name: "TrophyRoom Latest"
-          body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }} bytes"
-          artifacts: trophyroom-app/release.apk
-          allowUpdates: true
-          removeArtifacts: true
-          replacesArtifacts: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ github.run_number }}
+          name: TrophyRoom v${{ github.run_number }}
+          files: /tmp/TrophyRoom.apk
+          make_latest: true
+          fail_on_unmatched_files: false
+          generate_release_notes: false

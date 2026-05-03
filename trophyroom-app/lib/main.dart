@@ -95,15 +95,49 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Logo 图片 ──
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Image.asset(
-              'assets/logo/logo_yann_design.png',
-              width: 160,
-              height: 160,
-              fit: BoxFit.contain,
-            ),
+              // ── Logo 图片 + 轮廓流光 ──
+          AnimatedBuilder(
+            animation: _ctrl,
+            builder: (ctx, child) {
+              final t = (_ctrl.value * 2.5) % 1.0;
+              return Container(
+                width: 172,
+                height: 172,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: HSLColor.fromAHSL(
+                      0.9,
+                      (t * 360) % 360,
+                      0.8,
+                      0.55,
+                    ).toColor(),
+                    width: 2.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: HSLColor.fromAHSL(
+                        0.5,
+                        ((t * 360) % 360),
+                        0.8,
+                        0.55,
+                      ).toColor(),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.asset(
+                    'assets/logo/logo_yann_design.png',
+                    width: 160,
+                    height: 160,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
           ),
               const SizedBox(height: 16),
               Opacity(

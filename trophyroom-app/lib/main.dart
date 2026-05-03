@@ -1210,3 +1210,4 @@ class _GameDetailCard extends StatelessWidget {
   }
 }
 // Trigger build Sun May  3 20:14:20 CST 2026
+// trigger 1777813344

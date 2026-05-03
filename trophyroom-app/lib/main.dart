@@ -539,6 +539,7 @@ class _HomePageState extends State<HomePage>
         _buildHome(),
         _buildDeals(),
         _buildGuide(),
+        _buildPSNStore(),
         const SettingsPage(),
       ][_currentTab],
       bottomNavigationBar: BottomNavigationBar(
@@ -551,6 +552,7 @@ class _HomePageState extends State<HomePage>
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
           BottomNavigationBarItem(icon: Icon(Icons.local_offer), label: '折扣'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '攻略'),
+          BottomNavigationBarItem(icon: Icon(Icons.storefront), label: 'PSN'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: '设置'),
         ],
       ),
@@ -1421,7 +1423,19 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// 攻略入口页面
+    /// 内嵌 PSN 商店网页
+  Widget _buildPSNStore() {
+    return Stack(
+      children: [
+        WebViewWidget(controller: _psnWebCtrl),
+        if (_psnWebLoading)
+          const Center(
+            child: CircularProgressIndicator(),
+          ),
+      ],
+    );
+  }
+
   Widget _buildGuide() {
     return ListView(
       padding: const EdgeInsets.all(16),

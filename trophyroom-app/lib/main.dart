@@ -367,6 +367,9 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: 0,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
         title: AnimatedBuilder(
           animation: Listenable.merge([_titleSlide, _scanCtrl]),
           builder: (ctx, _) {

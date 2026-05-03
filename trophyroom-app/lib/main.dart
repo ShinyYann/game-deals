@@ -1083,7 +1083,7 @@ class _HomePageState extends State<HomePage>
                 color: Colors.cyan[800]!.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text('P',
+              child: Text('白',
                   style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -1091,11 +1091,11 @@ class _HomePageState extends State<HomePage>
             )
           else
             Text(
-              type.isNotEmpty ? type[0].toUpperCase() : '?',
+              type == 'gold' ? '金' : type == 'silver' ? '银' : type == 'bronze' ? '铜' : '?',
               style: TextStyle(
                   fontSize: 11,
                   color: earned
-                      ? Colors.grey[500]
+                      ? type == 'gold' ? Colors.amber[300] : type == 'silver' ? Colors.grey[400] : Colors.brown[300]
                       : Colors.grey[700]),
             ),
           // Tips button

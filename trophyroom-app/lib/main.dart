@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'models/trophy.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -297,6 +299,9 @@ class _HomePageState extends State<HomePage>
   String _platform = 'all';
   late final WebViewController _psnWebCtrl;
   bool _psnWebLoading = true;
+  String _psnId = '';
+  String _steamId = '';
+  bool _accountsLoaded = false;
 
   @override
   void initState() {
@@ -320,6 +325,7 @@ class _HomePageState extends State<HomePage>
     _dealsStatus = '${_offlineGames.length} 款内置游戏';
     _initPSNWebView();
     _checkNetwork();
+    _loadAccounts();
   }
 
   @override
@@ -395,6 +401,15 @@ class _HomePageState extends State<HomePage>
     setState(() => _loading = true);
     await _checkNetwork();
     setState(() => _loading = false);
+  }
+
+  Future<void> _loadAccounts() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _psnId = prefs.getString('psn_id') ?? '';
+      _steamId = prefs.getString('steam_id') ?? '';
+      _accountsLoaded = true;
+    });
   }
 
   @override
@@ -572,6 +587,7 @@ class _HomePageState extends State<HomePage>
         _buildPSNStore(),
         _buildModSearch(),
         _buildGuide(),
+        const SettingsPage(),
       ][_currentTab],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -585,78 +601,116 @@ class _HomePageState extends State<HomePage>
           BottomNavigationBarItem(icon: Icon(Icons.store), label: 'PSN商店'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Mod'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '攻略'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: '设置'),
         ],
       ),
     );
   }
 
   Widget _buildHome() {
+    if (!_accountsLoaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final hasAccount = _psnId.isNotEmpty || _steamId.isNotEmpty;
+
+    if (!hasAccount) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.person_outline, size: 64, color: Colors.grey[600]),
+            const SizedBox(height: 16),
+            Text(
+              '请先去设置页绑定账号',
+              style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.settings),
+              label: const Text('前往设置'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple[700],
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => setState(() => _currentTab = 5),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Trophy wall content
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          const Text('快捷功能', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
           Row(
             children: [
-              _quickBtn(Icons.local_offer, '折扣', () => setState(() => _currentTab = 1)),
-              const SizedBox(width: 12),
-              _quickBtn(Icons.refresh, '刷新', _reloadDeals),
+              if (_psnId.isNotEmpty)
+                Chip(
+                  avatar: const Icon(Icons.sports_esports, size: 18, color: Colors.blue),
+                  label: Text('PSN: $_psnId', style: const TextStyle(fontSize: 12)),
+                  backgroundColor: Colors.blue[900]!.withOpacity(0.3),
+                ),
+              if (_psnId.isNotEmpty && _steamId.isNotEmpty)
+                const SizedBox(width: 8),
+              if (_steamId.isNotEmpty)
+                Chip(
+                  avatar: const Icon(Icons.sports_esports, size: 18, color: Colors.orange),
+                  label: Text('Steam: $_steamId', style: const TextStyle(fontSize: 12)),
+                  backgroundColor: Colors.orange[900]!.withOpacity(0.3),
+                ),
             ],
           ),
-          const SizedBox(height: 20),
-          Text('展示: $_dealsStatus',
-              style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Expanded(
-            child: ListView.separated(
-              itemCount: _deals.length > 10 ? 10 : _deals.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: 4,
               itemBuilder: (ctx, i) {
-                final g = _deals[i];
-                final imgUrl = g['img']?.toString() ?? '';
-                final name = g['name']?.toString() ?? '';
-                return InkWell(
-                  onTap: () => _showGameDetail(ctx, g),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: SizedBox(
-                            width: 50, height: 50,
-                            child: imgUrl.isNotEmpty
-                                ? Image.network(imgUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
-                                        _placeholderIcon())
-                                : _placeholderIcon(),
-                          ),
+                final platform = _psnId.isNotEmpty ? 'PSN' : 'Steam';
+                return Card(
+                  color: Colors.grey[900],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        platform == 'PSN'
+                            ? Icons.sports_esports
+                            : Icons.games,
+                        size: 48,
+                        color: platform == 'PSN'
+                            ? Colors.blue[400]
+                            : Colors.orange[400],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        platform,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: platform == 'PSN'
+                              ? Colors.blue[300]
+                              : Colors.orange[300],
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(name, maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 14)),
-                              if (g['discount']?.toString()?.isNotEmpty == true &&
-                                  g['discount'] != '-')
-                                Text('-${g['discount']}',
-                                    style: TextStyle(color: Colors.green[400],
-                                        fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                        Text(g['price']?.toString() ?? '',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 13)),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '需要接入数据',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -1110,6 +1164,237 @@ class _HomePageState extends State<HomePage>
         backgroundColor: Colors.transparent,
         child: _GameDetailCard(game: game),
       ),
+    );
+  }
+}
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final TextEditingController _psnCtrl = TextEditingController();
+  final TextEditingController _steamCtrl = TextEditingController();
+  String _savedPsnId = '';
+  String _savedSteamId = '';
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _savedPsnId = prefs.getString('psn_id') ?? '';
+      _savedSteamId = prefs.getString('steam_id') ?? '';
+      _psnCtrl.text = _savedPsnId;
+      _steamCtrl.text = _savedSteamId;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _bindPsn() async {
+    final id = _psnCtrl.text.trim();
+    if (id.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('psn_id', id);
+    setState(() => _savedPsnId = id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PSN 账号已绑定')),
+      );
+    }
+  }
+
+  Future<void> _bindSteam() async {
+    final id = _steamCtrl.text.trim();
+    if (id.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('steam_id', id);
+    setState(() => _savedSteamId = id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Steam 账号已绑定')),
+      );
+    }
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('psn_id');
+    await prefs.remove('steam_id');
+    setState(() {
+      _savedPsnId = '';
+      _savedSteamId = '';
+      _psnCtrl.clear();
+      _steamCtrl.clear();
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已退出登录')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _psnCtrl.dispose();
+    _steamCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const SizedBox(height: 12),
+        Text(
+          '账号设置',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[100],
+          ),
+        ),
+        const SizedBox(height: 32),
+        // PSN account
+        Text(
+          'PSN 账号',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _psnCtrl,
+                decoration: InputDecoration(
+                  hintText: '输入 PSN ID',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: _bindPsn,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[700],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('绑定'),
+            ),
+          ],
+        ),
+        if (_savedPsnId.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, size: 16, color: Colors.green[400]),
+                const SizedBox(width: 6),
+                Text(
+                  '已绑定 PSN: $_savedPsnId',
+                  style: TextStyle(fontSize: 13, color: Colors.green[400]),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 24),
+        // Steam account
+        Text(
+          'Steam 账号',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _steamCtrl,
+                decoration: InputDecoration(
+                  hintText: '输入 Steam ID',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: _bindSteam,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[700],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('绑定'),
+            ),
+          ],
+        ),
+        if (_savedSteamId.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, size: 16, color: Colors.green[400]),
+                const SizedBox(width: 6),
+                Text(
+                  '已绑定 Steam: $_savedSteamId',
+                  style: TextStyle(fontSize: 13, color: Colors.green[400]),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 40),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.logout),
+            label: const Text('退出登录', style: TextStyle(fontSize: 16)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: _logout,
+          ),
+        ),
+      ],
     );
   }
 }

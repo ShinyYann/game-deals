@@ -49,8 +49,6 @@ jobs:
           } {print}' android/app/src/main/AndroidManifest.xml > AndroidManifest.xml.new
           mv AndroidManifest.xml.new android/app/src/main/AndroidManifest.xml
           
-          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' android/app/build.gradle
-          
           echo "code prepared"
 
       - name: Build APK

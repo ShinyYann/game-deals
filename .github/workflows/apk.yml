@@ -27,25 +27,25 @@ jobs:
 
       - name: Build APK
         run: |
-          rm -rf /tmp/trophyroom
-          cd /tmp
-          flutter create --org com.trophyroom --project-name trophyroom --platforms android trophyroom
-
-          rm -rf /tmp/trophyroom/lib/*
-          cp -r ${{ github.workspace }}/trophyroom-app/lib/* /tmp/trophyroom/lib/
-          cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml /tmp/trophyroom/pubspec.yaml
-          mkdir -p /tmp/trophyroom/assets
-          cp ${{ github.workspace }}/trophyroom-app/assets/splash.png /tmp/trophyroom/assets/splash.png
-          mkdir -p /tmp/trophyroom/assets/logo
-          cp -r ${{ github.workspace }}/trophyroom-app/assets/logo/* /tmp/trophyroom/assets/logo/
-
-          cd /tmp/trophyroom
-          rm -f pubspec.lock
-          export PUB_HOSTED_URL=https://pub.flutter-io.cn
-          export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
-          flutter pub get
-
-          ANDROID_MANIFEST="/tmp/trophyroom/android/app/src/main/AndroidManifest.xml"
+          # 全新 clone 到独立目录，避免 watch 冲突
+          TMPDIR=$(mktemp -d)
+          cd "$TMPDIR"
+          
+          # 直接把整个 trophyroom-app 复制过去
+          mkdir -p trophyroom/lib
+          cp -r ${{ github.workspace }}/trophyroom-app/* trophyroom/
+          
+          # 生成 Android 项目结构
+          cd trophyroom
+          rm -rf android
+          flutter create --org com.trophyroom --project-name trophyroom --platforms android .
+          
+          # 恢复用户代码
+          rm -f lib/main.dart
+          cp -r ${{ github.workspace }}/trophyroom-app/lib/* lib/
+          
+          # 添加权限
+          ANDROID_MANIFEST="android/app/src/main/AndroidManifest.xml"
           awk '
           /<application/ {
             print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
@@ -58,16 +58,17 @@ jobs:
           { print }
           ' "$ANDROID_MANIFEST" > "${ANDROID_MANIFEST}.new"
           mv "${ANDROID_MANIFEST}.new" "$ANDROID_MANIFEST"
-
-          BUILD_GRADLE="/tmp/trophyroom/android/app/build.gradle"
-          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "$BUILD_GRADLE"
-
+          
+          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "android/app/build.gradle"
+          
+          export PUB_HOSTED_URL=https://pub.flutter-io.cn
+          export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
+          flutter pub get
           flutter build apk --release --target-platform android-arm,android-arm64
-
-      - name: Copy APK
-        run: |
-          cp /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
+          
+          cp build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
           echo "APK_SIZE=$(ls -lh ${{ github.workspace }}/TrophyRoom.apk | awk '{print $5}')" >> $GITHUB_ENV
+          rm -rf "$TMPDIR"
 
       - uses: actions/upload-artifact@v4
         with:

@@ -40,7 +40,6 @@ jobs:
           flutter pub get
 
           ANDROID_MANIFEST="/tmp/trophyroom/android/app/src/main/AndroidManifest.xml"
-          # Add permissions BEFORE <application> (Android requires this)
           awk '
           /<application/ {
             print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
@@ -55,7 +54,6 @@ jobs:
           mv "${ANDROID_MANIFEST}.new" "$ANDROID_MANIFEST"
           grep "permission" "$ANDROID_MANIFEST"
 
-          # Bump minSdkVersion for webview_flutter (requires >=20)
           BUILD_GRADLE="/tmp/trophyroom/android/app/build.gradle"
           sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "$BUILD_GRADLE"
           grep "minSdkVersion" "$BUILD_GRADLE"
@@ -84,3 +82,15 @@ jobs:
           allowUpdates: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Aliyun
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 8.153.97.56
+          username: root
+          key: ${{ secrets.ALIYUN_SSH_KEY }}
+          port: 22
+          source: /tmp/TrophyRoom.apk
+          target: /var/www/apk/
+          strip_components: 2
+          rm: true

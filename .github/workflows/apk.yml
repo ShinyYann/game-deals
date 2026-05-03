@@ -21,9 +21,15 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.2'
+          flutter-version: '3.27.0'
           channel: 'stable'
           cache: true
+
+      - name: Analyze code
+        run: |
+          cd ${{ github.workspace }}/trophyroom-app
+          PUB_DISABLE_ADVISORIES=true flutter pub get
+          flutter analyze --no-fatal-infos --no-fatal-warnings || echo '⚠️ 分析发现潜在问题'
 
       - name: Build APK
         run: |
@@ -38,7 +44,7 @@ jobs:
           # 生成 Android 项目结构
           cd trophyroom
           rm -rf android
-          flutter create --org com.trophyroom --project-name trophyroom --platforms android .
+          flutter create --org com.trophyroom --project-name trophyroom .
           
           # 恢复用户代码
           rm -f lib/main.dart
@@ -61,7 +67,7 @@ jobs:
           
           sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "android/app/build.gradle"
           
-                              flutter pub get
+                              PUB_DISABLE_ADVISORIES=true flutter pub get
           flutter build apk --release --target-platform android-arm,android-arm64
           
           cp build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk

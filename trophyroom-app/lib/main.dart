@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'models/trophy.dart';
 import 'pages/game_list_page.dart';
+import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -415,61 +416,6 @@ class _HomePageState extends State<HomePage>
       _steamId = steam;
       _accountsLoaded = true;
     });
-    await _fetchTrophyData(psn, steam);
-  }
-
-  Future<void> _fetchTrophyData(String psnId, String steamId) async {
-    final apiBase = 'http://8.153.97.56';
-    _trophyGames = [];
-    _error = '';
-
-    try {
-      if (steamId.isNotEmpty) {
-        final resp = await http.get(Uri.parse('$apiBase/api/steam?uid=$steamId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          if (data['status'] == 'ok' && data['games'] != null) {
-            for (final g in data['games']) {
-              _trophyGames.add(TrophyGame(
-                name: g['name'] ?? 'Unknown',
-                platform: 'steam',
-                coverUrl: g['logo'],
-                totalAchievements: g['total_achievements'] ?? 0,
-                unlockedAchievements: g['unlocked_achievements'] ?? 0,
-                completionRate: (g['unlocked_achievements'] ?? 0) > 0 && (g['total_achievements'] ?? 0) > 0
-                    ? ((g['unlocked_achievements'] / g['total_achievements']) * 100).roundToDouble()
-                    : 0,
-              ));
-            }
-          }
-        }
-      }
-
-      if (psnId.isNotEmpty) {
-        final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$psnId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          if (data['psn_id'] != null) {
-            _trophyGames.add(TrophyGame(
-              name: 'PSN: $psnId',
-              platform: 'psn',
-              platinum: data['platinum'] ?? 0,
-              gold: data['gold'] ?? 0,
-              silver: data['silver'] ?? 0,
-              bronze: data['bronze'] ?? 0,
-              completionRate: double.tryParse((data['completion_rate'] ?? '0').toString()) ?? 0,
-            ));
-          } else if (data['error'] != null) {
-            _error = 'PSN: ${data['error']}';
-          }
-        }
-      }
-    } catch (e) {
-      _error = '加载失败: $e';
-    }
-    setState(() => _loading = false);
   }
 
   @override
@@ -700,114 +646,145 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    // Trophy wall content
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          Row(
+    // 从 API 获取完整数据：概要 + 游戏列表
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _fetchFullPsnData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                const SizedBox(height: 12),
+                Text('加载失败: ${snapshot.error ?? "未知错误"}',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+              ],
+            ),
+          );
+        }
+        final data = snapshot.data!;
+        final profile = data['profile'] as Map<String, dynamic>?;
+        final games = data['games'] as List<dynamic>? ?? [];
+
+        return RefreshIndicator(
+          color: Colors.purple[300],
+          onRefresh: () async {
+            setState(() {});
+          },
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              if (_psnId.isNotEmpty)
-                Chip(
-                  avatar: const Icon(Icons.sports_esports, size: 18, color: Colors.blue),
-                  label: Text('PSN: $_psnId', style: const TextStyle(fontSize: 12)),
-                  backgroundColor: Colors.blue[900]!.withOpacity(0.3),
+              // ── 概要统计卡片 ──
+              if (profile != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.purple[900]!, Colors.indigo[900]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      // 玩家 ID
+                      Text(
+                        profile['psn_id'] ?? '',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                      ),
+                      const SizedBox(height: 8),
+                      // 等级
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Lv ${profile['level'] ?? '?'}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // 四色奖杯统计
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _trophyStat('🏆', '${profile['platinum'] ?? 0}', Colors.cyan[300]!),
+                          _trophyStat('🥇', '${profile['gold'] ?? 0}', Colors.amber[400]!),
+                          _trophyStat('🥈', '${profile['silver'] ?? 0}', Colors.grey[400]!),
+                          _trophyStat('🥉', '${profile['bronze'] ?? 0}', Colors.orange[400]!),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // 完成率进度条
+                      Row(
+                        children: [
+                          Text('完成率 ${profile['completion_rate'] ?? '0'}%',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: LinearProgressIndicator(
+                              value: double.tryParse((profile['completion_rate'] ?? '0').toString())?.clamp(0, 100) ?? 0 / 100,
+                              backgroundColor: Colors.white.withOpacity(0.1),
+                              color: Colors.green[400],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text('${profile['total_games'] ?? 0}个游戏',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              if (_psnId.isNotEmpty && _steamId.isNotEmpty)
-                const SizedBox(width: 8),
-              if (_steamId.isNotEmpty)
-                Chip(
-                  avatar: const Icon(Icons.sports_esports, size: 18, color: Colors.orange),
-                  label: Text('Steam: $_steamId', style: const TextStyle(fontSize: 12)),
-                  backgroundColor: Colors.orange[900]!.withOpacity(0.3),
+                const SizedBox(height: 20),
+              ],
+
+              // ── 游戏列表 ──
+              if (profile != null)
+                Text('📋 我的游戏 (${games.length})',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              if (games.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      children: [
+                        Icon(Icons.games_outlined, size: 48, color: Colors.grey[600]),
+                        const SizedBox(height: 12),
+                        Text(_error.isNotEmpty ? _error : '暂无游戏数据',
+                            style: TextStyle(color: Colors.grey[500])),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.75,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: games.length,
+                  itemBuilder: (ctx, i) {
+                    final g = games[i] as Map<String, dynamic>;
+                    return _buildGameCard(g, psnId: _psnId);
+                  },
                 ),
             ],
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-                : _trophyGames.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.sports_esports, size: 48, color: Colors.grey[600]),
-                            const SizedBox(height: 12),
-                            Text(_error.isNotEmpty ? '加载出错' : '暂无数据',
-                                style: TextStyle(color: Colors.grey[500])),
-                            if (_error.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(_error, style: TextStyle(fontSize: 11, color: Colors.red[300])),
-                              ),
-                          ],
-                        ),
-                      )
-                    : GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: _trophyGames.length,
-                        itemBuilder: (ctx, i) {
-                          final g = _trophyGames[i];
-                          return Card(
-                            color: Colors.grey[900],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  g.platform == 'psn'
-                                      ? Icons.sports_esports
-                                      : Icons.games,
-                                  size: 36,
-                                  color: g.platform == 'psn'
-                                      ? Colors.blue[400]
-                                      : Colors.orange[400],
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                                  child: Text(
-                                    g.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                if (g.platform == 'psn')
-                                  Text('🏆 P' + g.platinum.toString() + ' 🥇' + g.gold.toString() + ' 🥈' + g.silver.toString() + ' 🥉' + g.bronze.toString(),
-                                      style: const TextStyle(fontSize: 10))
-                                else
-                                  Text(g.unlockedAchievements.toString() + '/' + g.totalAchievements.toString(),
-                                      style: TextStyle(fontSize: 12, color: Colors.green[300])),
-                                if (g.completionRate > 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4, left: 16, right: 16),
-                                    child: LinearProgressIndicator(
-                                      value: g.completionRate / 100,
-                                      backgroundColor: Colors.grey[800],
-                                      color: Colors.purple[300],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -831,6 +808,110 @@ class _HomePageState extends State<HomePage>
         ),
       ),
     );
+  }
+
+  Widget _trophyStat(String emoji, String count, Color color) {
+    return Column(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 24)),
+        const SizedBox(height: 4),
+        Text(count, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+      ],
+    );
+  }
+
+  Widget _buildGameCard(Map<String, dynamic> g, {required String psnId}) {
+    return Card(
+      color: Colors.grey[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GameDetailPage(
+                gameName: g['name'] ?? '',
+                gameId: g['game_id'] ?? '',
+                psnId: psnId,
+                coverUrl: g['cover_url'],
+              ),
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 封面
+            Expanded(
+              child: g['cover_url'] != null
+                  ? Image.network(g['cover_url'], fit: BoxFit.cover, width: double.infinity,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: Colors.grey[850],
+                        child: Center(child: Icon(Icons.image, color: Colors.grey[700], size: 40)),
+                      ))
+                  : Container(
+                      color: Colors.grey[850],
+                      child: Center(child: Icon(Icons.image, color: Colors.grey[700], size: 40)),
+                    ),
+            ),
+            // 名称
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+              child: Text(
+                g['name'] ?? '',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
+            // 完成率
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, size: 12, color: Colors.green[400]),
+                      const SizedBox(width: 4),
+                      Text('${g['completion_rate'] ?? 0}%',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: ((g['completion_rate'] ?? 0) as num).toDouble() / 100,
+                    backgroundColor: Colors.grey[800],
+                    color: Colors.purple[300],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<Map<String, dynamic>> _fetchFullPsnData() async {
+    // 仅 PSN 数据可用时
+    if (_psnId.isEmpty || _accountsLoaded == false) {
+      return {'profile': null, 'games': []};
+    }
+    try {
+      final apiBase = 'http://8.153.97.56';
+      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId'))
+          .timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        if (data['psn_id'] != null) {
+          return data;
+        }
+      }
+    } catch (e) {
+      _error = '$e';
+    }
+    return {'profile': null, 'games': []};
   }
 
   Widget _buildDeals() {

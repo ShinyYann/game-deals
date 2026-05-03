@@ -386,7 +386,7 @@ class _HomePageState extends State<HomePage>
                       child: Stack(
                         children: [
                           // 底层：静态金橙渐变
-                          const Center(
+                          Center(
                             child: ShaderMask(
                               shaderCallback: (bounds) => LinearGradient(
                                 colors: [Color(0xFFFFD700), Color(0xFFFF8C00), Color(0xFFFF4500)],
@@ -453,7 +453,7 @@ class _HomePageState extends State<HomePage>
                       height: 14,
                       child: Stack(
                         children: [
-                          const Center(
+                          Center(
                             child: ShaderMask(
                               shaderCallback: (bounds) => LinearGradient(
                                 colors: [Color(0xFFFFD700), Color(0xFFFF8C00), Color(0xFFFF4500)],

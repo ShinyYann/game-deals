@@ -7,6 +7,7 @@ on:
       - 'trophyroom-app/lib/**'
       - 'trophyroom-app/pubspec.yaml'
       - '.github/workflows/apk.yml'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -57,7 +58,6 @@ jobs:
           sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/' "$BUILD_GRADLE"
 
           flutter build apk --release --target-platform android-arm,android-arm64
-          ls -lh build/app/outputs/flutter-apk/app-release.apk
 
       - name: Copy APK to workspace
         run: |
@@ -72,22 +72,10 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          tag: apk-minimal
-          name: "TrophyRoom v1.0.0"
-          body: |
-            TrophyRoom APK — 离线数据 + 联网更新
+          tag: latest
+          name: "TrophyRoom Latest"
+          body: "Latest build from main branch"
           artifacts: ${{ github.workspace }}/TrophyRoom.apk
           allowUpdates: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy to Aliyun
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 8.153.97.56
-          username: root
-          key: ${{ secrets.ALIYUN_SSH_KEY }}
-          port: 22
-          source: "TrophyRoom.apk"
-          target: /var/www/apk/
-          strip_components: 0

@@ -403,7 +403,7 @@ class _HomePageState extends State<HomePage>
                               ),
                             ),
                           ),
-                          // 上层：白色流光扫描
+                          // 上层：RGB 彩色流光扫描
                           Center(
                             child: ShaderMask(
                               shaderCallback: (bounds) {
@@ -418,8 +418,8 @@ class _HomePageState extends State<HomePage>
                                   colors: [
                                     Colors.transparent,
                                     Colors.transparent,
-                                    Colors.white.withOpacity(0.8),
-                                    Colors.white.withOpacity(0.8),
+                                    HSLColor.fromAHSL(0.8, ((r * 360) % 360).toDouble(), 0.8, 0.6).toColor(),
+                                    HSLColor.fromAHSL(0.8, ((r * 360) % 360).toDouble(), 0.8, 0.6).toColor(),
                                     Colors.transparent,
                                     Colors.transparent,
                                   ],
@@ -448,7 +448,7 @@ class _HomePageState extends State<HomePage>
                       ),
                     ),
                     const SizedBox(height: 4),
-                    // ── trophyroom — 金橙渐变 + 白色流光 ──
+                    // ── trophyroom — 金橙渐变 + RGB 彩色流光 ──
                     SizedBox(
                       height: 14,
                       child: Stack(
@@ -464,7 +464,7 @@ class _HomePageState extends State<HomePage>
                                 style: TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w300,
-                                  letterSpacing: 4,
+                                  letterSpacing: 2,
                                   color: Colors.white,
                                 ),
                               ),
@@ -482,8 +482,8 @@ class _HomePageState extends State<HomePage>
                                   colors: [
                                     Colors.transparent,
                                     Colors.transparent,
-                                    Colors.white.withOpacity(0.7),
-                                    Colors.white.withOpacity(0.7),
+                                    HSLColor.fromAHSL(0.7, ((g * 360) % 360).toDouble(), 0.8, 0.6).toColor(),
+                                    HSLColor.fromAHSL(0.7, ((g * 360) % 360).toDouble(), 0.8, 0.6).toColor(),
                                     Colors.transparent,
                                     Colors.transparent,
                                   ],
@@ -502,7 +502,7 @@ class _HomePageState extends State<HomePage>
                                 style: TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w300,
-                                  letterSpacing: 4,
+                                  letterSpacing: 2,
                                   color: Colors.white,
                                 ),
                               ),
@@ -517,7 +517,7 @@ class _HomePageState extends State<HomePage>
             ));
           },
         ),
-        centerTitle: true,
+        centerTitle: false,
         actions: [
           if (_netChecked)
             Padding(

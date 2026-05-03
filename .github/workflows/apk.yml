@@ -4,102 +4,45 @@ on:
   push:
     branches: [main]
     paths:
-      - 'trophyroom-app/lib/**'
-      - 'trophyroom-app/pubspec.yaml'
+      - 'trophyroom-app/**'
       - '.github/workflows/apk.yml'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
+    defaults:
+      run:
+        working-directory: trophyroom-app
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.19.6'
           channel: 'stable'
           cache: true
 
-      - name: Copy code and generate Android project
-        run: |
-          mkdir -p /tmp/tbuild
-          cp -r ${{ github.workspace }}/trophyroom-app/* /tmp/tbuild/
-          # 先保存 pubspec.yaml（flutter create 会覆盖）
-          cp /tmp/tbuild/pubspec.yaml /tmp/tbuild/pubspec.yaml.orig
-          cd /tmp/tbuild
-          
-          # 彻底避免 advisory bug：先初始化最小项目
-          rm -rf android lib test
-          flutter create --org com.trophyroom --project-name trophyroom .
-          
-          # 还原 pubspec.yaml（保留我们的依赖）
-          cp /tmp/tbuild/pubspec.yaml.orig /tmp/tbuild/pubspec.yaml
-          
-          # 还原我们的代码
-          rm -f lib/main.dart
-          cp -r ${{ github.workspace }}/trophyroom-app/lib/* lib/
-          mkdir -p assets
-          cp -r ${{ github.workspace }}/trophyroom-app/assets/* assets/ 2>/dev/null || true
-          
-          # 权限
-          awk '/<application/ {
-            print "    <uses-permission android:name=\"android.permission.INTERNET\"/>"
-            print "    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
-            print "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>"
-            print ""; print $0; next
-          } {print}' android/app/src/main/AndroidManifest.xml > AndroidManifest.xml.new
-          mv AndroidManifest.xml.new android/app/src/main/AndroidManifest.xml
-          
-          echo "code prepared"
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Build APK
+        run: flutter build apk --release --target-platform android-arm,android-arm64
+
+      - name: Prepare APK
         run: |
-          set -o pipefail
-          cd /tmp/tbuild
-          flutter pub get --offline 2>/dev/null || true
-          flutter pub get
-          flutter build apk --release --target-platform android-arm,android-arm64
-    
-      - name: Capture build logs
-        if: failure()
-        run: |
-          echo "=== Build failed - running flutter analyze ==="
-          cd /tmp/tbuild
-          flutter analyze 2>&1 | tee /tmp/flutter_analyze.log || true
-          echo "=== Running flutter build ===" | tee -a /tmp/flutter_analyze.log
-          flutter build apk --release --target-platform android-arm,android-arm64 2>&1 | tee -a /tmp/flutter_analyze.log || true
-          echo "=== Log saved ==="
-          wc -l /tmp/flutter_analyze.log
-      
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: build-error-log
-          path: /tmp/flutter_analyze.log
-          retention-days: 1
-      
-      - name: Copy and release
-        run: |
-          # Find the APK - path varies by Flutter version
-          APK_PATH=$(find /tmp/tbuild/build -name "*.apk" -not -name "*unaligned*" 2>/dev/null | head -1)
-          if [ -z "$APK_PATH" ]; then
-            echo "❌ No APK found! Listing build tree:"
-            find /tmp/tbuild/build -type f 2>/dev/null | head -20
-            exit 1
-          fi
-          echo "Found APK: $APK_PATH"
-          cp "$APK_PATH" ${{ github.workspace }}/TrophyRoom.apk
-          echo "APK_SIZE=$(ls -lh ${{ github.workspace }}/TrophyRoom.apk | awk '{print $5}')" >> $GITHUB_ENV
-          rm -rf /tmp/tbuild
+          APK_PATH=$(find build -name "*.apk" -not -name "*unaligned*" 2>/dev/null | head -1)
+          cp "$APK_PATH" release.apk
+          echo "APK_SIZE=$(stat -c%s release.apk)" >> $GITHUB_ENV
 
       - uses: actions/upload-artifact@v4
         with:
           name: TrophyRoom-APK
-          path: ${{ github.workspace }}/TrophyRoom.apk
+          path: trophyroom-app/release.apk
           retention-days: 1
 
       - name: Create Release
@@ -107,8 +50,8 @@ jobs:
         with:
           tag: latest
           name: "TrophyRoom Latest"
-          body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }}"
-          artifacts: ${{ github.workspace }}/TrophyRoom.apk
+          body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }} bytes"
+          artifacts: trophyroom-app/release.apk
           allowUpdates: true
           removeArtifacts: true
           replacesArtifacts: true

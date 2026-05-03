@@ -302,6 +302,8 @@ class _HomePageState extends State<HomePage>
   String _psnId = '';
   String _steamId = '';
   bool _accountsLoaded = false;
+  List<TrophyGame> _trophyGames = [];
+  String _error = '';
 
   @override
   void initState() {

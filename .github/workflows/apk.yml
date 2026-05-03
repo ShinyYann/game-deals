@@ -57,7 +57,7 @@ jobs:
           # 离线模式避 advisory bug
           flutter pub get --offline 2>/dev/null || true
           flutter pub get
-          flutter build apk --release
+          flutter build apk --release --target-platform android-arm,android-arm64 --split-per-abi
       
       - name: Copy and release
         run: |

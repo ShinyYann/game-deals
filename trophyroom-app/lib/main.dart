@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+// 加数据模型
+import 'models/trophy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'models/trophy.dart';
 
 void main() {
@@ -83,6 +86,60 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _ctrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchTrophyData(String psnId, String steamId) async {
+    final apiBase = 'http://8.153.97.56';
+    _trophyGames = [];
+    _error = '';
+
+    try {
+      if (steamId.isNotEmpty) {
+        final resp = await http.get(Uri.parse('$apiBase/api/steam?uid=$steamId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          if (data['status'] == 'ok' && data['games'] != null) {
+            for (final g in data['games']) {
+              _trophyGames.add(TrophyGame(
+                name: g['name'] ?? 'Unknown',
+                platform: 'steam',
+                coverUrl: g['logo'],
+                totalAchievements: g['total_achievements'] ?? 0,
+                unlockedAchievements: g['unlocked_achievements'] ?? 0,
+                completionRate: (g['unlocked_achievements'] ?? 0) > 0 && (g['total_achievements'] ?? 0) > 0
+                    ? ((g['unlocked_achievements'] / g['total_achievements']) * 100).roundToDouble()
+                    : 0,
+              ));
+            }
+          }
+        }
+      }
+
+      if (psnId.isNotEmpty) {
+        final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$psnId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          if (data['status'] == 'ok') {
+            // PSN 返回的是统计数据，转成 TrophyGame
+            if (data['level'] != null) {
+              _trophyGames.add(TrophyGame(
+                name: 'PSN: $psnId',
+                platform: 'psn',
+                platinum: data['platinum'] ?? 0,
+                gold: data['gold'] ?? 0,
+                silver: data['silver'] ?? 0,
+                bronze: data['bronze'] ?? 0,
+                completionRate: 100,
+              ));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      _error = '加载失败: $e';
+    }
   }
 
   @override
@@ -412,6 +469,60 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  Future<void> _fetchTrophyData(String psnId, String steamId) async {
+    final apiBase = 'http://8.153.97.56';
+    _trophyGames = [];
+    _error = '';
+
+    try {
+      if (steamId.isNotEmpty) {
+        final resp = await http.get(Uri.parse('$apiBase/api/steam?uid=$steamId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          if (data['status'] == 'ok' && data['games'] != null) {
+            for (final g in data['games']) {
+              _trophyGames.add(TrophyGame(
+                name: g['name'] ?? 'Unknown',
+                platform: 'steam',
+                coverUrl: g['logo'],
+                totalAchievements: g['total_achievements'] ?? 0,
+                unlockedAchievements: g['unlocked_achievements'] ?? 0,
+                completionRate: (g['unlocked_achievements'] ?? 0) > 0 && (g['total_achievements'] ?? 0) > 0
+                    ? ((g['unlocked_achievements'] / g['total_achievements']) * 100).roundToDouble()
+                    : 0,
+              ));
+            }
+          }
+        }
+      }
+
+      if (psnId.isNotEmpty) {
+        final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$psnId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          if (data['status'] == 'ok') {
+            // PSN 返回的是统计数据，转成 TrophyGame
+            if (data['level'] != null) {
+              _trophyGames.add(TrophyGame(
+                name: 'PSN: $psnId',
+                platform: 'psn',
+                platinum: data['platinum'] ?? 0,
+                gold: data['gold'] ?? 0,
+                silver: data['silver'] ?? 0,
+                bronze: data['bronze'] ?? 0,
+                completionRate: 100,
+              ));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      _error = '加载失败: $e';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -667,54 +778,84 @@ class _HomePageState extends State<HomePage>
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: 4,
-              itemBuilder: (ctx, i) {
-                final platform = _psnId.isNotEmpty ? 'PSN' : 'Steam';
-                return Card(
-                  color: Colors.grey[900],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        platform == 'PSN'
-                            ? Icons.sports_esports
-                            : Icons.games,
-                        size: 48,
-                        color: platform == 'PSN'
-                            ? Colors.blue[400]
-                            : Colors.orange[400],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        platform,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: platform == 'PSN'
-                              ? Colors.blue[300]
-                              : Colors.orange[300],
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                : _trophyGames.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.sports_esports, size: 48, color: Colors.grey[600]),
+                            const SizedBox(height: 12),
+                            Text(_error.isNotEmpty ? '加载出错' : '暂无数据',
+                                style: TextStyle(color: Colors.grey[500])),
+                            if (_error.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(_error, style: TextStyle(fontSize: 11, color: Colors.red[300])),
+                              ),
+                          ],
                         ),
+                      )
+                    : GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: _trophyGames.length,
+                        itemBuilder: (ctx, i) {
+                          final g = _trophyGames[i];
+                          return Card(
+                            color: Colors.grey[900],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  g.platform == 'psn'
+                                      ? Icons.sports_esports
+                                      : Icons.games,
+                                  size: 36,
+                                  color: g.platform == 'psn'
+                                      ? Colors.blue[400]
+                                      : Colors.orange[400],
+                                ),
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Text(
+                                    g.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                if (g.platform == 'psn')
+                                  Text('🏆 P' + g.platinum.toString() + ' 🥇' + g.gold.toString() + ' 🥈' + g.silver.toString() + ' 🥉' + g.bronze.toString(),
+                                      style: const TextStyle(fontSize: 10))
+                                else
+                                  Text(g.unlockedAchievements.toString() + '/' + g.totalAchievements.toString(),
+                                      style: const TextStyle(fontSize: 12, color: Colors.green[300])),
+                                if (g.completionRate > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4, left: 16, right: 16),
+                                    child: LinearProgressIndicator(
+                                      value: g.completionRate / 100,
+                                      backgroundColor: Colors.grey[800],
+                                      color: Colors.purple[300],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '需要接入数据',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -1247,6 +1388,60 @@ class _SettingsPageState extends State<SettingsPage> {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchTrophyData(String psnId, String steamId) async {
+    final apiBase = 'http://8.153.97.56';
+    _trophyGames = [];
+    _error = '';
+
+    try {
+      if (steamId.isNotEmpty) {
+        final resp = await http.get(Uri.parse('$apiBase/api/steam?uid=$steamId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          if (data['status'] == 'ok' && data['games'] != null) {
+            for (final g in data['games']) {
+              _trophyGames.add(TrophyGame(
+                name: g['name'] ?? 'Unknown',
+                platform: 'steam',
+                coverUrl: g['logo'],
+                totalAchievements: g['total_achievements'] ?? 0,
+                unlockedAchievements: g['unlocked_achievements'] ?? 0,
+                completionRate: (g['unlocked_achievements'] ?? 0) > 0 && (g['total_achievements'] ?? 0) > 0
+                    ? ((g['unlocked_achievements'] / g['total_achievements']) * 100).roundToDouble()
+                    : 0,
+              ));
+            }
+          }
+        }
+      }
+
+      if (psnId.isNotEmpty) {
+        final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$psnId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          if (data['status'] == 'ok') {
+            // PSN 返回的是统计数据，转成 TrophyGame
+            if (data['level'] != null) {
+              _trophyGames.add(TrophyGame(
+                name: 'PSN: $psnId',
+                platform: 'psn',
+                platinum: data['platinum'] ?? 0,
+                gold: data['gold'] ?? 0,
+                silver: data['silver'] ?? 0,
+                bronze: data['bronze'] ?? 0,
+                completionRate: 100,
+              ));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      _error = '加载失败: $e';
+    }
   }
 
   @override

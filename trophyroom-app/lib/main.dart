@@ -596,31 +596,6 @@ class _HomePageState extends State<HomePage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 状态卡片
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.purple[900]!, Colors.indigo[900]!],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Text(_netChecked ? _netStatus : '正在检测...',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                if (!_netChecked)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                const SizedBox(height: 8),
-                Text(_netChecked ? _dealsStatus : '等待连接...',
-                    style: TextStyle(color: Colors.grey[300], fontSize: 13)),
-              ],
-            ),
-          ),
           const SizedBox(height: 20),
           const Text('快捷功能', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),

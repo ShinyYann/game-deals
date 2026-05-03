@@ -25,13 +25,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Set up Android SDK
-        run: |
-          # macOS runners have Android SDK pre-installed, we just need to accept licenses
-          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-
       - name: Build APK
         run: |
           cd /tmp
@@ -66,9 +59,10 @@ jobs:
 
           flutter build apk --release --target-platform android-arm,android-arm64
 
-      - name: Copy APK to workspace
+      - name: Copy APK
         run: |
           cp /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk ${{ github.workspace }}/TrophyRoom.apk
+          echo "APK_SIZE=$(ls -lh ${{ github.workspace }}/TrophyRoom.apk | awk '{print $5}')" >> $GITHUB_ENV
 
       - uses: actions/upload-artifact@v4
         with:
@@ -81,8 +75,7 @@ jobs:
         with:
           tag: latest
           name: "TrophyRoom Latest"
-          body: "Latest build from main branch"
+          body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }}"
           artifacts: ${{ github.workspace }}/TrophyRoom.apk
-          allowUpdates: true
-          replacesArtifacts: true
+          allowUpdates: false
           token: ${{ secrets.GITHUB_TOKEN }}

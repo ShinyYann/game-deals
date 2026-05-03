@@ -972,6 +972,8 @@ class _HomePageState extends State<HomePage>
     final earned = trophy['earned'] == true;
     final iconUrl = trophy['icon_url']?.toString() ?? '';
     final isPlatinum = type == 'platinum';
+    final isGold = type == 'gold';
+    final isSilver = type == 'silver';
     final earnedDate = trophy['earned_date']?.toString() ?? '';
 
     IconData icon;
@@ -979,10 +981,10 @@ class _HomePageState extends State<HomePage>
     if (isPlatinum) {
       icon = Icons.star;
       iconColor = Colors.cyan[300]!;
-    } else if (type == 'gold') {
+    } else if (isGold) {
       icon = Icons.emoji_events;
       iconColor = Colors.amber[400]!;
-    } else if (type == 'silver') {
+    } else if (isSilver) {
       icon = Icons.workspace_premium;
       iconColor = Colors.grey[400]!;
     } else {
@@ -990,17 +992,70 @@ class _HomePageState extends State<HomePage>
       iconColor = Colors.orange[400]!;
     }
 
+    // Platinum tier accent bar colors
+    final accentColor = isPlatinum
+        ? const [Color(0xFFE5E7EB), Color(0xFF9CA3AF), Color(0xFFD1D5DB)]
+        : isGold
+            ? const [Color(0xFFFBBF24), Color(0xFFF59E0B), Color(0xFFFCD34D)]
+            : isSilver
+                ? const [Color(0xFF9CA3AF), Color(0xFF6B7280), Color(0xFFD1D5DB)]
+                : null;
+
+    final badgeWidget = isPlatinum
+        ? _ShinyPlatinumBadge()
+        : Text(
+            isGold ? '金' : isSilver ? '银' : '铜',
+            style: TextStyle(
+                fontSize: 11,
+                color: earned
+                    ? isGold ? Colors.amber[300] : isSilver ? Colors.grey[400] : Colors.brown[300]
+                    : Colors.grey[700]),
+          );
+
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
+        gradient: isPlatinum && earned
+            ? LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(0.03),
+                  Colors.white.withOpacity(0.01),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : null,
         border: Border(
-          bottom: BorderSide(
-              color: Colors.grey[850]!, width: 0.5),
+          bottom: BorderSide(color: Colors.grey[850]!, width: 0.5),
         ),
       ),
       child: Row(
         children: [
+          // Left accent bar (platinum/gold/silver)
+          if (accentColor != null && earned)
+            Container(
+              width: 3,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: isPlatinum
+                    ? [
+                        BoxShadow(
+                          color: Colors.cyan[200]!.withOpacity(0.3),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+                gradient: LinearGradient(
+                  colors: accentColor,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            )
+          else
+            const SizedBox(width: 3, height: 0),
           // Trophy icon
           if (iconUrl.isNotEmpty)
             ClipRRect(
@@ -1075,29 +1130,7 @@ class _HomePageState extends State<HomePage>
             ),
           ),
           // Trophy type badge
-          if (isPlatinum)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.cyan[800]!.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text('白',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.cyan[300])),
-            )
-          else
-            Text(
-              type == 'gold' ? '金' : type == 'silver' ? '银' : type == 'bronze' ? '铜' : '?',
-              style: TextStyle(
-                  fontSize: 11,
-                  color: earned
-                      ? type == 'gold' ? Colors.amber[300] : type == 'silver' ? Colors.grey[400] : Colors.brown[300]
-                      : Colors.grey[700]),
-            ),
+          badgeWidget,
           // Tips button
           GestureDetector(
             onTap: () => _showTrophyTips(context, trophy['id']?.toString() ?? ''),
@@ -1116,6 +1149,89 @@ class _HomePageState extends State<HomePage>
       ),
     );
   }
+
+// ── Platinum Badge with shimmer metallic sheen ──
+class _ShinyPlatinumBadge extends StatefulWidget {
+  @override
+  State<_ShinyPlatinumBadge> createState() => _ShinyPlatinumBadgeState();
+}
+
+class _ShinyPlatinumBadgeState extends State<_ShinyPlatinumBadge>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _shimmerCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerCtrl = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmerCtrl,
+      builder: (context, child) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.cyan[200]!.withOpacity(0.15 + 0.1 * (_shimmerCtrl.value - 0.5).abs() * 2),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: ShaderMask(
+            blendMode: BlendMode.srcATop,
+            shaderCallback: (bounds) {
+              return LinearGradient(
+                colors: const [
+                  Color(0xFFB0BEC5), // silver
+                  Color(0xFFE0E0E0), // bright
+                  Color(0xFFFFFFFF), // white sheen
+                  Color(0xFFE0E0E0), // bright
+                  Color(0xFFB0BEC5), // silver
+                ],
+                stops: [
+                  0.0,
+                  _shimmerCtrl.value - 0.15,
+                  _shimmerCtrl.value,
+                  _shimmerCtrl.value + 0.15,
+                  1.0,
+                ],
+              ).createShader(bounds);
+            },
+            child: Text(
+              '白',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                shadows: [
+                  Shadow(
+                    color: Colors.cyan[200]!.withOpacity(0.4),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
   void _showGameDetailModal(BuildContext context, String gameId, String gameName, String coverUrl) {
     showModalBottomSheet(

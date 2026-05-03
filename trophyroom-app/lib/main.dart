@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -297,7 +296,6 @@ class _HomePageState extends State<HomePage>
   List<Map<String, dynamic>> _deals = [];
   String _dealsStatus = '';
   String _platform = 'all';
-  late final WebViewController _psnWebCtrl;
   bool _psnWebLoading = true;
   String _psnId = '';
   String _steamId = '';
@@ -324,7 +322,7 @@ class _HomePageState extends State<HomePage>
     });
     _deals = List.from(_offlineGames);
     _dealsStatus = '${_offlineGames.length} 款内置游戏';
-    _initPSNWebView();
+    // _initPSNWebView(); // PSN tab disabled
     _checkNetwork();
     _loadAccounts();
   }
@@ -336,17 +334,7 @@ class _HomePageState extends State<HomePage>
     super.dispose();
   }
 
-  void _initPSNWebView() {
-    _psnWebCtrl = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (_) => setState(() => _psnWebLoading = true),
-          onPageFinished: (_) => setState(() => _psnWebLoading = false),
-        ),
-      )
-      ..loadRequest(Uri.parse('https://store.playstation.com/zh-hans-hk'));
-  }
+  // _initPSNWebView removed
 
   /// 遍历多个数据源，只要有数据就用在线数据
   Future<void> _checkNetwork() async {
@@ -1778,7 +1766,7 @@ class _ShinyPlatinumBadge extends StatelessWidget {
   Widget _buildPSNStore() {
     return Stack(
       children: [
-        WebViewWidget(controller: _psnWebCtrl),
+        // WebViewWidget(controller: _psnWebCtrl),
         if (_psnWebLoading)
           const Center(
             child: CircularProgressIndicator(),

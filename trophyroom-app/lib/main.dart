@@ -626,6 +626,9 @@ class _HomePageState extends State<HomePage>
             (silver as num).toInt() +
             (bronze as num).toInt();
         final games = data['games'] as List<dynamic>? ?? [];
+        final firstGameCover = games.isNotEmpty
+            ? (games[0]['cover_url']?.toString() ?? '')
+            : '';
         final hasData = psnId.isNotEmpty;
 
         return RefreshIndicator(
@@ -642,22 +645,36 @@ class _HomePageState extends State<HomePage>
               // ── Profile Summary Card ──
               if (hasData) ...[
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
                     borderRadius: BorderRadius.circular(16),
+                    image: firstGameCover.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(firstGameCover),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED).withOpacity(0.3),
+                        color: Colors.black.withOpacity(0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
                     ],
                   ),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withOpacity(0.55),
+                          Colors.black.withOpacity(0.75),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                   child: Column(
                     children: [
                       // Row 1: PSN ID + Level badge

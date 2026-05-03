@@ -1150,85 +1150,46 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-// ── Platinum Badge with shimmer metallic sheen ──
-class _ShinyPlatinumBadge extends StatefulWidget {
-  @override
-  State<_ShinyPlatinumBadge> createState() => _ShinyPlatinumBadgeState();
-}
-
-class _ShinyPlatinumBadgeState extends State<_ShinyPlatinumBadge>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _shimmerCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _shimmerCtrl = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _shimmerCtrl.dispose();
-    super.dispose();
-  }
-
+// ── Platinum Badge with metallic gradient ──
+class _ShinyPlatinumBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _shimmerCtrl,
-      builder: (context, child) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.cyan[200]!.withOpacity(0.15 + 0.1 * (_shimmerCtrl.value - 0.5).abs() * 2),
-                blurRadius: 8,
-                spreadRadius: 1,
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF8098A8), // dark silver
+            Color(0xFFD0D8E0), // mid
+            Color(0xFFF5F5FF), // bright sheen
+            Color(0xFFD0D8E0), // mid
+            Color(0xFF8098A8), // dark silver
+          ],
+          stops: [0.0, 0.3, 0.5, 0.7, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x40B2EBF2),
+            blurRadius: 6,
+            spreadRadius: 1,
           ),
-          child: ShaderMask(
-            blendMode: BlendMode.srcATop,
-            shaderCallback: (bounds) {
-              return LinearGradient(
-                colors: const [
-                  Color(0xFFB0BEC5), // silver
-                  Color(0xFFE0E0E0), // bright
-                  Color(0xFFFFFFFF), // white sheen
-                  Color(0xFFE0E0E0), // bright
-                  Color(0xFFB0BEC5), // silver
-                ],
-                stops: [
-                  0.0,
-                  _shimmerCtrl.value - 0.15,
-                  _shimmerCtrl.value,
-                  _shimmerCtrl.value + 0.15,
-                  1.0,
-                ],
-              ).createShader(bounds);
-            },
-            child: Text(
-              '白',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    color: Colors.cyan[200]!.withOpacity(0.4),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
+        ],
+      ),
+      child: const Text(
+        '白',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          shadows: [
+            Shadow(
+              color: Color(0x80B2EBF2),
+              blurRadius: 3,
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

@@ -518,7 +518,7 @@ class _HomePageState extends State<HomePage>
                   ],
                 ),
               ),
-            ));
+            );
           },
         ),
         centerTitle: true,

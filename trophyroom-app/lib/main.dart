@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -662,99 +663,118 @@ class _HomePageState extends State<HomePage>
                       ),
                     ],
                   ),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black.withOpacity(0.55),
-                          Colors.black.withOpacity(0.75),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  child: Column(
-                    children: [
-                      // Row 1: PSN ID + Level badge
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              psnId,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      children: [
+                        // Layer 1: frosted glass blur
+                        if (firstGameCover.isNotEmpty)
+                          Positioned.fill(
+                            child: BackdropFilter(
+                              filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: Container(color: Colors.transparent),
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 6),
+                        // Layer 2: translucent dark overlay
+                        Positioned.fill(
+                          child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              'Lv $level',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.black.withOpacity(0.35),
+                                  Colors.black.withOpacity(0.55),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Purple level progress bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: 0.75,
-                          minHeight: 8,
-                          backgroundColor: Colors.white.withOpacity(0.15),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFFA855F7),
+                        ),
+                        // Layer 3: content
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            children: [
+                              // Row 1: PSN ID + Level badge
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      psnId,
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      'Lv $level',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Level progress bar
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: 0.75,
+                                  minHeight: 8,
+                                  backgroundColor: Colors.white.withOpacity(0.15),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFA855F7),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              // Row 2: 4 trophy stat columns
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _trophyStat('🏆', '$platinum', Colors.cyan[300]!),
+                                  _trophyStat('🥇', '$gold', Colors.amber[400]!),
+                                  _trophyStat('🥈', '$silver', Colors.grey[400]!),
+                                  _trophyStat('🥉', '$bronze', Colors.orange[400]!),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Row 3: Total Games | Perfect Games | Completion Rate | Total Trophies
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _statItem('📊', '$totalGames', '游戏'),
+                                    _statItem('🏅', '$perfectGames', '完美'),
+                                    _statItem('🎯', '$completionRate%', '完成率'),
+                                    _statItem('🏆', '$totalTrophies', '总数'),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Row 2: 4 trophy stat columns
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _trophyStat(
-                              '🏆', '$platinum', Colors.cyan[300]!),
-                          _trophyStat(
-                              '🥇', '$gold', Colors.amber[400]!),
-                          _trophyStat(
-                              '🥈', '$silver', Colors.grey[400]!),
-                          _trophyStat(
-                              '🥉', '$bronze', Colors.orange[400]!),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Row 3: Total Games | Perfect Games | Completion Rate | Total Trophies
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _statItem('📊', '$totalGames', '游戏'),
-                            _statItem('🏅', '$perfectGames', '完美'),
-                            _statItem('🎯', '$completionRate%', '完成率'),
-                            _statItem('🏆', '$totalTrophies', '总数'),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                ),
                   ),
                 ),
                 const SizedBox(height: 20),

@@ -303,9 +303,6 @@ class _HomePageState extends State<HomePage>
   String _steamId = '';
   bool _accountsLoaded = false;
   String _error = '';
-  String? _expandedGameId;
-  Map<String, List<dynamic>> _gameTrophies = {};
-  Map<String, bool> _expandedLoading = {};
 
   @override
   void initState() {
@@ -635,9 +632,6 @@ class _HomePageState extends State<HomePage>
         return RefreshIndicator(
           color: Colors.purple[300],
           onRefresh: () async {
-            _expandedGameId = null;
-            _gameTrophies.clear();
-            _expandedLoading.clear();
             setState(() {});
           },
           child: ListView(
@@ -816,10 +810,7 @@ class _HomePageState extends State<HomePage>
               else
                 ...games.map((g) {
                   final game = g as Map<String, dynamic>;
-                  final gameId = game['game_id']?.toString() ?? '';
-                  final isExpanded = _expandedGameId == gameId;
-                  return _buildExpandableGameCard(game,
-                      isExpanded: isExpanded);
+                  return _buildGameCard(game);
                 }),
               const SizedBox(height: 20),
             ],
@@ -858,8 +849,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildExpandableGameCard(Map<String, dynamic> game,
-      {required bool isExpanded}) {
+  Widget _buildGameCard(Map<String, dynamic> game) {
     final gameId = game['game_id']?.toString() ?? '';
     final name = game['name']?.toString() ?? '';
     final coverUrl = game['cover_url']?.toString() ?? '';
@@ -874,143 +864,101 @@ class _HomePageState extends State<HomePage>
       color: const Color(0xFF1A1A2E),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isExpanded
-              ? Colors.purple[400]!.withOpacity(0.5)
-              : Colors.grey[800]!,
-        ),
+        side: BorderSide(color: Colors.grey[800]!),
       ),
       margin: const EdgeInsets.only(bottom: 10),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          // Header (always visible)
-          InkWell(
-            onTap: () => _toggleGame(gameId),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  // Cover image
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: coverUrl.isNotEmpty
-                          ? Image.network(coverUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  Container(
-                                    color: Colors.grey[850],
-                                    child: Icon(Icons.image,
-                                        color: Colors.grey[700],
-                                        size: 24),
-                                  ))
-                          : Container(
-                              color: Colors.grey[850],
-                              child: Icon(Icons.image,
-                                  color: Colors.grey[700],
-                                  size: 24),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Name + Platform
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+      child: InkWell(
+        onTap: () => _showGameDetailModal(context, gameId, name, coverUrl),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Cover image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: coverUrl.isNotEmpty
+                      ? Image.network(coverUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Container(
+                                color: Colors.grey[850],
+                                child: Icon(Icons.image,
+                                    color: Colors.grey[700], size: 24),
+                              ))
+                      : Container(
+                          color: Colors.grey[850],
+                          child: Icon(Icons.image,
+                              color: Colors.grey[700], size: 24),
                         ),
-                        const SizedBox(height: 4),
-                        if (platform.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: platform == 'PS5'
-                                  ? Colors.blue[800]
-                                  : platform == 'PS4'
-                                      ? Colors.indigo[800]
-                                      : Colors.grey[700],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(platform,
-                                style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white)),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Trophy counts
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('🥇$gold 🥈$silver 🥉$bronze',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[400])),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 80,
-                        child: LinearProgressIndicator(
-                          value: cr / 100,
-                          minHeight: 4,
-                          backgroundColor: Colors.grey[800],
-                          color: cr >= 100
-                              ? Colors.amber
-                              : Colors.purple[300],
-                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Name + Platform
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    isExpanded
-                        ? Icons.expand_less
-                        : Icons.expand_more,
-                    color: Colors.grey[500],
-                    size: 20,
+                    ),
+                    const SizedBox(height: 4),
+                    if (platform.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: platform == 'PS5'
+                              ? Colors.blue[800]
+                              : platform == 'PS4'
+                                  ? Colors.indigo[800]
+                                  : Colors.grey[700],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(platform,
+                            style: const TextStyle(
+                                fontSize: 10, color: Colors.white)),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Trophy counts + progress
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('🥇$gold 🥈$silver 🥉$bronze',
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey[400])),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: 80,
+                    child: LinearProgressIndicator(
+                      value: cr / 100,
+                      minHeight: 4,
+                      backgroundColor: Colors.grey[800],
+                      color: cr >= 100
+                          ? Colors.amber
+                          : Colors.purple[300],
+                    ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right,
+                  color: Colors.grey[600], size: 20),
+            ],
           ),
-
-          // Expanded content (trophy list)
-          if (isExpanded) ...[
-            const Divider(height: 1, color: Colors.grey),
-            if (_expandedLoading[gameId] == true)
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2),
-                  ),
-                ),
-              )
-            else if (_gameTrophies.containsKey(gameId))
-              ...(_gameTrophies[gameId] as List<dynamic>).map((t) {
-                final trophy = t as Map<String, dynamic>;
-                return _buildTrophyRow(trophy);
-              })
-            else
-              const SizedBox.shrink(),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -1141,37 +1089,129 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  void _toggleGame(String gameId) async {
-    if (_expandedGameId == gameId) {
-      setState(() => _expandedGameId = null);
-      return;
-    }
+  void _showGameDetailModal(BuildContext context, String gameId, String gameName, String coverUrl) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1A1A2E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return FutureBuilder(
+              future: _fetchGameTrophies(gameId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: 40),
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('加载奖杯中...', style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  );
+                }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: 40),
+                        Icon(Icons.error_outline, size: 40, color: Colors.red),
+                        SizedBox(height: 12),
+                        Text('加载失败', style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  );
+                }
 
-    setState(() {
-      _expandedGameId = gameId;
-    });
+                final data = snapshot.data as Map<String, dynamic>;
+                final trophies = data['trophies'] as List<dynamic>? ?? [];
+                final summary = data['summary'] as Map<String, dynamic>? ?? {};
+                final sections = data['sections'] as List<dynamic>? ?? [];
 
-    if (!_gameTrophies.containsKey(gameId)) {
-      setState(() => _expandedLoading[gameId] = true);
-      try {
-        final resp = await http
-            .get(Uri.parse(
-                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          final trophies = data['trophies'] as List<dynamic>? ?? [];
-          setState(() {
-            _gameTrophies[gameId] = trophies;
-            _expandedLoading[gameId] = false;
-          });
-        } else {
-          setState(() => _expandedLoading[gameId] = false);
-        }
-      } catch (e) {
-        setState(() => _expandedLoading[gameId] = false);
+                return Column(
+                  children: [
+                    // Drag handle
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[600],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              width: 36,
+                              height: 36,
+                              child: coverUrl.isNotEmpty
+                                  ? Image.network(coverUrl, fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(color: Colors.grey[850]))
+                                  : Container(color: Colors.grey[850]),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              gameName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 24),
+                    // Trophy list
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        padding: EdgeInsets.zero,
+                        itemCount: trophies.length,
+                        itemBuilder: (context, index) {
+                          return _buildTrophyRow(trophies[index] as Map<String, dynamic>);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> _fetchGameTrophies(String gameId) async {
+    try {
+      final resp = await http
+          .get(Uri.parse('http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+          .timeout(const Duration(seconds: 15));
+      if (resp.statusCode == 200) {
+        return json.decode(resp.body) as Map<String, dynamic>;
       }
-    }
+    } catch (_) {}
+    return {'trophies': [], 'summary': {}, 'sections': []};
   }
 
   Future<Map<String, dynamic>> _fetchFullPsnData() async {

@@ -4,11 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-// 加数据模型
 import 'models/trophy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'models/trophy.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -86,60 +83,6 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _ctrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _fetchTrophyData(String psnId, String steamId) async {
-    final apiBase = 'http://8.153.97.56';
-    _trophyGames = [];
-    _error = '';
-
-    try {
-      if (steamId.isNotEmpty) {
-        final resp = await http.get(Uri.parse('$apiBase/api/steam?uid=$steamId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          if (data['status'] == 'ok' && data['games'] != null) {
-            for (final g in data['games']) {
-              _trophyGames.add(TrophyGame(
-                name: g['name'] ?? 'Unknown',
-                platform: 'steam',
-                coverUrl: g['logo'],
-                totalAchievements: g['total_achievements'] ?? 0,
-                unlockedAchievements: g['unlocked_achievements'] ?? 0,
-                completionRate: (g['unlocked_achievements'] ?? 0) > 0 && (g['total_achievements'] ?? 0) > 0
-                    ? ((g['unlocked_achievements'] / g['total_achievements']) * 100).roundToDouble()
-                    : 0,
-              ));
-            }
-          }
-        }
-      }
-
-      if (psnId.isNotEmpty) {
-        final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$psnId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          if (data['status'] == 'ok') {
-            // PSN 返回的是统计数据，转成 TrophyGame
-            if (data['level'] != null) {
-              _trophyGames.add(TrophyGame(
-                name: 'PSN: $psnId',
-                platform: 'psn',
-                platinum: data['platinum'] ?? 0,
-                gold: data['gold'] ?? 0,
-                silver: data['silver'] ?? 0,
-                bronze: data['bronze'] ?? 0,
-                completionRate: 100,
-              ));
-            }
-          }
-        }
-      }
-    } catch (e) {
-      _error = '加载失败: $e';
-    }
   }
 
   @override
@@ -462,11 +405,14 @@ class _HomePageState extends State<HomePage>
 
   Future<void> _loadAccounts() async {
     final prefs = await SharedPreferences.getInstance();
+    final psn = prefs.getString('psn_id') ?? '';
+    final steam = prefs.getString('steam_id') ?? '';
     setState(() {
-      _psnId = prefs.getString('psn_id') ?? '';
-      _steamId = prefs.getString('steam_id') ?? '';
+      _psnId = psn;
+      _steamId = steam;
       _accountsLoaded = true;
     });
+    await _fetchTrophyData(psn, steam);
   }
 
   Future<void> _fetchTrophyData(String psnId, String steamId) async {
@@ -521,6 +467,7 @@ class _HomePageState extends State<HomePage>
     } catch (e) {
       _error = '加载失败: $e';
     }
+    setState(() => _loading = false);
   }
 
   @override
@@ -1388,60 +1335,6 @@ class _SettingsPageState extends State<SettingsPage> {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _fetchTrophyData(String psnId, String steamId) async {
-    final apiBase = 'http://8.153.97.56';
-    _trophyGames = [];
-    _error = '';
-
-    try {
-      if (steamId.isNotEmpty) {
-        final resp = await http.get(Uri.parse('$apiBase/api/steam?uid=$steamId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          if (data['status'] == 'ok' && data['games'] != null) {
-            for (final g in data['games']) {
-              _trophyGames.add(TrophyGame(
-                name: g['name'] ?? 'Unknown',
-                platform: 'steam',
-                coverUrl: g['logo'],
-                totalAchievements: g['total_achievements'] ?? 0,
-                unlockedAchievements: g['unlocked_achievements'] ?? 0,
-                completionRate: (g['unlocked_achievements'] ?? 0) > 0 && (g['total_achievements'] ?? 0) > 0
-                    ? ((g['unlocked_achievements'] / g['total_achievements']) * 100).roundToDouble()
-                    : 0,
-              ));
-            }
-          }
-        }
-      }
-
-      if (psnId.isNotEmpty) {
-        final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$psnId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          if (data['status'] == 'ok') {
-            // PSN 返回的是统计数据，转成 TrophyGame
-            if (data['level'] != null) {
-              _trophyGames.add(TrophyGame(
-                name: 'PSN: $psnId',
-                platform: 'psn',
-                platinum: data['platinum'] ?? 0,
-                gold: data['gold'] ?? 0,
-                silver: data['silver'] ?? 0,
-                bronze: data['bronze'] ?? 0,
-                completionRate: 100,
-              ));
-            }
-          }
-        }
-      }
-    } catch (e) {
-      _error = '加载失败: $e';
-    }
   }
 
   @override

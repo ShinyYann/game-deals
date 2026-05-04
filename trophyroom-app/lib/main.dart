@@ -1310,10 +1310,14 @@ class _HomePageState extends State<HomePage>
                                   style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                             ),
                           )
-                        : ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: tipItems.length,
+                        : ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: MediaQuery.of(context).size.height * 0.4,
+                            ),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: tipItems.length,
                             separatorBuilder: (_, __) =>
                                 const Divider(color: Color(0xFF333355), height: 1),
                             itemBuilder: (_, i) {
@@ -1352,6 +1356,7 @@ class _HomePageState extends State<HomePage>
                                 ),
                               );
                             },
+                          ),
                           ),
               ),
               actions: [

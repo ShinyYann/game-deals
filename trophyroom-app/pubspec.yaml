@@ -14,7 +14,6 @@ dependencies:
   webview_flutter: 4.2.0
   shared_preferences: ^2.2.0
   app_links: ^6.3.0
-  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

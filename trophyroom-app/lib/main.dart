@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -698,46 +699,54 @@ class _HomePageState extends State<HomePage>
                         // Layer 1: Blurred game cover background
                         if (recentCoverUrl.isNotEmpty)
                           Positioned.fill(
-                            child: Image.network(
-                              recentCoverUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
+                            child: ImageFiltered(
+                              imageFilter: ui.ImageFilter.blur(
+                                  sigmaX: 18, sigmaY: 18),
+                              child: Image.network(
+                                recentCoverUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        // Blur overlay
-                        Positioned.fill(
-                          child: BackdropFilter(
-                            filter: ColorFilter.mode(
-                              Colors.black.withOpacity(0.45),
-                              BlendMode.darken,
+                        // Fallback gradient when no cover
+                        if (recentCoverUrl.isEmpty)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
                             ),
-                            child: Container(),
                           ),
-                        ),
-                        // Gradient overlay at bottom for depth
+                        // Dark overlay for readability
                         Positioned.fill(
                           child: Container(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.transparent,
-                                  Color(0xDD1A1A2E),
+                                  Colors.black.withOpacity(0.3),
+                                  Colors.black.withOpacity(0.6),
+                                  Colors.black.withOpacity(0.85),
                                 ],
-                                begin: Alignment.center,
+                                begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                               ),
                             ),
                           ),
                         ),
-                        // Layer 2: Frosted glass content
+                        // Layer 2: Content
                         Positioned.fill(
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -750,16 +759,10 @@ class _HomePageState extends State<HomePage>
                                     Expanded(
                                       child: Text(
                                         psnId,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 22,
                                           fontWeight: FontWeight.bold,
                                           letterSpacing: 1,
-                                          shadows: [
-                                            Shadow(
-                                              color: Colors.black.withOpacity(0.5),
-                                              blurRadius: 8,
-                                            ),
-                                          ],
                                         ),
                                       ),
                                     ),
@@ -794,25 +797,32 @@ class _HomePageState extends State<HomePage>
                                     _trophyStat('🥉', '$bronze', Colors.orange[400]!),
                                   ],
                                 ),
-                                // Row 3: Stats strip
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
+                                // Row 3: Stats strip (frosted glass)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: BackdropFilter(
+                                    filter: ui.ImageFilter.blur(
+                                        sigmaX: 8, sigmaY: 8),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 10),
+                                      decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.1),
-                                        width: 0.5),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      _statItem('📊', '$totalGames', '游戏'),
-                                      _statItem('🏅', '$perfectGames', '完美'),
-                                      _statItem('🎯', '$completionRate%', '完成率'),
-                                      _statItem('🏆', '$totalTrophies', '总数'),
-                                    ],
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: Colors.white.withOpacity(0.15),
+                                            width: 0.5),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                        children: [
+                                          _statItem('📊', '$totalGames', '游戏'),
+                                          _statItem('🏅', '$perfectGames', '完美'),
+                                          _statItem('🎯', '$completionRate%', '完成率'),
+                                          _statItem('🏆', '$totalTrophies', '总数'),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],

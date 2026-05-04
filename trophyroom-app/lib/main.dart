@@ -302,6 +302,8 @@ class _HomePageState extends State<HomePage>
   String _steamId = '';
   bool _accountsLoaded = false;
   String _error = '';
+  Map<String, dynamic>? _cachedHomeData;  // 本地缓存
+  int _homeLastRefreshMs = 0;              // 上次刷新时间戳
   // 用 ValueNotifier 避免展开关闭时重建整页
   final ValueNotifier<String?> _expandedGameId = ValueNotifier<String?>(null);
   Map<String, List<dynamic>> _gameTrophies = {};
@@ -410,11 +412,27 @@ class _HomePageState extends State<HomePage>
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
+
+    // 读取本地缓存：秒开关键
+    final cacheKey = 'home_cache_$psn';
+    _homeLastRefreshMs = prefs.getInt('${cacheKey}_ts') ?? 0;
+    final cacheJson = prefs.getString(cacheKey);
+    if (cacheJson != null && cacheJson.isNotEmpty) {
+      try {
+        _cachedHomeData = json.decode(cacheJson) as Map<String, dynamic>;
+      } catch (_) {}
+    }
+
     setState(() {
       _psnId = psn;
       _steamId = steam;
       _accountsLoaded = true;
     });
+
+    // 有缓存 → 后台静默刷新，App 秒开不倒等
+    if (_cachedHomeData != null && _psnId.isNotEmpty) {
+      _backgroundRefresh();
+    }
   }
 
   @override
@@ -597,7 +615,10 @@ class _HomePageState extends State<HomePage>
     }
 
     return FutureBuilder<Map<String, dynamic>>(
-      future: _fetchFullPsnData(),
+      // 缓存优先：有缓存秒出，没缓存走 API
+      future: _cachedHomeData != null
+          ? Future.value(_cachedHomeData)
+          : _fetchFullPsnData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(strokeWidth: 2));
@@ -642,6 +663,8 @@ class _HomePageState extends State<HomePage>
           onRefresh: () async {
             _expandedGameId.value = null;
             _gameTrophies.clear();
+            // 下拉刷新：跳过缓存，走 API
+            _cachedHomeData = null;
             setState(() {});
           },
           child: ListView(
@@ -1307,6 +1330,27 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  Future<void> _saveHomeCache(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'home_cache_$_psnId';
+    await prefs.setString(key, json.encode(data));
+    await prefs.setInt('${key}_ts', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  Future<void> _backgroundRefresh() async {
+    final data = await _fetchFullPsnData();
+    if (mounted && data['psn_id']?.toString().isNotEmpty == true) {
+      // 只在有游戏数据时才更新缓存（失败时不覆盖旧缓存）
+      final games = (data['games'] as List?) ?? [];
+      if (games.isNotEmpty || data['error'] == null) {
+        setState(() {
+          _cachedHomeData = data;
+          _error = data['error']?.toString() ?? '';
+        });
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> _fetchFullPsnData() async {
     // 仅 PSN 数据可用时
     if (_psnId.isEmpty || _accountsLoaded == false) {
@@ -1319,6 +1363,8 @@ class _HomePageState extends State<HomePage>
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         if (data['psn_id'] != null) {
+          _saveHomeCache(data);
+          _cachedHomeData = data;
           return data;
         }
       }

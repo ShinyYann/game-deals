@@ -791,6 +791,26 @@ class _HomePageState extends State<HomePage>
                     ),
                   ),
                 )
+              else if (!hasData)
+                // Safety: show something even when data is empty
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      children: [
+                        Icon(Icons.cloud_off,
+                            size: 48, color: Colors.grey[600]),
+                        const SizedBox(height: 12),
+                        Text(
+                            _error.isNotEmpty
+                                ? '加载失败: $_error\n下拉刷新重试'
+                                : '数据加载中...',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey[500])),
+                      ],
+                    ),
+                  ),
+                )
               else
                 ...games.map((g) {
                   final game = g as Map<String, dynamic>;
@@ -1327,8 +1347,11 @@ class _HomePageState extends State<HomePage>
       }
     } catch (e) {
       _error = '$e';
+      // Return error with psn_id so UI doesn't go completely blank
+      return {'psn_id': _psnId, 'error': '$e', 'games': []};
     }
-    return {'profile': null, 'games': []};
+    // API responded but no psn_id — still keep psn_id for UI
+    return {'psn_id': _psnId, 'error': 'no data', 'games': []};
   }
 
   void _prefetchAllGameTrophies(List<dynamic> games) {

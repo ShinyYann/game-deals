@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app_links/app_links.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -1809,82 +1808,38 @@ class _SettingsPageState extends State<SettingsPage> {
 
   StreamSubscription<Uri>? _oauthSub;
   void _openPSNLogin() async {
-    if (_npssoVerifying) return;
-    setState(() {
-      _npssoVerifying = true;
-      _npssoStatus = 'waiting';
-    });
-    _listenForOAuthCallback();
-    // Open Sony OAuth authorize in system browser
-    final oauthUrl =
-        'https://ca.account.sony.com/api/authz/v3/oauth/authorize'
-        '?access_type=offline'
-        '&client_id=09515159-7237-4370-9b40-3806e67c0891'
-        '&redirect_uri=${Uri.encodeQueryComponent('com.scee.psxandroid://redirect')}'
-        '&response_type=code'
-        '&scope=${Uri.encodeComponent('psn:mobile.v2.core psn:clientapp')}'
-        '&request_locale=zh-hans';
+    // Open Sony signin in system browser
     try {
-      await launchUrl(Uri.parse(oauthUrl),
-          mode: LaunchMode.externalApplication);
+      await launchUrl(
+        Uri.parse('https://id.sonyentertainmentnetwork.com/signin/'),
+        mode: LaunchMode.externalApplication,
+      );
     } catch (_) {}
-  }
-
-  void _listenForOAuthCallback() {
-    _oauthSub?.cancel();
-    _oauthSub = AppLinks().uriLinkStream.listen((uri) {
-      if (uri.scheme == 'com.scee.psxandroid') {
-        final code = uri.queryParameters['code'];
-        if (code != null && code.isNotEmpty) {
-          _handleOAuthCode(code);
-          _oauthSub?.cancel();
-        }
-      }
-    });
-  }
-
-  Future<void> _handleOAuthCode(String code) async {
-    try {
-      final resp = await http
-          .get(Uri.parse(
-              'http://8.153.97.56/api/psn_oauth_exchange?code=${Uri.encodeComponent(code)}'))
-          .timeout(const Duration(seconds: 15));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        final onlineId = data['online_id'] as String? ?? '';
-        if (onlineId.isNotEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('oauth_uid', onlineId);
-          setState(() {
-            _savedNpsso = onlineId;
-            _npssoStatus = 'verified';
-            _npssoVerifying = false;
-          });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text('✅ 已连接 PSN: $onlineId'),
-                  backgroundColor: Colors.green[700]),
-            );
-          }
-          return;
-        }
-      }
-      setState(() {
-        _npssoStatus = 'invalid';
-        _npssoVerifying = false;
-      });
-    } catch (_) {
-      setState(() {
-        _npssoStatus = 'error';
-        _npssoVerifying = false;
-      });
+    // After a moment, prompt user to get NPSSO
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('登录后点「获取 NPSSO」按钮'),
+          backgroundColor: Colors.blue[700],
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
+  }
+
+  /// Open ssocookie page in browser — Chrome has Sony cookie → shows NPSSO JSON
+  void _openSSOCookie() async {
+    try {
+      await launchUrl(
+        Uri.parse('https://ca.account.sony.com/api/v1/ssocookie'),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {}
   }
 
   @override
   void dispose() {
-    _oauthSub?.cancel();
     _psnCtrl.dispose();
     _steamCtrl.dispose();
     _npssoCtrl.dispose();
@@ -2044,37 +1999,56 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                '登录 PSN 获取精确游玩时长（替代粗略估算）',
+                '通过 Chrome 登录索尼官网，手动获取 NPSSO',
                 style: TextStyle(fontSize: 12, color: Colors.grey[500]),
               ),
               const SizedBox(height: 12),
-              // PSN 登录按钮
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _npssoVerifying ? null : _openPSNLogin,
-                  icon: const Icon(Icons.login, size: 20),
-                  label: const Text('登录 PSN 账号'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00439C),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              // 两步操作按钮
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _openPSNLogin,
+                      icon: const Icon(Icons.login, size: 18),
+                      label: const Text('登录 PSN', style: TextStyle(fontSize: 13)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00439C),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _openSSOCookie,
+                      icon: const Icon(Icons.vpn_key, size: 18),
+                      label: const Text('获取 NPSSO', style: TextStyle(fontSize: 13)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueGrey[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text('或手动粘贴 NPSSO',
+              const SizedBox(height: 14),
+              Text('操作提示：登录 PSN → 获取 NPSSO → 复制 → 粘贴到下方',
                   style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               TextField(
                 controller: _npssoCtrl,
-                obscureText: true,
                 decoration: InputDecoration(
                   hintText: '粘贴 NPSSO Token',
                   hintStyle: TextStyle(color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.vpn_key, color: Colors.grey[500], size: 20),
                   filled: true,
                   fillColor: Colors.grey[850],
                   border: OutlineInputBorder(
@@ -2116,6 +2090,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       onPressed: () {
                         SharedPreferences.getInstance().then((prefs) {
                           prefs.remove('npsso');
+                          prefs.remove('oauth_uid');
                           setState(() {
                             _savedNpsso = '';
                             _npssoCtrl.clear();

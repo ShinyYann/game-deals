@@ -2278,7 +2278,6 @@ class _PPNLoginScreenState extends State<_PSNLoginScreen> {
       } catch (_) {}
     }
   }
-  }
 
   @override
   Widget build(BuildContext context) {

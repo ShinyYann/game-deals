@@ -545,12 +545,15 @@ class _HomePageState extends State<HomePage>
             ),
         ],
       ),
-      body: [
-        _buildHome(),
-        _buildDeals(),
-        _buildGuide(),
-        const SettingsPage(),
-      ][_currentTab],
+      body: IndexedStack(
+        index: _currentTab,
+        children: [
+          _buildHome(),
+          _buildDeals(),
+          _buildGuide(),
+          const SettingsPage(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentTab,

@@ -1139,8 +1139,72 @@ class _HomePageState extends State<HomePage>
   void _showTrophyTips(String trophyId, String trophyName) {
     showDialog(
       context: context,
-      builder: (ctx) => _TrophyTipsDialog(trophyId: trophyId, trophyName: trophyName),
+      builder: (ctx) {
+        String tipsText = '';
+        bool loading = true;
+        // Use a StatefulBuilder to allow async loading inside dialog
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            if (loading) {
+              _fetchTipsData(trophyId).then((tips) {
+                tipsText = tips;
+                loading = false;
+                if (context.mounted) setDialogState(() {});
+              });
+            }
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E1E2E),
+              title: Text('💡 $trophyName - 奖杯心得',
+                  style: const TextStyle(color: Colors.white, fontSize: 16)),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: loading
+                    ? const Center(
+                        child: SizedBox(
+                          width: 24, height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ))
+                    : SingleChildScrollView(
+                        child: Text(
+                          tipsText.isNotEmpty ? tipsText : '暂无玩家心得',
+                          style: TextStyle(
+                            color: tipsText.isNotEmpty ? Colors.grey[300] : Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('关闭', style: TextStyle(color: Colors.cyan)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
+  }
+
+  Future<String> _fetchTipsData(String trophyId) async {
+    try {
+      final resp = await http.get(Uri.parse(
+        'http://8.153.97.56/api/psn_trophy_tips?trophy_id=$trophyId',
+      )).timeout(const Duration(seconds: 8));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final rawTips = data['tips'];
+        if (rawTips is List && rawTips.isNotEmpty) {
+          return rawTips.map((t) {
+            final n = (t as Map)['name'] ?? '';
+            final c = t['content'] ?? '';
+            return '👤 $n: $c';
+          }).join('\n\n');
+        }
+      }
+    } catch (_) {}
+    return '';
   }
 
   void _toggleGame(String gameId) async {
@@ -1854,74 +1918,6 @@ class _GameDetailCard extends StatelessWidget {
       ),
     );
   }
-// ── 奖杯心得弹窗 ──
-class _TrophyTipsDialog extends StatefulWidget {
-  final String trophyId;
-  final String trophyName;
-  const _TrophyTipsDialog({required this.trophyId, required this.trophyName});
-  @override
-  State<_TrophyTipsDialog> createState() => _TrophyTipsDialogState();
-}
-
-class _TrophyTipsDialogState extends State<_TrophyTipsDialog> {
-  String _tipsText = '';
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchTips();
-  }
-
-  Future<void> _fetchTips() async {
-    try {
-      final resp = await http.get(Uri.parse(
-        'http://8.153.97.56/api/psn_trophy_tips?trophy_id=${widget.trophyId}',
-      )).timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        final rawTips = data['tips'];
-        if (rawTips is List && rawTips.isNotEmpty) {
-          _tipsText = rawTips.map((t) {
-            final n = t['name'] ?? '';
-            final c = t['content'] ?? '';
-            return '👤 $n: $c';
-          }).join('\n\n');
-        }
-      }
-    } catch (_) {}
-    if (mounted) setState(() => _loading = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: const Color(0xFF1E1E2E),
-      title: Text('💡 ${widget.trophyName} - 奖杯心得',
-          style: const TextStyle(color: Colors.white, fontSize: 16)),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Text(
-                  _tipsText.isNotEmpty ? _tipsText : '暂无玩家心得',
-                  style: TextStyle(
-                    color: _tipsText.isNotEmpty ? Colors.grey[300] : Colors.grey[600],
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('关闭', style: TextStyle(color: Colors.cyan)),
-        ),
-      ],
-    );
-  }
-}
 }
 // Trigger build Sun May  3 20:14:20 CST 2026
 // trigger 1777813344

@@ -1260,7 +1260,7 @@ class _HomePageState extends State<HomePage>
     try {
       final resp = await http.get(Uri.parse(
         'http://8.153.97.56/api/psn_trophy_tips?trophy_id=$trophyId',
-      )).timeout(const Duration(seconds: 8));
+      )).timeout(const Duration(seconds: 20));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         final rawTips = data['tips'];
@@ -1288,7 +1288,7 @@ class _HomePageState extends State<HomePage>
         }
         final resp = await http
             .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 10));
+            .timeout(const Duration(seconds: 25));
         if (resp.statusCode == 200) {
           final data = json.decode(resp.body);
           final trophies = data['trophies'] as List<dynamic>? ?? [];
@@ -1315,7 +1315,7 @@ class _HomePageState extends State<HomePage>
         url += '&npsso=${Uri.encodeComponent(_npsso)}';
       }
       final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 25));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         if (data['psn_id'] != null) {
@@ -1355,7 +1355,7 @@ class _HomePageState extends State<HomePage>
         url += '&npsso=${Uri.encodeComponent(_npsso)}&np_id=${Uri.encodeComponent(npId)}';
       }
       final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         final trophies = data['trophies'] as List<dynamic>? ?? [];
@@ -1777,7 +1777,7 @@ class _SettingsPageState extends State<SettingsPage> {
       final resp = await http
           .get(Uri.parse(
               'http://8.153.97.56/api/psn_verify_npsso?npsso=$token'))
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 25));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         if (data['valid'] == true) {

@@ -628,6 +628,11 @@ class _HomePageState extends State<HomePage>
         final games = data['games'] as List<dynamic>? ?? [];
         final hasData = psnId.isNotEmpty;
 
+        // 后台预取所有游戏奖杯数据，点开秒开
+        if (hasData && games.isNotEmpty) {
+          _prefetchAllGameTrophies(games);
+        }
+
         return RefreshIndicator(
           color: Colors.purple[300],
           onRefresh: () async {
@@ -1259,6 +1264,41 @@ class _HomePageState extends State<HomePage>
       _error = '$e';
     }
     return {'profile': null, 'games': []};
+  }
+
+  void _prefetchAllGameTrophies(List<dynamic> games) {
+    // 并行预取所有游戏奖杯，每组 3 个并发
+    final todo = <String>[];
+    for (final g in games) {
+      final gid = g['game_id']?.toString() ?? '';
+      if (gid.isNotEmpty && !_gameTrophies.containsKey(gid)) {
+        todo.add(gid);
+      }
+    }
+    Future(() async {
+      for (var i = 0; i < todo.length; i += 3) {
+        final batch = todo.skip(i).take(3);
+        await Future.wait(batch.map((gid) => _fetchGameDetailSilent(gid)));
+      }
+    });
+  }
+
+  Future<void> _fetchGameDetailSilent(String gameId) async {
+    try {
+      final resp = await http
+          .get(Uri.parse(
+              'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+          .timeout(const Duration(seconds: 15));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final trophies = data['trophies'] as List<dynamic>? ?? [];
+        if (mounted) {
+          setState(() {
+            _gameTrophies[gameId] = trophies;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   Widget _buildDeals() {

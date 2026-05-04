@@ -1344,8 +1344,7 @@ class _HomePageState extends State<HomePage>
                                               style: TextStyle(color: Colors.cyan[300],
                                                   fontSize: 12, fontWeight: FontWeight.w600)),
                                           const SizedBox(height: 2),
-                                          Text(content,
-                                              style: TextStyle(color: Colors.grey[300], fontSize: 13)),
+                                          _buildContentWithLinks(content),
                                         ],
                                       ),
                                     ),
@@ -1365,6 +1364,37 @@ class _HomePageState extends State<HomePage>
           },
         );
       },
+    );
+  }
+
+  Widget _buildContentWithLinks(String text) {
+    final urlRegex = RegExp(r'https?://[^\s，。；！？、]+');
+    final matches = urlRegex.allMatches(text);
+    if (matches.isEmpty) {
+      return Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 13));
+    }
+    final spans = <InlineSpan>[];
+    int lastEnd = 0;
+    for (final m in matches) {
+      if (m.start > lastEnd) {
+        spans.add(TextSpan(text: text.substring(lastEnd, m.start)));
+      }
+      final url = m.group(0)!;
+      spans.add(TextSpan(
+        text: url,
+        style: TextStyle(color: Colors.cyan[300], fontSize: 13, decoration: TextDecoration.underline),
+        recognizer: TapGestureRecognizer()..onTap = () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      ));
+      lastEnd = m.end;
+    }
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd)));
+    }
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(color: Colors.grey[300], fontSize: 13),
+        children: spans,
+      ),
     );
   }
 

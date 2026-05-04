@@ -1070,7 +1070,9 @@ class _HomePageState extends State<HomePage>
       iconColor = Colors.orange[400]!;
     }
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _showTrophyTips(trophy),
+      child: Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -1186,23 +1188,27 @@ class _HomePageState extends State<HomePage>
               ),
             ),
           ),
-          // Trophy tips button
-          if (trophyId.isNotEmpty) ...[
-            const SizedBox(width: 4),
-            GestureDetector(
-              onTap: () => _showTrophyTips(trophyId, name),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                child: Text('💡', style: TextStyle(fontSize: 14)),
-              ),
-            ),
-          ],
+          // Trophy tips button — removed, whole row is tappable now
         ],
+      ),
       ),
     );
   }
 
-  void _showTrophyTips(String trophyId, String trophyName) {
+  void _showTrophyTips(Map<String, dynamic> trophy) {
+    final trophyId = trophy['id']?.toString() ?? '';
+    final name = trophy['name']?.toString() ?? '';
+    final description = trophy['description']?.toString() ?? '';
+    final type = trophy['type']?.toString().toLowerCase() ?? '';
+    final earnedDate = trophy['earned_date']?.toString() ?? '';
+    final iconUrl = trophy['icon_url']?.toString() ?? '';
+    final earned = trophy['earned'] == true;
+    final isPlatinum = type == 'platinum';
+
+    final typeLabel = isPlatinum ? '白金' : type == 'gold' ? '金' : type == 'silver' ? '银' : '铜';
+    final typeColor = isPlatinum ? Colors.cyan[300] : type == 'gold' ? Colors.amber[300] : type == 'silver' ? Colors.grey[300] : Colors.orange[300];
+    final typeIcon = isPlatinum ? '🏆' : type == 'gold' ? '🥇' : type == 'silver' ? '🥈' : '🥉';
+
     showDialog(
       context: context,
       builder: (ctx) {
@@ -1219,20 +1225,91 @@ class _HomePageState extends State<HomePage>
             }
             return AlertDialog(
               backgroundColor: const Color(0xFF1E1E2E),
-              title: Text('💡 $trophyName - 奖杯心得',
-                  style: const TextStyle(color: Colors.white, fontSize: 16)),
+              titlePadding: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              title: Column(
+                children: [
+                  // ── Trophy icon (large) ──
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: Center(
+                      child: iconUrl.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(iconUrl, width: 64, height: 64,
+                                  fit: BoxFit.cover,
+                                  color: earned ? null : Colors.grey,
+                                  colorBlendMode: earned ? null : BlendMode.saturation,
+                                  errorBuilder: (_, __, ___) =>
+                                      Text(typeIcon, style: const TextStyle(fontSize: 48))),
+                            )
+                          : Text(typeIcon, style: const TextStyle(fontSize: 48)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // ── Trophy name ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 8),
+                  // ── Trophy details ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: (typeColor ?? Colors.grey).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text('$typeIcon $typeLabel',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: typeColor)),
+                        ),
+                        if (earnedDate.isNotEmpty) ...[
+                          const SizedBox(width: 12),
+                          Text('📅 $earnedDate',
+                              style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (description.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(description,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  // Divider before tips
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Divider(color: Color(0xFF333355), height: 1),
+                  ),
+                ],
+              ),
               content: SizedBox(
                 width: double.maxFinite,
                 child: loading
                     ? const Center(
-                        child: SizedBox(
-                          width: 24, height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ))
+                        child: SizedBox(width: 24, height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2)))
                     : tipItems.isEmpty
-                        ? Text('暂无玩家心得',
-                            style: TextStyle(
-                                color: Colors.grey[600], fontSize: 13))
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text('暂无玩家心得 💬',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                            ),
+                          )
                         : ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
@@ -1251,15 +1328,12 @@ class _HomePageState extends State<HomePage>
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(16),
-                                      child: SizedBox(
-                                        width: 32, height: 32,
+                                      child: SizedBox(width: 32, height: 32,
                                         child: avatar.isNotEmpty
-                                            ? Image.network(avatar,
-                                                fit: BoxFit.cover,
+                                            ? Image.network(avatar, fit: BoxFit.cover,
                                                 errorBuilder: (_, __, ___) =>
                                                     Icon(Icons.person, color: Colors.grey[600]))
-                                            : Icon(Icons.person, color: Colors.grey[600]),
-                                      ),
+                                            : Icon(Icons.person, color: Colors.grey[600])),
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
@@ -1267,15 +1341,11 @@ class _HomePageState extends State<HomePage>
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(user,
-                                              style: TextStyle(
-                                                  color: Colors.cyan[300],
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600)),
+                                              style: TextStyle(color: Colors.cyan[300],
+                                                  fontSize: 12, fontWeight: FontWeight.w600)),
                                           const SizedBox(height: 2),
                                           Text(content,
-                                              style: TextStyle(
-                                                  color: Colors.grey[300],
-                                                  fontSize: 13)),
+                                              style: TextStyle(color: Colors.grey[300], fontSize: 13)),
                                         ],
                                       ),
                                     ),

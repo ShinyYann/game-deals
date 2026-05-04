@@ -599,7 +599,10 @@ class _HomePageState extends State<HomePage>
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentTab,
-        onTap: (i) => setState(() => _currentTab = i),
+        onTap: (i) {
+          setState(() => _currentTab = i);
+          if (i == 0) { _loadAccounts(); _checkNetwork(); }
+        },
         selectedItemColor: Colors.purple[300],
         unselectedItemColor: Colors.grey[600],
         items: const [

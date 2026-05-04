@@ -1821,6 +1821,8 @@ class _SettingsPageState extends State<SettingsPage> {
         '&redirect_uri=${Uri.encodeComponent('com.scee.psxandroid://redirect')}'
         '&response_type=code'
         '&scope=${Uri.encodeComponent('psn:mobile.v2.core psn:clientapp')}'
+        '&service_entity=urn:service-entity:psn'
+        '&ui=pr'
         '&request_locale=zh-hans';
     try {
       await launchUrl(Uri.parse(oauthUrl),

@@ -8,6 +8,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_links/app_links.dart';
+import 'package:crypto/crypto.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -1808,6 +1809,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   StreamSubscription<Uri>? _oauthSub;
+  String _codeVerifier = '';
   void _openPSNLogin() async {
     if (_npssoVerifying) return;
     setState(() {
@@ -1815,14 +1817,22 @@ class _SettingsPageState extends State<SettingsPage> {
       _npssoStatus = 'waiting';
     });
     _listenForOAuthCallback();
+    // Generate PKCE code_verifier (43 chars)
+    final r = math.Random.secure();
+    final bytes = List<int>.generate(32, (_) => r.nextInt(256));
+    _codeVerifier = base64Url.encode(bytes).replaceAll('=', '').substring(0, 43);
+    // Compute code_challenge = base64url(sha256(code_verifier))
+    final digest = sha256.convert(utf8.encode(_codeVerifier)).bytes;
+    final challenge = base64Url.encode(digest).replaceAll('=', '');
     final oauthUrl =
-        'https://id.sonyentertainmentnetwork.com/signin/'
-        '?client_id=09515159-7237-4370-9b40-3806e67c0891'
-        '&redirect_uri=${Uri.encodeComponent('com.scee.psxandroid://redirect')}'
+        'https://ca.account.sony.com/api/authz/v3/oauth/authorize'
+        '?access_type=offline'
+        '&client_id=09515159-7237-4370-9b40-3806e67c0891'
+        '&redirect_uri=com.scee.psxandroid://redirect'
         '&response_type=code'
         '&scope=${Uri.encodeComponent('psn:mobile.v2.core psn:clientapp')}'
-        '&service_entity=urn:service-entity:psn'
-        '&ui=pr'
+        '&code_challenge=$challenge'
+        '&code_challenge_method=S256'
         '&request_locale=zh-hans';
     try {
       await launchUrl(Uri.parse(oauthUrl),
@@ -1847,7 +1857,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final resp = await http
           .get(Uri.parse(
-              'http://8.153.97.56/api/psn_oauth_exchange?code=${Uri.encodeComponent(code)}'))
+              'http://8.153.97.56/api/psn_oauth_exchange?code=${Uri.encodeComponent(code)}&verifier=${Uri.encodeComponent(_codeVerifier)}'))
           .timeout(const Duration(seconds: 15));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);

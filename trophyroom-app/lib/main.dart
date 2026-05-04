@@ -1800,6 +1800,16 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _npssoVerifying = false);
   }
 
+  void _openPSNLogin() async {
+    final npsso = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const _PSNLoginScreen()),
+    );
+    if (npsso != null && npsso.isNotEmpty && mounted) {
+      _npssoCtrl.text = npsso;
+      _saveNpsso();
+    }
+  }
+
   @override
   void dispose() {
     _psnCtrl.dispose();
@@ -1965,6 +1975,27 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: TextStyle(fontSize: 12, color: Colors.grey[500]),
               ),
               const SizedBox(height: 12),
+              // PSN 登录按钮
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _npssoVerifying ? null : _openPSNLogin,
+                  icon: const Icon(Icons.login, size: 20),
+                  label: const Text('登录 PSN 账号'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00439C),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text('或手动粘贴 NPSSO',
+                  style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+              const SizedBox(height: 6),
               TextField(
                 controller: _npssoCtrl,
                 obscureText: true,
@@ -2171,6 +2202,86 @@ class _GameDetailCard extends StatelessWidget {
           Icon(icon, size: 16, color: Colors.grey[400]),
           const SizedBox(width: 8),
           Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 14)),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════
+// PSN Login WebView —— Sony 官方登录自动拿 NPSSO
+// ═══════════════════════════════════════════
+class _PSNLoginScreen extends StatefulWidget {
+  const _PSNLoginScreen();
+  @override
+  State<_PSNLoginScreen> createState() => _PPNLoginScreenState();
+}
+
+class _PPNLoginScreenState extends State<_PSNLoginScreen> {
+  late final WebViewController _ctrl;
+  bool _loading = true;
+  bool _extracted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (url) {
+          setState(() => _loading = false);
+          if (_extracted) return;
+          // When user is on the ssocookie page and logged in, extract NPSSO
+          if (url.contains('ssocookie')) {
+            _ctrl.runJavaScript('document.body.innerText').then((raw) {
+              if (_extracted) return;
+              try {
+                final data = json.decode(raw as String);
+                final token = data['npsso'] as String?;
+                if (token != null && token.isNotEmpty) {
+                  _extracted = true;
+                  if (mounted) Navigator.of(context).pop(token);
+                }
+              } catch (_) {}
+            }).catchError((_) {});
+          }
+        },
+        onNavigationRequest: (req) {
+          // Allow all Sony/account domains
+          final u = req.url.toLowerCase();
+          if (u.contains('sony.com') ||
+              u.contains('playstation.com') ||
+              u.contains('scedev.net') ||
+              u.contains('auth.api')) {
+            return NavigationDecision.navigate;
+          }
+          return NavigationDecision.prevent;
+        },
+      ))
+      ..loadRequest(Uri.parse(
+          'https://ca.account.sony.com/api/v1/ssocookie'));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF00439C),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF00439C),
+        title: const Text('Sony 账号登录'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _ctrl),
+          if (_loading)
+            const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
         ],
       ),
     );

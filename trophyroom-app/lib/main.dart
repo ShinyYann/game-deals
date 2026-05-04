@@ -300,6 +300,7 @@ class _HomePageState extends State<HomePage>
   bool _psnWebLoading = true;
   String _psnId = '';
   String _steamId = '';
+  String _npsso = '';
   bool _accountsLoaded = false;
   String _error = '';
   // 用 ValueNotifier 避免展开关闭时重建整页
@@ -410,9 +411,11 @@ class _HomePageState extends State<HomePage>
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
+    final npsso = prefs.getString('npsso') ?? '';
     setState(() {
       _psnId = psn;
       _steamId = steam;
+      _npsso = npsso;
       _accountsLoaded = true;
     });
   }
@@ -841,7 +844,11 @@ class _HomePageState extends State<HomePage>
     final gold = game['gold'] ?? 0;
     final silver = game['silver'] ?? 0;
     final bronze = game['bronze'] ?? 0;
-    final playTime = game['play_time']?.toString();
+    // play_duration（PSN 精确）优先于 play_time（psnine 估算）
+    final realDuration = game['play_duration']?.toString();
+    final playTime = realDuration != null && realDuration.isNotEmpty
+        ? realDuration
+        : game['play_time']?.toString();
 
     return Card(
       color: const Color(0xFF1A1A2E),
@@ -1295,7 +1302,11 @@ class _HomePageState extends State<HomePage>
     }
     try {
       final apiBase = 'http://8.153.97.56';
-      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId'))
+      var url = '$apiBase/api/psn?uid=$_psnId';
+      if (_npsso.isNotEmpty) {
+        url += '&npsso=${Uri.encodeComponent(_npsso)}';
+      }
+      final resp = await http.get(Uri.parse(url))
           .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
@@ -1671,8 +1682,12 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
+  final TextEditingController _npssoCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
+  String _savedNpsso = '';
+  bool _npssoVerifying = false;
+  String _npssoStatus = '';
   bool _loaded = false;
 
   @override
@@ -1686,8 +1701,10 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
+      _savedNpsso = prefs.getString('npsso') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
+      _npssoCtrl.text = _savedNpsso;
       _loaded = true;
     });
   }
@@ -1735,10 +1752,52 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _saveNpsso() async {
+    final token = _npssoCtrl.text.trim();
+    if (token.isEmpty) return;
+    setState(() {
+      _npssoVerifying = true;
+      _npssoStatus = '';
+    });
+    // 验证 token 是否有效
+    try {
+      final resp = await http
+          .get(Uri.parse(
+              'http://8.153.97.56/api/psn_verify_npsso?npsso=$token'))
+          .timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        if (data['valid'] == true) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('npsso', token);
+          setState(() {
+            _savedNpsso = token;
+            _npssoStatus = 'verified';
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('✅ 已连接 PSN: ${data['online_id'] ?? 'ok'}'),
+                  backgroundColor: Colors.green[700]),
+            );
+          }
+        } else {
+          setState(() => _npssoStatus = 'invalid');
+        }
+      } else {
+        setState(() => _npssoStatus = 'invalid');
+      }
+    } catch (_) {
+      setState(() => _npssoStatus = 'error');
+    }
+    setState(() => _npssoVerifying = false);
+  }
+
   @override
   void dispose() {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
+    _npssoCtrl.dispose();
     super.dispose();
   }
 
@@ -1870,6 +1929,114 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
+        const SizedBox(height: 32),
+        // NPSSO token
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.purple[900]!.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.purple[700]!.withOpacity(0.5)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.timer, size: 20, color: Colors.purple[300]),
+                  const SizedBox(width: 8),
+                  Text('真实游玩时间',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.purple[200])),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '登录 PSN 获取精确游玩时长（替代粗略估算）',
+                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _npssoCtrl,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: '粘贴 NPSSO Token',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: _npssoVerifying
+                      ? const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2)),
+                        )
+                      : _savedNpsso.isNotEmpty
+                          ? Icon(Icons.check_circle,
+                              color: Colors.green[400])
+                          : null,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: _npssoVerifying ? null : _saveNpsso,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple[700],
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(_savedNpsso.isNotEmpty ? '更新' : '验证连接'),
+                  ),
+                  if (_savedNpsso.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () {
+                        SharedPreferences.getInstance().then((prefs) {
+                          prefs.remove('npsso');
+                          setState(() {
+                            _savedNpsso = '';
+                            _npssoCtrl.clear();
+                            _npssoStatus = '';
+                          });
+                        });
+                      },
+                      child: Text('清除',
+                          style: TextStyle(color: Colors.red[300])),
+                    ),
+                  ],
+                  if (_npssoStatus == 'invalid')
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text('❌ Token 无效',
+                          style: TextStyle(
+                              color: Colors.red[300], fontSize: 12)),
+                    ),
+                ],
+              ),
+              if (_savedNpsso.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    '✅ 已连接 · 游戏详情将显示精确时长',
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.green[400]),
+                  ),
+                ),
+            ],
+          ),
+        ),
         const SizedBox(height: 40),
         SizedBox(
           width: double.infinity,

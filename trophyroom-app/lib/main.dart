@@ -620,23 +620,34 @@ class _HomePageState extends State<HomePage>
           ? Future.value(_cachedHomeData)
           : _fetchFullPsnData(),
       builder: (context, snapshot) {
+        // 有缓存时跳过转圈 —— Future.value() 会有短暂 waiting 态导致闪烁
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+          if (_cachedHomeData == null) {
+            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+          }
+          // 缓存命中 — fall through 直接用缓存渲染
         }
+        // snapshot.data 有效用 snapshot，否则降级到缓存
+        final effectiveData = (snapshot.hasData && !snapshot.hasError)
+            ? snapshot.data
+            : (_cachedHomeData ?? snapshot.data);
         if (snapshot.hasError || !snapshot.hasData) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                const SizedBox(height: 12),
-                Text('加载失败: ${snapshot.error ?? "未知错误"}',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-              ],
-            ),
-          );
+          if (effectiveData == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                  const SizedBox(height: 12),
+                  Text('加载失败: ${snapshot.error ?? "未知错误"}',
+                      style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                ],
+              ),
+            );
+          }
+          // 有缓存 — 降级显示
         }
-        final data = snapshot.data!;
+        final data = effectiveData!;
         final psnId = data['psn_id']?.toString() ?? '';
         final level = data['level']?.toString() ?? '?';
         final platinum = data['platinum'] ?? 0;

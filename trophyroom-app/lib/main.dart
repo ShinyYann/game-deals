@@ -304,7 +304,6 @@ class _HomePageState extends State<HomePage>
   String _error = '';
   String? _expandedGameId;
   Map<String, List<dynamic>> _gameTrophies = {};
-  Map<String, bool> _expandedLoading = {};
 
   @override
   void initState() {
@@ -638,7 +637,6 @@ class _HomePageState extends State<HomePage>
           onRefresh: () async {
             _expandedGameId = null;
             _gameTrophies.clear();
-            _expandedLoading.clear();
             setState(() {});
           },
           child: ListView(
@@ -967,25 +965,20 @@ class _HomePageState extends State<HomePage>
           // Expanded content (trophy list)
           if (isExpanded) ...[
             const Divider(height: 1, color: Colors.grey),
-            if (_expandedLoading[gameId] == true)
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2),
-                  ),
-                ),
-              )
-            else if (_gameTrophies.containsKey(gameId))
+            if (_gameTrophies.containsKey(gameId))
               ...(_gameTrophies[gameId] as List<dynamic>).map((t) {
                 final trophy = t as Map<String, dynamic>;
                 return _buildTrophyRow(trophy);
               })
             else
-              const SizedBox.shrink(),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: Text('加载中...',
+                      style: TextStyle(
+                          color: Colors.grey[500], fontSize: 12)),
+                ),
+              ),
           ],
         ],
       ),
@@ -1273,7 +1266,6 @@ class _HomePageState extends State<HomePage>
     });
 
     if (!_gameTrophies.containsKey(gameId)) {
-      setState(() => _expandedLoading[gameId] = true);
       try {
         final resp = await http
             .get(Uri.parse(
@@ -1282,16 +1274,13 @@ class _HomePageState extends State<HomePage>
         if (resp.statusCode == 200) {
           final data = json.decode(resp.body);
           final trophies = data['trophies'] as List<dynamic>? ?? [];
-          setState(() {
-            _gameTrophies[gameId] = trophies;
-            _expandedLoading[gameId] = false;
-          });
-        } else {
-          setState(() => _expandedLoading[gameId] = false);
+          if (mounted) {
+            setState(() {
+              _gameTrophies[gameId] = trophies;
+            });
+          }
         }
-      } catch (e) {
-        setState(() => _expandedLoading[gameId] = false);
-      }
+      } catch (_) {}
     }
   }
 

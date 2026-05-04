@@ -837,6 +837,7 @@ class _HomePageState extends State<HomePage>
     final gold = game['gold'] ?? 0;
     final silver = game['silver'] ?? 0;
     final bronze = game['bronze'] ?? 0;
+    final playTime = game['play_time']?.toString();
 
     return Card(
       color: const Color(0xFF1A1A2E),
@@ -915,6 +916,14 @@ class _HomePageState extends State<HomePage>
                                 style: const TextStyle(
                                     fontSize: 10,
                                     color: Colors.white)),
+                          ),
+                        if (playTime != null && playTime.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text('⏱ $playTime',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[500])),
                           ),
                       ],
                     ),
@@ -1145,14 +1154,13 @@ class _HomePageState extends State<HomePage>
     showDialog(
       context: context,
       builder: (ctx) {
-        String tipsText = '';
+        List<Map<String, dynamic>> tipItems = [];
         bool loading = true;
-        // Use a StatefulBuilder to allow async loading inside dialog
         return StatefulBuilder(
           builder: (context, setDialogState) {
             if (loading) {
               _fetchTipsData(trophyId).then((tips) {
-                tipsText = tips;
+                tipItems = tips;
                 loading = false;
                 if (context.mounted) setDialogState(() {});
               });
@@ -1169,15 +1177,61 @@ class _HomePageState extends State<HomePage>
                           width: 24, height: 24,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ))
-                    : SingleChildScrollView(
-                        child: Text(
-                          tipsText.isNotEmpty ? tipsText : '暂无玩家心得',
-                          style: TextStyle(
-                            color: tipsText.isNotEmpty ? Colors.grey[300] : Colors.grey[600],
-                            fontSize: 13,
+                    : tipItems.isEmpty
+                        ? Text('暂无玩家心得',
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 13))
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: tipItems.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(color: Color(0xFF333355), height: 1),
+                            itemBuilder: (_, i) {
+                              final tip = tipItems[i];
+                              final avatar = tip['avatar']?.toString() ?? '';
+                              final user = tip['user']?.toString() ?? '';
+                              final content = tip['content']?.toString() ?? '';
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: SizedBox(
+                                        width: 32, height: 32,
+                                        child: avatar.isNotEmpty
+                                            ? Image.network(avatar,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    Icon(Icons.person, color: Colors.grey[600]))
+                                            : Icon(Icons.person, color: Colors.grey[600]),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(user,
+                                              style: TextStyle(
+                                                  color: Colors.cyan[300],
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600)),
+                                          const SizedBox(height: 2),
+                                          Text(content,
+                                              style: TextStyle(
+                                                  color: Colors.grey[300],
+                                                  fontSize: 13)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
-                        ),
-                      ),
               ),
               actions: [
                 TextButton(
@@ -1192,7 +1246,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Future<String> _fetchTipsData(String trophyId) async {
+  Future<List<Map<String, dynamic>>> _fetchTipsData(String trophyId) async {
     try {
       final resp = await http.get(Uri.parse(
         'http://8.153.97.56/api/psn_trophy_tips?trophy_id=$trophyId',
@@ -1201,15 +1255,11 @@ class _HomePageState extends State<HomePage>
         final data = json.decode(resp.body);
         final rawTips = data['tips'];
         if (rawTips is List && rawTips.isNotEmpty) {
-          return rawTips.map((t) {
-            final n = (t as Map)['name'] ?? '';
-            final c = t['content'] ?? '';
-            return '👤 $n: $c';
-          }).join('\n\n');
+          return rawTips.map((t) => t as Map<String, dynamic>).toList();
         }
       }
     } catch (_) {}
-    return '';
+    return [];
   }
 
   void _toggleGame(String gameId) async {

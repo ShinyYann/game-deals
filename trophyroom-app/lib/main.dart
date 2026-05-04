@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -301,8 +300,6 @@ class _HomePageState extends State<HomePage>
   bool _psnWebLoading = true;
   String _psnId = '';
   String _steamId = '';
-  String _npsso = '';
-  String _oauthUid = '';
   bool _accountsLoaded = false;
   String _error = '';
   // 用 ValueNotifier 避免展开关闭时重建整页
@@ -413,13 +410,9 @@ class _HomePageState extends State<HomePage>
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
-    final npsso = prefs.getString('npsso') ?? '';
-    final oauthUid = prefs.getString('oauth_uid') ?? '';
     setState(() {
       _psnId = psn;
       _steamId = steam;
-      _npsso = npsso;
-      _oauthUid = oauthUid;
       _accountsLoaded = true;
     });
   }
@@ -792,19 +785,15 @@ class _HomePageState extends State<HomePage>
                   ),
                 )
               else if (!hasData)
-                // Safety: show something even when data is empty
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.all(40),
                     child: Column(
                       children: [
-                        Icon(Icons.cloud_off,
-                            size: 48, color: Colors.grey[600]),
+                        Icon(Icons.cloud_off, size: 48, color: Colors.grey[600]),
                         const SizedBox(height: 12),
                         Text(
-                            _error.isNotEmpty
-                                ? '加载失败: $_error\n下拉刷新重试'
-                                : '数据加载中...',
+                            _error.isNotEmpty ? '加载失败: $_error\n下拉刷新重试' : '数据加载中...',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.grey[500])),
                       ],
@@ -871,11 +860,7 @@ class _HomePageState extends State<HomePage>
     final gold = game['gold'] ?? 0;
     final silver = game['silver'] ?? 0;
     final bronze = game['bronze'] ?? 0;
-    // play_duration（PSN 精确）优先于 play_time（psnine 估算）
-    final realDuration = game['play_duration']?.toString();
-    final playTime = realDuration != null && realDuration.isNotEmpty
-        ? realDuration
-        : game['play_time']?.toString();
+    final playTime = game['play_time']?.toString();
 
     return Card(
       color: const Color(0xFF1A1A2E),
@@ -893,7 +878,7 @@ class _HomePageState extends State<HomePage>
         children: [
           // Header (always visible)
           InkWell(
-            onTap: () => _toggleGame(gameId, game['np_communication_id']?.toString() ?? ''),
+            onTap: () => _toggleGame(gameId),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -1283,7 +1268,7 @@ class _HomePageState extends State<HomePage>
     try {
       final resp = await http.get(Uri.parse(
         'http://8.153.97.56/api/psn_trophy_tips?trophy_id=$trophyId',
-      )).timeout(const Duration(seconds: 20));
+      )).timeout(const Duration(seconds: 8));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         final rawTips = data['tips'];
@@ -1295,7 +1280,7 @@ class _HomePageState extends State<HomePage>
     return [];
   }
 
-  void _toggleGame(String gameId, String npId) async {
+  void _toggleGame(String gameId) async {
     if (_expandedGameId.value == gameId) {
       _expandedGameId.value = null;
       return;
@@ -1305,13 +1290,10 @@ class _HomePageState extends State<HomePage>
 
     if (!_gameTrophies.containsKey(gameId)) {
       try {
-        var url = 'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId';
-        if (_npsso.isNotEmpty && npId.isNotEmpty) {
-          url += '&npsso=${Uri.encodeComponent(_npsso)}&np_id=${Uri.encodeComponent(npId)}';
-        }
         final resp = await http
-            .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 25));
+            .get(Uri.parse(
+                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+            .timeout(const Duration(seconds: 10));
         if (resp.statusCode == 200) {
           final data = json.decode(resp.body);
           final trophies = data['trophies'] as List<dynamic>? ?? [];
@@ -1328,17 +1310,12 @@ class _HomePageState extends State<HomePage>
   Future<Map<String, dynamic>> _fetchFullPsnData() async {
     // 仅 PSN 数据可用时
     if (_psnId.isEmpty || _accountsLoaded == false) {
-      return {'profile': null, 'games': []};
+      return {'psn_id': '', 'games': []};
     }
     try {
       final apiBase = 'http://8.153.97.56';
-      var url = '$apiBase/api/psn?uid=$_psnId';
-      if (_npsso.isNotEmpty) {
-        if (_oauthUid.isNotEmpty) url += '&oauth_uid=\${Uri.encodeComponent(_oauthUid)}';
-        url += '&npsso=${Uri.encodeComponent(_npsso)}';
-      }
-      final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 25));
+      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId'))
+          .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         if (data['psn_id'] != null) {
@@ -1347,41 +1324,33 @@ class _HomePageState extends State<HomePage>
       }
     } catch (e) {
       _error = '$e';
-      // Return error with psn_id so UI doesn't go completely blank
-      return {'psn_id': _psnId, 'error': '$e', 'games': []};
     }
-    // API responded but no psn_id — still keep psn_id for UI
-    return {'psn_id': _psnId, 'error': 'no data', 'games': []};
+    return {'psn_id': _psnId, 'error': _error, 'games': []};
   }
 
   void _prefetchAllGameTrophies(List<dynamic> games) {
     // 并行预取所有游戏奖杯，每组 3 个并发
-    final todo = <MapEntry<String, String>>[];
+    final todo = <String>[];
     for (final g in games) {
       final gid = g['game_id']?.toString() ?? '';
-      final npId = g['np_communication_id']?.toString() ?? '';
       if (gid.isNotEmpty && !_gameTrophies.containsKey(gid)) {
-        todo.add(MapEntry(gid, npId));
+        todo.add(gid);
       }
     }
     Future(() async {
       for (var i = 0; i < todo.length; i += 3) {
         final batch = todo.skip(i).take(3);
-        await Future.wait(batch.map((e) =>
-            _fetchGameDetailSilent(e.key, e.value)));
+        await Future.wait(batch.map((gid) => _fetchGameDetailSilent(gid)));
       }
     });
   }
 
-  Future<void> _fetchGameDetailSilent(String gameId, String npId) async {
+  Future<void> _fetchGameDetailSilent(String gameId) async {
     try {
-      var url = 'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId';
-      if (_npsso.isNotEmpty && npId.isNotEmpty) {
-        if (_oauthUid.isNotEmpty) url += '&oauth_uid=\${Uri.encodeComponent(_oauthUid)}';
-        url += '&npsso=${Uri.encodeComponent(_npsso)}&np_id=${Uri.encodeComponent(npId)}';
-      }
-      final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 30));
+      final resp = await http
+          .get(Uri.parse(
+              'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+          .timeout(const Duration(seconds: 15));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         final trophies = data['trophies'] as List<dynamic>? ?? [];
@@ -1721,12 +1690,8 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
-  final TextEditingController _npssoCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
-  String _savedNpsso = '';
-  bool _npssoVerifying = false;
-  String _npssoStatus = '';
   bool _loaded = false;
 
   @override
@@ -1740,10 +1705,8 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
-      _savedNpsso = prefs.getString('npsso') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
-      _npssoCtrl.text = _savedNpsso;
       _loaded = true;
     });
   }
@@ -1791,84 +1754,10 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Future<void> _saveNpsso() async {
-    final token = _npssoCtrl.text.trim();
-    if (token.isEmpty) return;
-    setState(() {
-      _npssoVerifying = true;
-      _npssoStatus = '';
-    });
-    // 验证 token 是否有效
-    try {
-      final resp = await http
-          .get(Uri.parse(
-              'http://8.153.97.56/api/psn_verify_npsso?npsso=$token'))
-          .timeout(const Duration(seconds: 25));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        if (data['valid'] == true) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('npsso', token);
-          setState(() {
-            _savedNpsso = token;
-            _npssoStatus = 'verified';
-          });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text('✅ 已连接 PSN: ${data['online_id'] ?? 'ok'}'),
-                  backgroundColor: Colors.green[700]),
-            );
-          }
-        } else {
-          setState(() => _npssoStatus = 'invalid');
-        }
-      } else {
-        setState(() => _npssoStatus = 'invalid');
-      }
-    } catch (_) {
-      setState(() => _npssoStatus = 'error');
-    }
-    setState(() => _npssoVerifying = false);
-  }
-
-  StreamSubscription<Uri>? _oauthSub;
-  void _openPSNLogin() async {
-    // Open Sony signin in system browser
-    try {
-      await launchUrl(
-        Uri.parse('https://id.sonyentertainmentnetwork.com/signin/'),
-        mode: LaunchMode.externalApplication,
-      );
-    } catch (_) {}
-    // After a moment, prompt user to get NPSSO
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('登录后点「获取 NPSSO」按钮'),
-          backgroundColor: Colors.blue[700],
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-
-  /// Open ssocookie page in browser — Chrome has Sony cookie → shows NPSSO JSON
-  void _openSSOCookie() async {
-    try {
-      await launchUrl(
-        Uri.parse('https://ca.account.sony.com/api/v1/ssocookie'),
-        mode: LaunchMode.externalApplication,
-      );
-    } catch (_) {}
-  }
-
   @override
   void dispose() {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
-    _npssoCtrl.dispose();
     super.dispose();
   }
 
@@ -2000,155 +1889,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-        const SizedBox(height: 32),
-        // NPSSO token
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.purple[900]!.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.purple[700]!.withOpacity(0.5)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.timer, size: 20, color: Colors.purple[300]),
-                  const SizedBox(width: 8),
-                  Text('真实游玩时间',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.purple[200])),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '通过 Chrome 登录索尼官网，手动获取 NPSSO',
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              ),
-              const SizedBox(height: 12),
-              // 两步操作按钮
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _openPSNLogin,
-                      icon: const Icon(Icons.login, size: 18),
-                      label: const Text('登录 PSN', style: TextStyle(fontSize: 13)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00439C),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _openSSOCookie,
-                      icon: const Icon(Icons.vpn_key, size: 18),
-                      label: const Text('获取 NPSSO', style: TextStyle(fontSize: 13)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueGrey[700],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text('操作提示：登录 PSN → 获取 NPSSO → 复制 → 粘贴到下方',
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _npssoCtrl,
-                decoration: InputDecoration(
-                  hintText: '粘贴 NPSSO Token',
-                  hintStyle: TextStyle(color: Colors.grey[600]),
-                  prefixIcon: Icon(Icons.vpn_key, color: Colors.grey[500], size: 20),
-                  filled: true,
-                  fillColor: Colors.grey[850],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: _npssoVerifying
-                      ? const Padding(
-                          padding: EdgeInsets.all(14),
-                          child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2)),
-                        )
-                      : _savedNpsso.isNotEmpty
-                          ? Icon(Icons.check_circle,
-                              color: Colors.green[400])
-                          : null,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: _npssoVerifying ? null : _saveNpsso,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple[700],
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(_savedNpsso.isNotEmpty ? '更新' : '验证连接'),
-                  ),
-                  if (_savedNpsso.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: () {
-                        SharedPreferences.getInstance().then((prefs) {
-                          prefs.remove('npsso');
-                          prefs.remove('oauth_uid');
-                          setState(() {
-                            _savedNpsso = '';
-                            _npssoCtrl.clear();
-                            _npssoStatus = '';
-                          });
-                        });
-                      },
-                      child: Text('清除',
-                          style: TextStyle(color: Colors.red[300])),
-                    ),
-                  ],
-                  if (_npssoStatus == 'invalid')
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Text('❌ Token 无效',
-                          style: TextStyle(
-                              color: Colors.red[300], fontSize: 12)),
-                    ),
-                ],
-              ),
-              if (_savedNpsso.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    '✅ 已连接 · 游戏详情将显示精确时长',
-                    style:
-                        TextStyle(fontSize: 12, color: Colors.green[400]),
-                  ),
-                ),
-            ],
-          ),
-        ),
         const SizedBox(height: 40),
         SizedBox(
           width: double.infinity,

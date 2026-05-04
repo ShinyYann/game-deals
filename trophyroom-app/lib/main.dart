@@ -1380,10 +1380,14 @@ class _HomePageState extends State<HomePage>
         spans.add(TextSpan(text: text.substring(lastEnd, m.start)));
       }
       final url = m.group(0)!;
-      spans.add(TextSpan(
-        text: url,
-        style: TextStyle(color: Colors.cyan[300], fontSize: 13, decoration: TextDecoration.underline),
-        recognizer: TapGestureRecognizer()..onTap = () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      // Use WidgetSpan with GestureDetector to avoid TapGestureRecognizer lifecycle warning
+      spans.add(WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: GestureDetector(
+          onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+          child: Text(url,
+              style: TextStyle(color: Colors.cyan[300], fontSize: 13, decoration: TextDecoration.underline)),
+        ),
       ));
       lastEnd = m.end;
     }

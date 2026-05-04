@@ -2231,35 +2231,31 @@ class _PPNLoginScreenState extends State<_PSNLoginScreen> {
         onPageFinished: (url) {
           setState(() => _loading = false);
           if (_extracted) return;
-          // When user is on the ssocookie page and logged in, extract NPSSO
+          // After login, navigate to ssocookie to grab the token
+          if (url.contains('playstation.com') &&
+              !url.contains('signin') &&
+              !url.contains('login')) {
+            _ctrl.runJavaScript('document.cookie').then((cookies) {
+              if (cookies.toString().contains('npsso')) {
+                // Navigate to ssocookie page to extract NPSSO
+                _ctrl.loadRequest(Uri.parse(
+                    'https://ca.account.sony.com/api/v1/ssocookie'));
+              }
+            });
+          }
+          // On ssocookie page, extract the NPSSO value
           if (url.contains('ssocookie')) {
-            _ctrl.runJavaScript('document.body.innerText').then((raw) {
-              if (_extracted) return;
-              try {
-                final data = json.decode(raw as String);
-                final token = data['npsso'] as String?;
-                if (token != null && token.isNotEmpty) {
-                  _extracted = true;
-                  if (mounted) Navigator.of(context).pop(token);
-                }
-              } catch (_) {}
+            _ctrl.runJavaScript('JSON.parse(document.body.innerText).npsso')
+                .then((npsso) {
+              if (!_extracted && npsso is String && npsso.isNotEmpty) {
+                _extracted = true;
+                if (mounted) Navigator.of(context).pop(npsso);
+              }
             }).catchError((_) {});
           }
         },
-        onNavigationRequest: (req) {
-          // Allow all Sony/account domains
-          final u = req.url.toLowerCase();
-          if (u.contains('sony.com') ||
-              u.contains('playstation.com') ||
-              u.contains('scedev.net') ||
-              u.contains('auth.api')) {
-            return NavigationDecision.navigate;
-          }
-          return NavigationDecision.prevent;
-        },
       ))
-      ..loadRequest(Uri.parse(
-          'https://ca.account.sony.com/api/v1/ssocookie'));
+      ..loadRequest(Uri.parse('https://www.playstation.com/'));
   }
 
   @override

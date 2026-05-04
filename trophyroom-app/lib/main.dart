@@ -360,7 +360,11 @@ class _HomePageState extends State<HomePage>
 
   void _initGyro() {
     try {
+      int _lastTs = 0;
       _gyroSub = gyroscopeEvents.listen((event) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now - _lastTs < 50) return; // throttle to ~20fps
+        _lastTs = now;
         _tiltX = (event.x * 0.08).clamp(-0.06, 0.06);
         _tiltY = (event.y * 0.08).clamp(-0.06, 0.06);
         if (mounted) setState(() {});

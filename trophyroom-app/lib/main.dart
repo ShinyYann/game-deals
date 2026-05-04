@@ -665,6 +665,9 @@ class _HomePageState extends State<HomePage>
             (bronze as num).toInt();
         final games = data['games'] as List<dynamic>? ?? [];
         final hasData = psnId.isNotEmpty;
+        final recentCoverUrl = (games.isNotEmpty)
+            ? (games.first as Map<String, dynamic>)['cover_url']?.toString() ?? ''
+            : '';
 
         // 后台预取所有游戏奖杯数据，点开秒开
         if (hasData && games.isNotEmpty) {
@@ -683,105 +686,141 @@ class _HomePageState extends State<HomePage>
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // ── Profile Summary Card ──
+              // ── Profile Summary Card (Spotify-style) ──
               if (hasData) ...[
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 240,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Layer 1: Blurred game cover background
+                        if (recentCoverUrl.isNotEmpty)
+                          Positioned.fill(
+                            child: Image.network(
+                              recentCoverUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        // Blur overlay
+                        Positioned.fill(
+                          child: BackdropFilter(
+                            filter: ColorFilter.mode(
+                              Colors.black.withOpacity(0.45),
+                              BlendMode.darken,
+                            ),
+                            child: Container(),
+                          ),
+                        ),
+                        // Gradient overlay at bottom for depth
+                        Positioned.fill(
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  Color(0xDD1A1A2E),
+                                ],
+                                begin: Alignment.center,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Layer 2: Frosted glass content
+                        Positioned.fill(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Row 1: PSN ID + Level badge
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        psnId,
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black.withOpacity(0.5),
+                                              blurRadius: 8,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 14, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                            color: Colors.white.withOpacity(0.3),
+                                            width: 0.5),
+                                      ),
+                                      child: Text(
+                                        'Lv $level',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Row 2: Trophy stat columns
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _trophyStat('🏆', '$platinum', Colors.cyan[300]!),
+                                    _trophyStat('🥇', '$gold', Colors.amber[400]!),
+                                    _trophyStat('🥈', '$silver', Colors.grey[400]!),
+                                    _trophyStat('🥉', '$bronze', Colors.orange[400]!),
+                                  ],
+                                ),
+                                // Row 3: Stats strip
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: Colors.white.withOpacity(0.1),
+                                        width: 0.5),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      _statItem('📊', '$totalGames', '游戏'),
+                                      _statItem('🏅', '$perfectGames', '完美'),
+                                      _statItem('🎯', '$completionRate%', '完成率'),
+                                      _statItem('🏆', '$totalTrophies', '总数'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF7C3AED).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      // Row 1: PSN ID + Level badge
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              psnId,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              'Lv $level',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Purple level progress bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: 0.75,
-                          minHeight: 8,
-                          backgroundColor: Colors.white.withOpacity(0.15),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFFA855F7),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Row 2: 4 trophy stat columns
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _trophyStat(
-                              '🏆', '$platinum', Colors.cyan[300]!),
-                          _trophyStat(
-                              '🥇', '$gold', Colors.amber[400]!),
-                          _trophyStat(
-                              '🥈', '$silver', Colors.grey[400]!),
-                          _trophyStat(
-                              '🥉', '$bronze', Colors.orange[400]!),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Row 3: Total Games | Perfect Games | Completion Rate | Total Trophies
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _statItem('📊', '$totalGames', '游戏'),
-                            _statItem('🏅', '$perfectGames', '完美'),
-                            _statItem('🎯', '$completionRate%', '完成率'),
-                            _statItem('🏆', '$totalTrophies', '总数'),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(height: 20),

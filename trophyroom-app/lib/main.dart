@@ -866,7 +866,7 @@ class _HomePageState extends State<HomePage>
         children: [
           // Header (always visible)
           InkWell(
-            onTap: () => _toggleGame(gameId),
+            onTap: () => _toggleGame(gameId, game['np_communication_id']?.toString() ?? ''),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -1268,7 +1268,7 @@ class _HomePageState extends State<HomePage>
     return [];
   }
 
-  void _toggleGame(String gameId) async {
+  void _toggleGame(String gameId, String npId) async {
     if (_expandedGameId.value == gameId) {
       _expandedGameId.value = null;
       return;
@@ -1278,9 +1278,12 @@ class _HomePageState extends State<HomePage>
 
     if (!_gameTrophies.containsKey(gameId)) {
       try {
+        var url = 'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId';
+        if (_npsso.isNotEmpty && npId.isNotEmpty) {
+          url += '&npsso=${Uri.encodeComponent(_npsso)}&np_id=${Uri.encodeComponent(npId)}';
+        }
         final resp = await http
-            .get(Uri.parse(
-                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+            .get(Uri.parse(url))
             .timeout(const Duration(seconds: 10));
         if (resp.statusCode == 200) {
           final data = json.decode(resp.body);
@@ -1322,26 +1325,30 @@ class _HomePageState extends State<HomePage>
 
   void _prefetchAllGameTrophies(List<dynamic> games) {
     // 并行预取所有游戏奖杯，每组 3 个并发
-    final todo = <String>[];
+    final todo = <MapEntry<String, String>>[];
     for (final g in games) {
       final gid = g['game_id']?.toString() ?? '';
+      final npId = g['np_communication_id']?.toString() ?? '';
       if (gid.isNotEmpty && !_gameTrophies.containsKey(gid)) {
-        todo.add(gid);
+        todo.add(MapEntry(gid, npId));
       }
     }
     Future(() async {
       for (var i = 0; i < todo.length; i += 3) {
         final batch = todo.skip(i).take(3);
-        await Future.wait(batch.map((gid) => _fetchGameDetailSilent(gid)));
+        await Future.wait(batch.map((e) =>
+            _fetchGameDetailSilent(e.key, e.value)));
       }
     });
   }
 
-  Future<void> _fetchGameDetailSilent(String gameId) async {
+  Future<void> _fetchGameDetailSilent(String gameId, String npId) async {
     try {
-      final resp = await http
-          .get(Uri.parse(
-              'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+      var url = 'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId';
+      if (_npsso.isNotEmpty && npId.isNotEmpty) {
+        url += '&npsso=${Uri.encodeComponent(_npsso)}&np_id=${Uri.encodeComponent(npId)}';
+      }
+      final resp = await http.get(Uri.parse(url))
           .timeout(const Duration(seconds: 15));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);

@@ -302,7 +302,8 @@ class _HomePageState extends State<HomePage>
   String _steamId = '';
   bool _accountsLoaded = false;
   String _error = '';
-  String? _expandedGameId;
+  // 用 ValueNotifier 避免展开关闭时重建整页
+  final ValueNotifier<String?> _expandedGameId = ValueNotifier<String?>(null);
   Map<String, List<dynamic>> _gameTrophies = {};
 
   @override
@@ -334,6 +335,7 @@ class _HomePageState extends State<HomePage>
   void dispose() {
     _animCtrl.dispose();
     _scanCtrl.dispose();
+    _expandedGameId.dispose();
     super.dispose();
   }
 
@@ -635,7 +637,7 @@ class _HomePageState extends State<HomePage>
         return RefreshIndicator(
           color: Colors.purple[300],
           onRefresh: () async {
-            _expandedGameId = null;
+            _expandedGameId.value = null;
             _gameTrophies.clear();
             setState(() {});
           },
@@ -783,9 +785,13 @@ class _HomePageState extends State<HomePage>
                 ...games.map((g) {
                   final game = g as Map<String, dynamic>;
                   final gameId = game['game_id']?.toString() ?? '';
-                  final isExpanded = _expandedGameId == gameId;
-                  return _buildExpandableGameCard(game,
-                      isExpanded: isExpanded);
+                  return ValueListenableBuilder<String?>(
+                    valueListenable: _expandedGameId,
+                    builder: (context, expandedId, _) {
+                      return _buildExpandableGameCard(game,
+                          isExpanded: expandedId == gameId);
+                    },
+                  );
                 }),
               const SizedBox(height: 20),
             ],
@@ -1256,14 +1262,12 @@ class _HomePageState extends State<HomePage>
   }
 
   void _toggleGame(String gameId) async {
-    if (_expandedGameId == gameId) {
-      setState(() => _expandedGameId = null);
+    if (_expandedGameId.value == gameId) {
+      _expandedGameId.value = null;
       return;
     }
 
-    setState(() {
-      _expandedGameId = gameId;
-    });
+    _expandedGameId.value = gameId;
 
     if (!_gameTrophies.containsKey(gameId)) {
       try {

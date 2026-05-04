@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
+import 'pages/web_view_page.dart';
+import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -1385,11 +1387,11 @@ class _HomePageState extends State<HomePage>
         spans.add(TextSpan(text: text.substring(lastEnd, m.start)));
       }
       final url = m.group(0)!;
-      // Use WidgetSpan with GestureDetector to avoid TapGestureRecognizer lifecycle warning
+      // Use WidgetSpan with GestureDetector — inline tap opens in-app WebView
       spans.add(WidgetSpan(
         alignment: PlaceholderAlignment.middle,
         child: GestureDetector(
-          onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WebViewPage(url: url))),
           child: Text(url,
               style: TextStyle(color: Colors.cyan[300], fontSize: 13, decoration: TextDecoration.underline)),
         ),
@@ -1748,6 +1750,18 @@ class _HomePageState extends State<HomePage>
           color: const Color(0xFF1565C0),
         ),
         const SizedBox(height: 20),
+        // 📑 攻略收藏夹入口
+        _guideCard(
+          icon: '📑',
+          title: '攻略收藏夹',
+          subtitle: '已收藏的网页攻略 · 点击续读',
+          color: const Color(0xFFFF8F00),
+          onTapOverride: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const BookmarkListPage()));
+          },
+        ),
+        const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1769,14 +1783,16 @@ class _HomePageState extends State<HomePage>
     required String title,
     required String subtitle,
     required Color color,
+    VoidCallback? onTapOverride,
   }) {
     return InkWell(
-      onTap: () {
-        // TODO: 跳转到具体攻略页
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$title — 攻略制作中'), duration: const Duration(seconds: 2)),
-        );
-      },
+      onTap: onTapOverride ??
+          () {
+            // TODO: 跳转到具体攻略页
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$title — 攻略制作中'), duration: const Duration(seconds: 2)),
+            );
+          },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

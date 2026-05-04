@@ -1816,9 +1816,8 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     _listenForOAuthCallback();
     final oauthUrl =
-        'https://ca.account.sony.com/api/authz/v3/oauth/authorize'
-        '?access_type=offline'
-        '&client_id=09515159-7237-4370-9b40-3806e67c0891'
+        'https://id.sonyentertainmentnetwork.com/signin/'
+        '?client_id=09515159-7237-4370-9b40-3806e67c0891'
         '&redirect_uri=${Uri.encodeComponent('com.scee.psxandroid://redirect')}'
         '&response_type=code'
         '&scope=${Uri.encodeComponent('psn:mobile.v2.core psn:clientapp')}'

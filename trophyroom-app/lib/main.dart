@@ -295,6 +295,7 @@ class _HomePageState extends State<HomePage>
   late AnimationController _animCtrl;
   late Animation<double> _titleSlide;
   late AnimationController _scanCtrl;
+  late AnimationController _rippleCtrl;
   bool _animDone = false;
   List<Map<String, dynamic>> _deals = [];
   String _dealsStatus = '';
@@ -326,6 +327,10 @@ class _HomePageState extends State<HomePage>
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
+    _rippleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) _animCtrl.forward().then((_) => setState(() => _animDone = true));
     });
@@ -339,6 +344,8 @@ class _HomePageState extends State<HomePage>
   @override
   void dispose() {
     _animCtrl.dispose();
+    _scanCtrl.dispose();
+    _rippleCtrl.dispose();
     _scanCtrl.dispose();
     _expandedGameId.dispose();
     super.dispose();
@@ -696,21 +703,22 @@ class _HomePageState extends State<HomePage>
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Layer 1: Blurred game cover background
+                        // Layer 1: Blurred game cover with chromatic aberration
                         if (recentCoverUrl.isNotEmpty)
                           Positioned.fill(
                             child: ImageFiltered(
-                              imageFilter: ui.ImageFilter.blur(
-                                  sigmaX: 18, sigmaY: 18),
-                              child: Image.network(
-                                recentCoverUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                              imageFilter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                              child: _chromaticImage(
+                                Image.network(
+                                  recentCoverUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -746,6 +754,8 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                         ),
+                        // Color ripple animation overlay
+                        Positioned.fill(child: _rippleOverlay()),
                         // Layer 2: Content
                         Positioned.fill(
                           child: Padding(
@@ -931,6 +941,53 @@ class _HomePageState extends State<HomePage>
                 fontWeight: FontWeight.bold,
                 color: color)),
       ],
+    );
+  }
+
+  /// Chromatic aberration wrapper: offsets R/B channels for a lens-like dispersion effect
+  Widget _chromaticImage(Widget image) {
+    return Stack(
+      children: [
+        // Red channel — offset top-left
+        ColorFiltered(
+          colorFilter: const ColorFilter.matrix(<double>[
+            1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0.25, 0,
+          ]),
+          child: Transform.translate(
+            offset: const Offset(-3, -2),
+            child: Opacity(opacity: 0.5, child: image),
+          ),
+        ),
+        // Cyan channel — offset bottom-right
+        ColorFiltered(
+          colorFilter: const ColorFilter.matrix(<double>[
+            0, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 0.25, 0,
+          ]),
+          child: Transform.translate(
+            offset: const Offset(3, 2),
+            child: Opacity(opacity: 0.5, child: image),
+          ),
+        ),
+        // Center — normal image
+        image,
+      ],
+    );
+  }
+
+  /// Animated color ripple overlay — CustomPainter
+  Widget _rippleOverlay() {
+    return AnimatedBuilder(
+      animation: _rippleCtrl,
+      builder: (_, __) => CustomPaint(
+        painter: _RipplePainter(_rippleCtrl.value * 2 * math.pi),
+        size: Size.infinite,
+      ),
     );
   }
 
@@ -2252,5 +2309,40 @@ class _GameDetailCard extends StatelessWidget {
     );
   }
 }
+
+/// Color ripple painter — slow, flowing color blobs
+class _RipplePainter extends CustomPainter {
+  final double phase;
+  _RipplePainter(this.phase);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 3 color blobs orbiting slowly
+    final blobs = [
+      _blob(phase, size, const Color(0x30E040FB), 0.6, 0.4),
+      _blob(phase + 2.1, size, const Color(0x30FF6D00), 0.3, 0.7),
+      _blob(phase + 4.2, size, const Color(0x3000E5FF), 0.7, 0.2),
+    ];
+    for (final b in blobs) {
+      canvas.drawCircle(b.offset, b.radius, b.paint);
+    }
+  }
+
+  ({Offset offset, double radius, Paint paint}) _blob(
+      double angle, Size size, Color color, double cx, double cy) {
+    final orbitX = 80 * math.sin(angle);
+    final orbitY = 60 * math.cos(angle);
+    final center = Offset(size.width * cx + orbitX, size.height * cy + orbitY);
+    final radius = 120 + 40 * math.sin(angle * 1.3);
+    final paint = Paint()
+      ..color = color
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+    return (offset: center, radius: radius, paint: paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RipplePainter old) => old.phase != phase;
+}
+
 // Trigger build Sun May  3 20:14:20 CST 2026
 // trigger 1777813344

@@ -2221,43 +2221,63 @@ class _PPNLoginScreenState extends State<_PSNLoginScreen> {
   late final WebViewController _ctrl;
   bool _loading = true;
   bool _extracted = false;
-  bool _seenSignIn = false;
 
   @override
   void initState() {
     super.initState();
     _ctrl = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setUserAgent(
+          'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0 Mobile Safari/537.36')
       ..setNavigationDelegate(NavigationDelegate(
         onPageFinished: (url) {
           setState(() => _loading = false);
           if (_extracted) return;
-          // Track sign-in flow
           final u = url.toLowerCase();
-          if (u.contains('signin') || u.contains('/login')) {
-            _seenSignIn = true;
-          }
-          // After login completes, try ssocookie
-          if (_seenSignIn &&
-              u.contains('playstation.com') &&
-              !u.contains('signin') &&
-              !u.contains('login')) {
-            _ctrl.loadRequest(Uri.parse(
-                'https://ca.account.sony.com/api/v1/ssocookie'));
-          }
-          // Extract NPSSO from ssocookie page
-          if (u.contains('ssocookie')) {
-            _ctrl.runJavaScript('JSON.parse(document.body.innerText).npsso')
-                .then((npsso) {
-              if (!_extracted && npsso is String && npsso.isNotEmpty) {
-                _extracted = true;
-                if (mounted) Navigator.of(context).pop(npsso);
-              }
-            }).catchError((_) {});
+          // After login completes (redirect to playstation/account page)
+          if (!u.contains('signin') && !u.contains('login') &&
+              (u.contains('playstation.com') || u.contains('sony.com'))) {
+            _tryExtractNpsso();
           }
         },
       ))
-      ..loadRequest(Uri.parse('https://www.playstation.com/'));
+      ..loadRequest(Uri.parse(
+          'https://id.sonyentertainmentnetwork.com/signin/'));
+  }
+
+  void _tryExtractNpsso() async {
+    try {
+      await _ctrl.loadRequest(Uri.parse(
+          'https://ca.account.sony.com/api/v1/ssocookie'));
+      await Future.delayed(const Duration(seconds: 2));
+      final raw = await _ctrl.runJavaScript('document.body.innerText');
+      if (_extracted || !mounted) return;
+      final data = json.decode(raw as String);
+      final token = data['npsso'] as String?;
+      if (token != null && token.isNotEmpty) {
+        _extracted = true;
+        if (mounted) Navigator.of(context).pop(token);
+      }
+    } catch (_) {
+      // Retry once
+      try {
+        await _ctrl.loadRequest(Uri.parse(
+            'https://www.playstation.com/'));
+        await Future.delayed(const Duration(seconds: 1));
+        await _ctrl.loadRequest(Uri.parse(
+            'https://ca.account.sony.com/api/v1/ssocookie'));
+        await Future.delayed(const Duration(seconds: 2));
+        final raw = await _ctrl.runJavaScript('document.body.innerText');
+        if (_extracted || !mounted) return;
+        final data = json.decode(raw as String);
+        final token = data['npsso'] as String?;
+        if (token != null && token.isNotEmpty) {
+          _extracted = true;
+          if (mounted) Navigator.of(context).pop(token);
+        }
+      } catch (_) {}
+    }
+  }
   }
 
   @override
@@ -2272,14 +2292,37 @@ class _PPNLoginScreenState extends State<_PSNLoginScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _ctrl),
-          if (_loading)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+        actions: [
+          if (!_loading)
+            TextButton(
+              onPressed: _tryExtractNpsso,
+              child: const Text('完成', style: TextStyle(color: Colors.white)),
             ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _ctrl),
+                if (_loading)
+                  const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+              ],
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: Colors.black87,
+            child: Text(
+              _loading ? '正在加载登录页面…' : '登录成功后，点右上角「完成」',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[400], fontSize: 13),
+            ),
+          ),
         ],
       ),
     );

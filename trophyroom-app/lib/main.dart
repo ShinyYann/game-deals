@@ -738,15 +738,15 @@ class _HomePageState extends State<HomePage>
                               ),
                             ),
                           ),
-                        // Dark overlay for readability
+                        // Dark overlay — lighter, let the background show through
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.black.withOpacity(0.3),
+                                  Colors.black.withOpacity(0.15),
+                                  Colors.black.withOpacity(0.35),
                                   Colors.black.withOpacity(0.6),
-                                  Colors.black.withOpacity(0.85),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -756,6 +756,16 @@ class _HomePageState extends State<HomePage>
                         ),
                         // Color ripple animation overlay
                         Positioned.fill(child: _rippleOverlay()),
+                        // Rotating neon border glow
+                        Positioned.fill(
+                          child: AnimatedBuilder(
+                            animation: _rippleCtrl,
+                            builder: (_, __) => CustomPaint(
+                              painter: _NeonBorderPainter(_rippleCtrl.value * 2 * math.pi),
+                              size: Size.infinite,
+                            ),
+                          ),
+                        ),
                         // Layer 2: Content
                         Positioned.fill(
                           child: Padding(
@@ -948,30 +958,30 @@ class _HomePageState extends State<HomePage>
   Widget _chromaticImage(Widget image) {
     return Stack(
       children: [
-        // Red channel — offset top-left
+        // Red channel — offset top-left, stronger
         ColorFiltered(
           colorFilter: const ColorFilter.matrix(<double>[
             1, 0, 0, 0, 0,
             0, 0, 0, 0, 0,
             0, 0, 0, 0, 0,
-            0, 0, 0, 0.25, 0,
+            0, 0, 0, 0.4, 0,
           ]),
           child: Transform.translate(
-            offset: const Offset(-3, -2),
-            child: Opacity(opacity: 0.5, child: image),
+            offset: const Offset(-5, -3),
+            child: Opacity(opacity: 0.6, child: image),
           ),
         ),
-        // Cyan channel — offset bottom-right
+        // Cyan channel — offset bottom-right, stronger
         ColorFiltered(
           colorFilter: const ColorFilter.matrix(<double>[
             0, 0, 0, 0, 0,
             0, 1, 0, 0, 0,
             0, 0, 1, 0, 0,
-            0, 0, 0, 0.25, 0,
+            0, 0, 0, 0.4, 0,
           ]),
           child: Transform.translate(
-            offset: const Offset(3, 2),
-            child: Opacity(opacity: 0.5, child: image),
+            offset: const Offset(5, 3),
+            child: Opacity(opacity: 0.6, child: image),
           ),
         ),
         // Center — normal image
@@ -2344,5 +2354,38 @@ class _RipplePainter extends CustomPainter {
   bool shouldRepaint(covariant _RipplePainter old) => old.phase != phase;
 }
 
-// Trigger build Sun May  3 20:14:20 CST 2026
+/// Neon glowing border — rotating gradient sweep
+class _NeonBorderPainter extends CustomPainter {
+  final double phase;
+  _NeonBorderPainter(this.phase);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
+      const Radius.circular(16),
+    );
+    // Rotating gradient sweep
+    final sweep = SweepGradient(
+      center: Alignment.center,
+      startAngle: phase,
+      endAngle: phase + math.pi * 2,
+      colors: const [
+        Color(0x00E040FB),
+        Color(0x60E040FB),
+        Color(0x00E040FB),
+      ],
+      stops: const [0.0, 0.15, 0.25],
+    );
+    final paint = Paint()
+      ..shader = sweep.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _NeonBorderPainter old) => old.phase != phase;
+}
 // trigger 1777813344

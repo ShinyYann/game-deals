@@ -2221,6 +2221,7 @@ class _PPNLoginScreenState extends State<_PSNLoginScreen> {
   late final WebViewController _ctrl;
   bool _loading = true;
   bool _extracted = false;
+  bool _seenSignIn = false;
 
   @override
   void initState() {
@@ -2231,20 +2232,21 @@ class _PPNLoginScreenState extends State<_PSNLoginScreen> {
         onPageFinished: (url) {
           setState(() => _loading = false);
           if (_extracted) return;
-          // After login, navigate to ssocookie to grab the token
-          if (url.contains('playstation.com') &&
-              !url.contains('signin') &&
-              !url.contains('login')) {
-            _ctrl.runJavaScript('document.cookie').then((cookies) {
-              if (cookies.toString().contains('npsso')) {
-                // Navigate to ssocookie page to extract NPSSO
-                _ctrl.loadRequest(Uri.parse(
-                    'https://ca.account.sony.com/api/v1/ssocookie'));
-              }
-            });
+          // Track sign-in flow
+          final u = url.toLowerCase();
+          if (u.contains('signin') || u.contains('/login')) {
+            _seenSignIn = true;
           }
-          // On ssocookie page, extract the NPSSO value
-          if (url.contains('ssocookie')) {
+          // After login completes, try ssocookie
+          if (_seenSignIn &&
+              u.contains('playstation.com') &&
+              !u.contains('signin') &&
+              !u.contains('login')) {
+            _ctrl.loadRequest(Uri.parse(
+                'https://ca.account.sony.com/api/v1/ssocookie'));
+          }
+          // Extract NPSSO from ssocookie page
+          if (u.contains('ssocookie')) {
             _ctrl.runJavaScript('JSON.parse(document.body.innerText).npsso')
                 .then((npsso) {
               if (!_extracted && npsso is String && npsso.isNotEmpty) {

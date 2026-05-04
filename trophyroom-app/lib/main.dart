@@ -313,9 +313,8 @@ class _HomePageState extends State<HomePage>
   // 用 ValueNotifier 避免展开关闭时重建整页
   final ValueNotifier<String?> _expandedGameId = ValueNotifier<String?>(null);
   Map<String, List<dynamic>> _gameTrophies = {};
-  // 3D tilt values from gyroscope
-  double _tiltX = 0;
-  double _tiltY = 0;
+  // 3D tilt via ValueNotifier — avoids full-page setState
+  final ValueNotifier<Offset> _tilt = ValueNotifier(Offset.zero);
   StreamSubscription<GyroscopeEvent>? _gyroSub;
 
   @override
@@ -353,6 +352,7 @@ class _HomePageState extends State<HomePage>
     _animCtrl.dispose();
     _scanCtrl.dispose();
     _rippleCtrl.dispose();
+    _tilt.dispose();
     _gyroSub?.cancel();
     _expandedGameId.dispose();
     super.dispose();
@@ -363,11 +363,12 @@ class _HomePageState extends State<HomePage>
       int _lastTs = 0;
       _gyroSub = gyroscopeEvents.listen((event) {
         final now = DateTime.now().millisecondsSinceEpoch;
-        if (now - _lastTs < 50) return; // throttle to ~20fps
+        if (now - _lastTs < 50) return;
         _lastTs = now;
-        _tiltX = (event.x * 0.08).clamp(-0.06, 0.06);
-        _tiltY = (event.y * 0.08).clamp(-0.06, 0.06);
-        if (mounted) setState(() {});
+        _tilt.value = Offset(
+          (event.x * 0.3).clamp(-0.12, 0.12),
+          (event.y * 0.3).clamp(-0.12, 0.12),
+        );
       });
     } catch (_) {}
   }
@@ -720,12 +721,14 @@ class _HomePageState extends State<HomePage>
             children: [
               // ── Profile Summary Card (Spotify-style) ──
               if (hasData) ...[
-                Transform(
+                ValueListenableBuilder<Offset>(
+                  valueListenable: _tilt,
+                  builder: (_, tilt, __) => Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.identity()
                     ..setEntry(3, 2, 0.001)
-                    ..rotateX(_tiltY)
-                    ..rotateY(_tiltX),
+                    ..rotateX(tilt.dy)
+                    ..rotateY(tilt.dx),
                   child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: SizedBox(
@@ -791,8 +794,7 @@ class _HomePageState extends State<HomePage>
                             builder: (_, __) => CustomPaint(
                               painter: _ProfileVfxPainter(
                                 _rippleCtrl.value * 2 * math.pi,
-                                _tiltX,
-                                _tiltY,
+                                _tilt.value,
                               ),
                               size: Size.infinite,
                             ),
@@ -849,21 +851,29 @@ class _HomePageState extends State<HomePage>
                                     _trophyStat('🥉', '$bronze', Colors.orange[400]!),
                                   ],
                                 ),
-                                // Row 3: Stats strip (frosted glass)
+                                // Row 3: Stats strip (crystal glass)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: BackdropFilter(
                                     filter: ui.ImageFilter.blur(
-                                        sigmaX: 8, sigmaY: 8),
+                                        sigmaX: 16, sigmaY: 16),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 12, vertical: 10),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
+                                        color: Colors.white.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                            color: Colors.white.withOpacity(0.15),
-                                            width: 0.5),
+                                            color: Colors.white.withOpacity(0.25),
+                                            width: 0.8),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white.withOpacity(0.05),
+                                            blurRadius: 2,
+                                            spreadRadius: 0,
+                                            offset: const Offset(0, 1),
+                                          ),
+                                        ],
                                       ),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -885,6 +895,7 @@ class _HomePageState extends State<HomePage>
                     ),
                   ),
                 ),
+                  ),
                   ),
                 const SizedBox(height: 20),
               ],
@@ -2346,44 +2357,44 @@ class _GameDetailCard extends StatelessWidget {
 /// Color ripple painter — slow, flowing color blobs
 class _ProfileVfxPainter extends CustomPainter {
   final double phase;
-  final double tiltX, tiltY;
-  _ProfileVfxPainter(this.phase, this.tiltX, this.tiltY);
+  final Offset tilt;
+  _ProfileVfxPainter(this.phase, this.tilt);
 
   @override
   void paint(Canvas canvas, Size size) {
     // ── Color ripples: 3 soft orbiting blobs ──
-    _drawRipple(phase, size, canvas, const Color(0x30E040FB), 0.6, 0.4);
-    _drawRipple(phase + 2.1, size, canvas, const Color(0x30FF6D00), 0.3, 0.7);
-    _drawRipple(phase + 4.2, size, canvas, const Color(0x3000E5FF), 0.7, 0.2);
+    _drawRipple(phase, size, canvas, const Color(0x40E040FB), 0.6, 0.4);
+    _drawRipple(phase + 2.1, size, canvas, const Color(0x40FF6D00), 0.3, 0.7);
+    _drawRipple(phase + 4.2, size, canvas, const Color(0x4000E5FF), 0.7, 0.2);
 
     // ── Aurora waves: horizontal shimmer bands ──
     for (int i = 0; i < 3; i++) {
-      final y = size.height * (0.3 + i * 0.25);
-      final waveX = 60 * math.sin(phase + i * 1.8) * (1 + i) * 0.6;
+      final y = size.height * (0.2 + i * 0.3);
+      final waveX = 80 * math.sin(phase + i * 1.8) * (1 + i) * 0.7;
       final rect = Rect.fromLTWH(
-        size.width * 0.1 + waveX, y - 40,
-        size.width * 0.8, 80,
+        size.width * 0.05 + waveX, y - 50,
+        size.width * 0.9, 100,
       );
       final aPaint = Paint()
         ..shader = const LinearGradient(
-          colors: [Color(0x08E040FB), Color(0x1500E5FF), Color(0x08E040FB)],
+          colors: [Color(0x15E040FB), Color(0x3500E5FF), Color(0x15E040FB)],
         ).createShader(rect)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
       canvas.drawRect(rect, aPaint);
     }
 
     // ── Floating particles: trophy-like dots rising ──
     final particleColors = const [
-      Color(0x60FFFFFF), Color(0x40E040FB), Color(0x50FFD700), Color(0x4000E5FF),
+      Color(0x80FFFFFF), Color(0x60E040FB), Color(0x70FFD700), Color(0x6000E5FF),
     ];
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 16; i++) {
       final seed = i * 0.618;
       final px = (math.sin(phase * 0.3 + seed) * 0.5 + 0.5) * size.width;
-      final py = size.height - ((phase * 40 + seed * size.height * 3) % (size.height + 40));
-      final radius = 2.0 + math.sin(phase * 2 + seed) * 0.5;
+      final py = size.height - ((phase * 50 + seed * size.height * 3) % (size.height + 50));
+      final radius = 2.5 + math.sin(phase * 2 + seed) * 1.0;
       final pPaint = Paint()
         ..color = particleColors[i % particleColors.length]
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
       canvas.drawCircle(Offset(px, py), radius, pPaint);
     }
 
@@ -2397,31 +2408,31 @@ class _ProfileVfxPainter extends CustomPainter {
       startAngle: phase,
       endAngle: phase + math.pi * 2,
       colors: const [
-        Color(0x00E040FB), Color(0x60E040FB), Color(0x00E040FB),
+        Color(0x00E040FB), Color(0x80E040FB), Color(0x10E040FB), Color(0x00E040FB),
       ],
-      stops: const [0.0, 0.12, 0.2],
+      stops: const [0.0, 0.08, 0.15, 0.2],
     );
     final nPaint = Paint()
       ..shader = sweep.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      ..strokeWidth = 3
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
     canvas.drawRRect(rrect, nPaint);
   }
 
   void _drawRipple(double angle, Size size, Canvas canvas, Color color, double cx, double cy) {
-    final ox = 60 * math.sin(angle);
-    final oy = 40 * math.cos(angle);
+    final ox = 70 * math.sin(angle);
+    final oy = 50 * math.cos(angle);
     final center = Offset(size.width * cx + ox, size.height * cy + oy);
-    final radius = 100 + 30 * math.sin(angle * 1.3);
+    final radius = 110 + 40 * math.sin(angle * 1.3);
     canvas.drawCircle(center, radius, Paint()
       ..color = color
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50));
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60));
   }
 
   @override
   bool shouldRepaint(covariant _ProfileVfxPainter old) =>
-      old.phase != phase || old.tiltX != tiltX || old.tiltY != tiltY;
+      old.phase != phase || old.tilt != tilt;
 }
 
 /// Neon glowing border — rotating gradient sweep

@@ -9,6 +9,7 @@ import 'pages/game_detail_page.dart';
 import 'pages/web_view_page.dart';
 import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -311,6 +312,10 @@ class _HomePageState extends State<HomePage>
   // 用 ValueNotifier 避免展开关闭时重建整页
   final ValueNotifier<String?> _expandedGameId = ValueNotifier<String?>(null);
   Map<String, List<dynamic>> _gameTrophies = {};
+  // 3D tilt values from gyroscope
+  double _tiltX = 0;
+  double _tiltY = 0;
+  StreamSubscription<GyroscopeEvent>? _gyroSub;
 
   @override
   void initState() {
@@ -337,6 +342,7 @@ class _HomePageState extends State<HomePage>
     _deals = List.from(_offlineGames);
     _dealsStatus = '${_offlineGames.length} 款内置游戏';
     _initPSNWebView();
+    _initGyro();
     _checkNetwork();
     _loadAccounts();
   }
@@ -346,9 +352,19 @@ class _HomePageState extends State<HomePage>
     _animCtrl.dispose();
     _scanCtrl.dispose();
     _rippleCtrl.dispose();
-    _scanCtrl.dispose();
+    _gyroSub?.cancel();
     _expandedGameId.dispose();
     super.dispose();
+  }
+
+  void _initGyro() {
+    try {
+      _gyroSub = gyroscopeEvents.listen((event) {
+        _tiltX = (event.x * 0.08).clamp(-0.06, 0.06);
+        _tiltY = (event.y * 0.08).clamp(-0.06, 0.06);
+        if (mounted) setState(() {});
+      });
+    } catch (_) {}
   }
 
   void _initPSNWebView() {
@@ -696,7 +712,13 @@ class _HomePageState extends State<HomePage>
             children: [
               // ── Profile Summary Card (Spotify-style) ──
               if (hasData) ...[
-                ClipRRect(
+                Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateX(_tiltY)
+                    ..rotateY(_tiltX),
+                  child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: SizedBox(
                     height: 240,
@@ -754,14 +776,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                         ),
-                        // Color ripple animation overlay
-                        Positioned.fill(child: _rippleOverlay()),
-                        // Rotating neon border glow
+                        // Combined VFX: ripples + particles + aurora + neon border
                         Positioned.fill(
                           child: AnimatedBuilder(
                             animation: _rippleCtrl,
                             builder: (_, __) => CustomPaint(
-                              painter: _NeonBorderPainter(_rippleCtrl.value * 2 * math.pi),
+                              painter: _ProfileVfxPainter(
+                                _rippleCtrl.value * 2 * math.pi,
+                                _tiltX,
+                                _tiltY,
+                              ),
                               size: Size.infinite,
                             ),
                           ),
@@ -853,6 +877,7 @@ class _HomePageState extends State<HomePage>
                     ),
                   ),
                 ),
+                  ),
                 const SizedBox(height: 20),
               ],
 
@@ -991,16 +1016,6 @@ class _HomePageState extends State<HomePage>
   }
 
   /// Animated color ripple overlay — CustomPainter
-  Widget _rippleOverlay() {
-    return AnimatedBuilder(
-      animation: _rippleCtrl,
-      builder: (_, __) => CustomPaint(
-        painter: _RipplePainter(_rippleCtrl.value * 2 * math.pi),
-        size: Size.infinite,
-      ),
-    );
-  }
-
   Widget _buildExpandableGameCard(Map<String, dynamic> game,
       {required bool isExpanded}) {
     final gameId = game['game_id']?.toString() ?? '';
@@ -2321,71 +2336,86 @@ class _GameDetailCard extends StatelessWidget {
 }
 
 /// Color ripple painter — slow, flowing color blobs
-class _RipplePainter extends CustomPainter {
+class _ProfileVfxPainter extends CustomPainter {
   final double phase;
-  _RipplePainter(this.phase);
+  final double tiltX, tiltY;
+  _ProfileVfxPainter(this.phase, this.tiltX, this.tiltY);
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 3 color blobs orbiting slowly
-    final blobs = [
-      _blob(phase, size, const Color(0x30E040FB), 0.6, 0.4),
-      _blob(phase + 2.1, size, const Color(0x30FF6D00), 0.3, 0.7),
-      _blob(phase + 4.2, size, const Color(0x3000E5FF), 0.7, 0.2),
-    ];
-    for (final b in blobs) {
-      canvas.drawCircle(b.offset, b.radius, b.paint);
+    // ── Color ripples: 3 soft orbiting blobs ──
+    _drawRipple(phase, size, canvas, const Color(0x30E040FB), 0.6, 0.4);
+    _drawRipple(phase + 2.1, size, canvas, const Color(0x30FF6D00), 0.3, 0.7);
+    _drawRipple(phase + 4.2, size, canvas, const Color(0x3000E5FF), 0.7, 0.2);
+
+    // ── Aurora waves: horizontal shimmer bands ──
+    for (int i = 0; i < 3; i++) {
+      final y = size.height * (0.3 + i * 0.25);
+      final waveX = 60 * math.sin(phase + i * 1.8) * (1 + i) * 0.6;
+      final rect = Rect.fromLTWH(
+        size.width * 0.1 + waveX, y - 40,
+        size.width * 0.8, 80,
+      );
+      final aPaint = Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0x08E040FB), Color(0x1500E5FF), Color(0x08E040FB)],
+        ).createShader(rect)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+      canvas.drawRect(rect, aPaint);
     }
-  }
 
-  ({Offset offset, double radius, Paint paint}) _blob(
-      double angle, Size size, Color color, double cx, double cy) {
-    final orbitX = 80 * math.sin(angle);
-    final orbitY = 60 * math.cos(angle);
-    final center = Offset(size.width * cx + orbitX, size.height * cy + orbitY);
-    final radius = 120 + 40 * math.sin(angle * 1.3);
-    final paint = Paint()
-      ..color = color
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
-    return (offset: center, radius: radius, paint: paint);
-  }
+    // ── Floating particles: trophy-like dots rising ──
+    final particleColors = const [
+      Color(0x60FFFFFF), Color(0x40E040FB), Color(0x50FFD700), Color(0x4000E5FF),
+    ];
+    for (int i = 0; i < 12; i++) {
+      final seed = i * 0.618;
+      final px = (math.sin(phase * 0.3 + seed) * 0.5 + 0.5) * size.width;
+      final py = size.height - ((phase * 40 + seed * size.height * 3) % (size.height + 40));
+      final radius = 2.0 + math.sin(phase * 2 + seed) * 0.5;
+      final pPaint = Paint()
+        ..color = particleColors[i % particleColors.length]
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawCircle(Offset(px, py), radius, pPaint);
+    }
 
-  @override
-  bool shouldRepaint(covariant _RipplePainter old) => old.phase != phase;
-}
-
-/// Neon glowing border — rotating gradient sweep
-class _NeonBorderPainter extends CustomPainter {
-  final double phase;
-  _NeonBorderPainter(this.phase);
-
-  @override
-  void paint(Canvas canvas, Size size) {
+    // ── Neon border: rotating gradient sweep ──
     final rrect = RRect.fromRectAndRadius(
       Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
       const Radius.circular(16),
     );
-    // Rotating gradient sweep
     final sweep = SweepGradient(
       center: Alignment.center,
       startAngle: phase,
       endAngle: phase + math.pi * 2,
       colors: const [
-        Color(0x00E040FB),
-        Color(0x60E040FB),
-        Color(0x00E040FB),
+        Color(0x00E040FB), Color(0x60E040FB), Color(0x00E040FB),
       ],
-      stops: const [0.0, 0.15, 0.25],
+      stops: const [0.0, 0.12, 0.2],
     );
-    final paint = Paint()
+    final nPaint = Paint()
       ..shader = sweep.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-    canvas.drawRRect(rrect, paint);
+      ..strokeWidth = 2
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    canvas.drawRRect(rrect, nPaint);
+  }
+
+  void _drawRipple(double angle, Size size, Canvas canvas, Color color, double cx, double cy) {
+    final ox = 60 * math.sin(angle);
+    final oy = 40 * math.cos(angle);
+    final center = Offset(size.width * cx + ox, size.height * cy + oy);
+    final radius = 100 + 30 * math.sin(angle * 1.3);
+    canvas.drawCircle(center, radius, Paint()
+      ..color = color
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50));
   }
 
   @override
-  bool shouldRepaint(covariant _NeonBorderPainter old) => old.phase != phase;
+  bool shouldRepaint(covariant _ProfileVfxPainter old) =>
+      old.phase != phase || old.tiltX != tiltX || old.tiltY != tiltY;
 }
+
+/// Neon glowing border — rotating gradient sweep
+
 // trigger 1777813344

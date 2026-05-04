@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_links/app_links.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -301,6 +303,7 @@ class _HomePageState extends State<HomePage>
   String _psnId = '';
   String _steamId = '';
   String _npsso = '';
+  String _oauthUid = '';
   bool _accountsLoaded = false;
   String _error = '';
   // 用 ValueNotifier 避免展开关闭时重建整页
@@ -412,10 +415,12 @@ class _HomePageState extends State<HomePage>
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
     final npsso = prefs.getString('npsso') ?? '';
+    final oauthUid = prefs.getString('oauth_uid') ?? '';
     setState(() {
       _psnId = psn;
       _steamId = steam;
       _npsso = npsso;
+      _oauthUid = oauthUid;
       _accountsLoaded = true;
     });
   }
@@ -1307,6 +1312,7 @@ class _HomePageState extends State<HomePage>
       final apiBase = 'http://8.153.97.56';
       var url = '$apiBase/api/psn?uid=$_psnId';
       if (_npsso.isNotEmpty) {
+        if (_oauthUid.isNotEmpty) url += '&oauth_uid=\${Uri.encodeComponent(_oauthUid)}';
         url += '&npsso=${Uri.encodeComponent(_npsso)}';
       }
       final resp = await http.get(Uri.parse(url))
@@ -1346,6 +1352,7 @@ class _HomePageState extends State<HomePage>
     try {
       var url = 'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId';
       if (_npsso.isNotEmpty && npId.isNotEmpty) {
+        if (_oauthUid.isNotEmpty) url += '&oauth_uid=\${Uri.encodeComponent(_oauthUid)}';
         url += '&npsso=${Uri.encodeComponent(_npsso)}&np_id=${Uri.encodeComponent(npId)}';
       }
       final resp = await http.get(Uri.parse(url))
@@ -1800,18 +1807,83 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _npssoVerifying = false);
   }
 
+  StreamSubscription<Uri>? _oauthSub;
   void _openPSNLogin() async {
-    final npsso = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const _PSNLoginScreen()),
-    );
-    if (npsso != null && npsso.isNotEmpty && mounted) {
-      _npssoCtrl.text = npsso;
-      _saveNpsso();
+    if (_npssoVerifying) return;
+    setState(() {
+      _npssoVerifying = true;
+      _npssoStatus = 'waiting';
+    });
+    _listenForOAuthCallback();
+    final oauthUrl =
+        'https://ca.account.sony.com/api/authz/v3/oauth/authorize'
+        '?access_type=offline'
+        '&client_id=09515159-7237-4370-9b40-3806e67c0891'
+        '&redirect_uri=${Uri.encodeComponent('com.scee.psxandroid://redirect')}'
+        '&response_type=code'
+        '&scope=${Uri.encodeComponent('psn:mobile.v2.core psn:clientapp')}'
+        '&request_locale=zh-hans';
+    try {
+      await launchUrl(Uri.parse(oauthUrl),
+          mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
+  void _listenForOAuthCallback() {
+    _oauthSub?.cancel();
+    _oauthSub = AppLinks().uriLinkStream.listen((uri) {
+      if (uri.scheme == 'com.scee.psxandroid') {
+        final code = uri.queryParameters['code'];
+        if (code != null && code.isNotEmpty) {
+          _handleOAuthCode(code);
+          _oauthSub?.cancel();
+        }
+      }
+    });
+  }
+
+  Future<void> _handleOAuthCode(String code) async {
+    try {
+      final resp = await http
+          .get(Uri.parse(
+              'http://8.153.97.56/api/psn_oauth_exchange?code=${Uri.encodeComponent(code)}'))
+          .timeout(const Duration(seconds: 15));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final onlineId = data['online_id'] as String? ?? '';
+        if (onlineId.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('oauth_uid', onlineId);
+          setState(() {
+            _savedNpsso = onlineId;
+            _npssoStatus = 'verified';
+            _npssoVerifying = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('✅ 已连接 PSN: $onlineId'),
+                  backgroundColor: Colors.green[700]),
+            );
+          }
+          return;
+        }
+      }
+      setState(() {
+        _npssoStatus = 'invalid';
+        _npssoVerifying = false;
+      });
+    } catch (_) {
+      setState(() {
+        _npssoStatus = 'error';
+        _npssoVerifying = false;
+      });
     }
   }
 
   @override
   void dispose() {
+    _oauthSub?.cancel();
     _psnCtrl.dispose();
     _steamCtrl.dispose();
     _npssoCtrl.dispose();
@@ -2202,126 +2274,6 @@ class _GameDetailCard extends StatelessWidget {
           Icon(icon, size: 16, color: Colors.grey[400]),
           const SizedBox(width: 8),
           Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 14)),
-        ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════
-// PSN Login WebView —— Sony 官方登录自动拿 NPSSO
-// ═══════════════════════════════════════════
-class _PSNLoginScreen extends StatefulWidget {
-  const _PSNLoginScreen();
-  @override
-  State<_PSNLoginScreen> createState() => _PPNLoginScreenState();
-}
-
-class _PPNLoginScreenState extends State<_PSNLoginScreen> {
-  late final WebViewController _ctrl;
-  bool _loading = true;
-  bool _extracted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent(
-          'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0 Mobile Safari/537.36')
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (url) {
-          setState(() => _loading = false);
-          if (_extracted) return;
-          final u = url.toLowerCase();
-          // After login completes (redirect to playstation/account page)
-          if (!u.contains('signin') && !u.contains('login') &&
-              (u.contains('playstation.com') || u.contains('sony.com'))) {
-            _tryExtractNpsso();
-          }
-        },
-      ))
-      ..loadRequest(Uri.parse(
-          'https://id.sonyentertainmentnetwork.com/signin/'));
-  }
-
-  void _tryExtractNpsso() async {
-    try {
-      await _ctrl.loadRequest(Uri.parse(
-          'https://ca.account.sony.com/api/v1/ssocookie'));
-      await Future.delayed(const Duration(seconds: 2));
-      final raw = await _ctrl.runJavaScript('document.body.innerText');
-      if (_extracted || !mounted) return;
-      final data = json.decode(raw as String);
-      final token = data['npsso'] as String?;
-      if (token != null && token.isNotEmpty) {
-        _extracted = true;
-        if (mounted) Navigator.of(context).pop(token);
-      }
-    } catch (_) {
-      // Retry once
-      try {
-        await _ctrl.loadRequest(Uri.parse(
-            'https://www.playstation.com/'));
-        await Future.delayed(const Duration(seconds: 1));
-        await _ctrl.loadRequest(Uri.parse(
-            'https://ca.account.sony.com/api/v1/ssocookie'));
-        await Future.delayed(const Duration(seconds: 2));
-        final raw = await _ctrl.runJavaScript('document.body.innerText');
-        if (_extracted || !mounted) return;
-        final data = json.decode(raw as String);
-        final token = data['npsso'] as String?;
-        if (token != null && token.isNotEmpty) {
-          _extracted = true;
-          if (mounted) Navigator.of(context).pop(token);
-        }
-      } catch (_) {}
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF00439C),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF00439C),
-        title: const Text('Sony 账号登录'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          if (!_loading)
-            TextButton(
-              onPressed: _tryExtractNpsso,
-              child: const Text('完成', style: TextStyle(color: Colors.white)),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                WebViewWidget(controller: _ctrl),
-                if (_loading)
-                  const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-              ],
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: Colors.black87,
-            child: Text(
-              _loading ? '正在加载登录页面…' : '登录成功后，点右上角「完成」',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[400], fontSize: 13),
-            ),
-          ),
         ],
       ),
     );

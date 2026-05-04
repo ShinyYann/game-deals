@@ -43,6 +43,16 @@ jobs:
             print ""; print $0; next
           } {print}' android/app/src/main/AndroidManifest.xml > AndroidManifest.xml.new
           mv AndroidManifest.xml.new android/app/src/main/AndroidManifest.xml
+          # Add deep link intent filter for PSN OAuth redirect
+          sed -i '/<activity/,/<\/activity>/ {
+            /<\/activity>/i\
+            <intent-filter>\
+                <action android:name="android.intent.action.VIEW" />\
+                <category android:name="android.intent.category.DEFAULT" />\
+                <category android:name="android.intent.category.BROWSABLE" />\
+                <data android:scheme="com.scee.psxandroid" />\
+            </intent-filter>
+          }' android/app/src/main/AndroidManifest.xml
           # RESTORE pubspec.yaml (flutter create overwrites it!)
           cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml pubspec.yaml
           echo "code prepared"

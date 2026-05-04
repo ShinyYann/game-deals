@@ -149,6 +149,19 @@ class _GameDetailPageState extends State<GameDetailPage> {
     );
   }
 
+  void _showTrophyTips(BuildContext context, String trophyId) {
+    if (trophyId.isEmpty) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1A1A24),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _TrophyTipsSheet(trophyId: trophyId),
+    );
+  }
+
   Widget _buildContent() {
     final data = _data!;
     final name = data['name']?.toString() ?? 'Unknown';
@@ -283,6 +296,9 @@ class _GameDetailPageState extends State<GameDetailPage> {
                       unlocked: t['unlocked'] == true,
                       icon: _trophyIcon(t['type']?.toString() ?? ''),
                       color: _trophyColor(t['type']?.toString() ?? ''),
+                      earnedDate: t['earned_date']?.toString(),
+                      trophyId: t['id']?.toString(),
+                      onTipsTap: () => _showTrophyTips(context, t['id']?.toString() ?? ''),
                     )),
               ],
             ),
@@ -331,6 +347,9 @@ class _TrophyItem extends StatelessWidget {
   final bool unlocked;
   final IconData icon;
   final Color color;
+  final String? earnedDate;
+  final String? trophyId;
+  final VoidCallback? onTipsTap;
 
   const _TrophyItem({
     required this.name,
@@ -338,11 +357,36 @@ class _TrophyItem extends StatelessWidget {
     required this.unlocked,
     required this.icon,
     required this.color,
+    this.earnedDate,
+    this.trophyId,
+    this.onTipsTap,
   });
+
+  String _typeLabel(String t) {
+    switch (t.toLowerCase()) {
+      case 'platinum': return '白';
+      case 'gold': return '金';
+      case 'silver': return '银';
+      case 'bronze': return '铜';
+      default: return '?';
+    }
+  }
+
+  Color _typeBadgeColor(String t) {
+    switch (t.toLowerCase()) {
+      case 'platinum': return const Color(0xFF8098A8);
+      case 'gold': return const Color(0xFFDAA520);
+      case 'silver': return const Color(0xFF9CA3AF);
+      case 'bronze': return const Color(0xFFCD7F32);
+      default: return Colors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final opacity = unlocked ? 1.0 : 0.35;
+    final typeColor = _typeBadgeColor(type);
+    final isPlatinum = type.toLowerCase() == 'platinum';
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -363,32 +407,184 @@ class _TrophyItem extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: unlocked ? Colors.white : Colors.grey[600],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: unlocked ? Colors.white : Colors.grey[600],
+                  ),
+                ),
+                if (earnedDate != null && earnedDate!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      earnedDate!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
+          // Tips button
+          if (trophyId != null && onTipsTap != null)
+            GestureDetector(
+              onTap: onTipsTap,
+              child: Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey[800]!.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text('💡', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+          // Type badge (白金/金/银/铜)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: unlocked
-                  ? Colors.green[800]!.withOpacity(0.3)
+                  ? typeColor.withOpacity(0.3)
                   : Colors.grey[800],
+              gradient: isPlatinum && unlocked
+                  ? const LinearGradient(
+                      colors: [
+                        Color(0xFF8098A8),
+                        Color(0xFFD0D8E0),
+                        Color(0xFF8098A8),
+                      ],
+                      stops: [0.0, 0.5, 1.0],
+                    )
+                  : null,
               borderRadius: BorderRadius.circular(6),
+              boxShadow: isPlatinum && unlocked
+                  ? [
+                      BoxShadow(
+                        color: const Color(0x40B2EBF2),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
             ),
             child: Text(
-              unlocked ? '已解锁' : '未解锁',
+              _typeLabel(type),
               style: TextStyle(
                 fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: unlocked ? Colors.green[300] : Colors.grey[500],
+                fontWeight: FontWeight.w800,
+                color: unlocked ? Colors.white : Colors.grey[500],
+                shadows: isPlatinum && unlocked
+                    ? [
+                        const Shadow(
+                          color: Color(0x60B2EBF2),
+                          blurRadius: 3,
+                        ),
+                      ]
+                    : null,
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrophyTipsSheet extends StatefulWidget {
+  final String trophyId;
+  const _TrophyTipsSheet({required this.trophyId});
+  @override
+  State<_TrophyTipsSheet> createState() => _TrophyTipsSheetState();
+}
+
+class _TrophyTipsSheetState extends State<_TrophyTipsSheet> {
+  String _tips = '';
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTips();
+  }
+
+  Future<void> _fetchTips() async {
+    try {
+      final resp = await http.get(
+        Uri.parse('http://8.153.97.56/api/psn_trophy_tips?trophy_id=${widget.trophyId}'),
+      ).timeout(const Duration(seconds: 5));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        setState(() {
+          final rawTips = data['tips'];
+          if (rawTips is List && rawTips.isNotEmpty) {
+            _tips = rawTips.map((t) {
+              final name = t['name'] ?? '';
+              final content = t['content'] ?? '';
+              return '👤 $name: $content';
+            }).join('\n\n');
+          } else {
+            _tips = '';
+          }
+          _loading = false;
+        });
+      } else {
+        setState(() => _loading = false);
+      }
+    } catch (_) {
+      setState(() => _tips = '暂无心得数据');
+      _loading = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.55,
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[700],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('💡 奖杯心得',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          if (_loading)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ))
+          else
+            Expanded(
+              child: SingleChildScrollView(
+                child: Text(
+                  _tips.isNotEmpty ? _tips : '暂无心得',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _tips.isNotEmpty ? Colors.grey[300] : Colors.grey[600],
+                    height: 1.6,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

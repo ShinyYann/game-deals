@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 class WebViewPage extends StatefulWidget {
   final String url;
@@ -30,7 +32,24 @@ class _WebViewPageState extends State<WebViewPage> {
   void _initWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
+      ..setUserAgent(
+        'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+      )
+      ..setBackgroundColor(const Color(0xFF0F0F1A))
+      ..enableZoom(true);
+
+    // Android: enable DOM storage, mixed content, etc. for B站 & sites
+    if (Platform.isAndroid) {
+      final androidCtl = _controller.platform as AndroidWebViewController;
+      androidCtl.setMediaPlaybackRequiresUserGesture(false);
+      final settings = androidCtl.getSettings();
+      settings.domStorageEnabled = true;
+      settings.mixedContentMode = AndroidMixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW;
+      settings.allowFileAccess = true;
+      settings.javaScriptCanOpenWindowsAutomatically = true;
+    }
+
+    _controller.setNavigationDelegate(
         NavigationDelegate(
           onPageFinished: (url) async {
             setState(() => _isLoading = false);

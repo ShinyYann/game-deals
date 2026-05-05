@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK (v2)
 
 on:
   push:
@@ -57,7 +57,7 @@ jobs:
           cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml pubspec.yaml
           echo "code prepared"
 
-      - name: Build APK
+      - name: Build APK (v2)
         run: |
           cd /tmp/tbuild
           flutter pub get --offline 2>/dev/null || true

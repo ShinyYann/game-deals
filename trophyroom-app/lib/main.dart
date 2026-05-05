@@ -10,6 +10,8 @@ import 'pages/game_detail_page.dart';
 import 'pages/web_view_page.dart';
 import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
+import 'services/steam_video.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -313,6 +315,10 @@ class _HomePageState extends State<HomePage>
   Map<String, List<dynamic>> _gameTrophies = {};
   bool _vfxBlur = true;
   bool _vfxGlass = true;
+  bool _videoBg = false;                  // Steam 动态背景
+  VideoPlayerController? _videoController;
+  String? _trailerUrl;
+  bool _videoLoading = false;
   Map<String, dynamic> _vfx = {};        // {crystal/neon/sweep/breath: {en,intensity,color,speed}}
   late AnimationController _vfxCtrl;
 
@@ -374,13 +380,63 @@ class _HomePageState extends State<HomePage>
     setState(() {
       _vfxBlur = prefs.getBool('vfx_blur') ?? true;
       _vfxGlass = prefs.getBool('vfx_glass') ?? true;
+      _videoBg = prefs.getBool('video_bg') ?? false;
       _vfx = cfg;
     });
+    if (_videoBg) {
+      _loadTrailer();
+    } else {
+      _videoController?.pause();
+      _videoController?.dispose();
+      _videoController = null;
+      _trailerUrl = null;
+      setState(() {});
+    }
   }
 
   Future<void> _saveVfx() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('vfx_cfg', jsonEncode(_vfx));
+  }
+
+  Future<void> _loadTrailer() async {
+    if (_videoLoading || _trailerUrl != null) return;
+    setState(() => _videoLoading = true);
+    final url = await SteamVideoService.findTrailer(_lastGame ?? '');
+    if (mounted && url != null) {
+      _trailerUrl = url;
+      _initVideoPlayer();
+    }
+    if (mounted) setState(() => _videoLoading = false);
+  }
+
+  void _initVideoPlayer() {
+    _videoController?.dispose();
+    if (_trailerUrl == null) return;
+    _videoController = VideoPlayerController.networkUrl(Uri.parse(_trailerUrl!))
+      ..initialize().then((_) {
+        if (mounted) {
+          _videoController!.setLooping(true);
+          _videoController!.setVolume(0);
+          _videoController!.play();
+          setState(() {});
+        }
+      });
+  }
+
+  Future<void> _toggleVideoBg(bool on) async {
+    _videoBg = on;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('video_bg', on);
+    if (on) {
+      _loadTrailer();
+    } else {
+      _videoController?.pause();
+      _videoController?.dispose();
+      _videoController = null;
+      _trailerUrl = null;
+    }
+    setState(() {});
   }
 
   @override
@@ -389,6 +445,7 @@ class _HomePageState extends State<HomePage>
     _scanCtrl.dispose();
     _expandedGameId.dispose();
     _vfxCtrl.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -765,6 +822,18 @@ class _HomePageState extends State<HomePage>
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
+                        // Layer 0: Steam video background
+                        if (_videoBg && _videoController != null && _videoController!.value.isInitialized)
+                          Positioned.fill(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: _videoController!.value.size.width,
+                                height: _videoController!.value.size.height,
+                                child: VideoPlayer(_videoController!),
+                              ),
+                            ),
+                          ),
                         // Layer 1: Blurred game cover background
                         if (recentCoverUrl.isNotEmpty && _vfxBlur)
                           Positioned.fill(
@@ -2084,6 +2153,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _savedSteamId = '';
   bool _loaded = false;
   Map<String, dynamic> _vfxCfg = {};
+  bool _videoBg = false;
 
   @override
   void initState() {
@@ -2100,6 +2170,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
       _vfxCfg = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
+      _videoBg = prefs.getBool('video_bg') ?? false;
       _loaded = true;
     });
   }
@@ -2418,6 +2489,17 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 10),
         _vfxSwitch('封面模糊', '游戏封面毛玻璃效果', 'vfx_blur', true),
         _vfxSwitch('水晶玻璃统计条', '统计栏毛玻璃+边框发光', 'vfx_glass', true),
+        SwitchListTile(
+          title: const Text('🎬 Steam 动态背景'),
+          subtitle: const Text('当前游戏 Steam 预告片作为背景'),
+          value: _videoBg,
+          activeColor: Colors.purple[300],
+          onChanged: (v) async {
+            await SharedPreferences.getInstance().then((p) => p.setBool('video_bg', v));
+            setState(() => _videoBg = v);
+            widget.onVfxChanged?.call();
+          },
+        ),
         const SizedBox(height: 6),
         Text('🎨 封面特效自定义',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[400])),

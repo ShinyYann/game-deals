@@ -76,14 +76,19 @@ jobs:
           path: ${{ github.workspace }}/TrophyRoom.apk
           retention-days: 1
 
+      - name: Delete old tag & release
+        run: |
+          git push origin :refs/tags/latest 2>/dev/null || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
       - name: Create Release
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v2
         with:
-          tag: latest
+          tag_name: latest
           name: "TrophyRoom Latest"
           body: "Auto-build ${{ github.run_number }} — ${{ env.APK_SIZE }}"
-          artifacts: ${{ github.workspace }}/TrophyRoom.apk
-          allowUpdates: true
-          removeArtifacts: true
-          replacesArtifacts: true
+          files: ${{ github.workspace }}/TrophyRoom.apk
+          make_latest: true
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -289,7 +289,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   int _currentTab = 0;
   String _netStatus = '检测中...';
   bool _netChecked = false;
@@ -313,7 +313,24 @@ class _HomePageState extends State<HomePage>
   Map<String, List<dynamic>> _gameTrophies = {};
   bool _vfxBlur = true;
   bool _vfxGlass = true;
-  bool _vfxCrystal = false;
+  Map<String, dynamic> _vfx = {};        // {crystal/neon/sweep/breath: {en,intensity,color,speed}}
+  late AnimationController _vfxCtrl;
+
+  static const _vfxColors = {
+    '💜': 0xFF7C3AED, '💙': 0xFF3B82F6, '💚': 0xFF06B6D4,
+    '💛': 0xFFF59E0B, '🩷': 0xFFEC4899, '🤍': 0xFFE5E7EB,
+  };
+
+  Map<String, dynamic> _defaultVfx(String k) => switch (k) {
+    'crystal' => {'en': false, 'intensity': 0.15, 'color': 0xFF7C3AED},
+    'neon'    => {'en': false, 'intensity': 0.4,  'color': 0xFF7C3AED},
+    'sweep'   => {'en': false, 'intensity': 0.5,  'speed': 1.0},
+    'breath'  => {'en': false, 'intensity': 0.4,  'color': 0xFF7C3AED, 'speed': 1.0},
+    _ => {},
+  };
+
+  dynamic _v(String k, String field) => (_vfx[k] ?? _defaultVfx(k))[field];
+  bool _ve(String k) => (_vfx[k] ?? _defaultVfx(k))['en'] == true;
 
   @override
   void initState() {
@@ -339,15 +356,31 @@ class _HomePageState extends State<HomePage>
     _checkNetwork();
     _loadAccounts();
     _loadVfxPrefs();
+    _vfxCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
   }
 
   Future<void> _loadVfxPrefs() async {
     final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('vfx_cfg');
+    Map<String, dynamic> cfg;
+    if (raw != null) {
+      cfg = Map<String, dynamic>.from(jsonDecode(raw));
+    } else {
+      cfg = {};
+    }
     setState(() {
       _vfxBlur = prefs.getBool('vfx_blur') ?? true;
       _vfxGlass = prefs.getBool('vfx_glass') ?? true;
-      _vfxCrystal = prefs.getBool('vfx_crystal') ?? false;
+      _vfx = cfg;
     });
+  }
+
+  Future<void> _saveVfx() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('vfx_cfg', jsonEncode(_vfx));
   }
 
   @override
@@ -355,6 +388,7 @@ class _HomePageState extends State<HomePage>
     _animCtrl.dispose();
     _scanCtrl.dispose();
     _expandedGameId.dispose();
+    _vfxCtrl.dispose();
     super.dispose();
   }
 
@@ -706,7 +740,25 @@ class _HomePageState extends State<HomePage>
             children: [
               // ── Profile Summary Card (Spotify-style) ──
               if (hasData) ...[
-                ClipRRect(
+                AnimatedBuilder(
+                  animation: _vfxCtrl,
+                  builder: (context, child) {
+                    final breath = _ve('breath');
+                    final bi = _v('breath', 'intensity') as double;
+                    final bc = Color(_v('breath', 'color') as int);
+                    final bp = (math.sin(_vfxCtrl.value * 6.28 * (_v('breath', 'speed') as double)) + 1) / 2;
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: breath ? [
+                          BoxShadow(color: bc.withOpacity(0.2 * bi * bp), blurRadius: 16, spreadRadius: 2),
+                          BoxShadow(color: bc.withOpacity(0.08 * bi * bp), blurRadius: 32, spreadRadius: 6),
+                        ] : null,
+                      ),
+                      child: child,
+                    );
+                  },
+                  child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: SizedBox(
                     height: 240,
@@ -764,20 +816,28 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                         // Crystal glass tint overlay
-                        if (_vfxCrystal)
+                        if (_ve('crystal'))
                           Positioned.fill(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: RadialGradient(
-                                  center: const Alignment(0.0, -0.4),
-                                  radius: 0.7,
-                                  colors: [
-                                    Colors.purple[400]!.withOpacity(0.12),
-                                    Colors.blue[900]!.withOpacity(0.05),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
+                            child: AnimatedBuilder(
+                              animation: _vfxCtrl,
+                              builder: (context, child) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    gradient: RadialGradient(
+                                      center: Alignment(0.3 + math.sin(_vfxCtrl.value * 6.28) * 0.15,
+                                          -0.4 + math.cos(_vfxCtrl.value * 6.28) * 0.1),
+                                      radius: 0.7,
+                                      colors: [
+                                        Color(_v('crystal', 'color') as int)
+                                            .withOpacity((_v('crystal', 'intensity') as double) * 1.2),
+                                        Color(_v('crystal', 'color') as int)
+                                            .withOpacity((_v('crystal', 'intensity') as double) * 0.3),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         // Dark overlay — lighter, let the background show through
@@ -888,9 +948,44 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                         ),
+                        // Sweep light effect
+                        if (_ve('sweep'))
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: AnimatedBuilder(
+                                animation: _vfxCtrl,
+                                builder: (context, child) {
+                                  return CustomPaint(
+                                    painter: _SweepPainter(
+                                      time: _vfxCtrl.value * (_v('sweep', 'speed') as double),
+                                      intensity: _v('sweep', 'intensity') as double,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        // Neon border glow
+                        if (_ve('neon'))
+                          Positioned.fill(
+                            child: AnimatedBuilder(
+                              animation: _vfxCtrl,
+                              builder: (context, child) {
+                                return CustomPaint(
+                                  painter: _NeonBorderPainter(
+                                    color: Color(_v('neon', 'color') as int),
+                                    intensity: _v('neon', 'intensity') as double,
+                                    time: _vfxCtrl.value,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                       ],
                     ),
                   ),
+                ),
                 ),
               ],
 
@@ -1973,6 +2068,11 @@ class SettingsPage extends StatefulWidget {
   final VoidCallback? onVfxChanged;
   const SettingsPage({super.key, this.onVfxChanged});
 
+  static const _vfxColors = {
+    '💜': 0xFF7C3AED, '💙': 0xFF3B82F6, '💚': 0xFF06B6D4,
+    '💛': 0xFFF59E0B, '🩷': 0xFFEC4899, '🤍': 0xFFE5E7EB,
+  };
+
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
@@ -2031,6 +2131,126 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
     widget.onVfxChanged?.call();
+  }
+
+  Widget _buildEffectCard(String key, String title, String subtitle) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: SharedPreferences.getInstance().then((p) {
+        final raw = p.getString('vfx_cfg');
+        if (raw != null) {
+          final cfg = Map<String, dynamic>.from(jsonDecode(raw));
+          return Map<String, dynamic>.from(cfg[key] ?? {});
+        }
+        return {};
+      }),
+      builder: (context, snap) {
+        final data = snap.data ?? {};
+        final enabled = data['en'] == true;
+        final intensity = (data['intensity'] ?? 0.4).toDouble();
+        final color = data['color'] ?? 0xFF7C3AED;
+        final speed = (data['speed'] ?? 1.0).toDouble();
+        final hasSpeed = key == 'sweep' || key == 'breath';
+        final hasColor = key != 'sweep';
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.grey[850],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SwitchListTile(
+                title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey[200])),
+                subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                value: enabled,
+                activeColor: Colors.purple[300],
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                onChanged: (v) => _updateEffect(key, 'en', v),
+              ),
+              if (enabled) ...[
+                const Divider(height: 1, color: Colors.white10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSlider('强度', intensity, (v) => _updateEffect(key, 'intensity', v)),
+                      if (hasSpeed)
+                        _buildSlider('速度', speed, (v) => _updateEffect(key, 'speed', v), min: 0.2, max: 3.0),
+                      if (hasColor)
+                        _buildColorRow(color, (c) => _updateEffect(key, 'color', c)),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSlider(String label, double value, ValueChanged<double> onChanged, {double min = 0.0, double max = 1.0}) {
+    return Row(
+      children: [
+        SizedBox(width: 40, child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[400]))),
+        Expanded(
+          child: Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: 20,
+            activeColor: Colors.purple[300],
+            onChanged: onChanged,
+          ),
+        ),
+        SizedBox(
+          width: 36,
+          child: Text('${(value * 100).round()}%',
+              style: TextStyle(fontSize: 13, color: Colors.grey[400])),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildColorRow(int current, ValueChanged<int> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          Text('颜色 ', style: TextStyle(fontSize: 13, color: Colors.grey[400])),
+          ...SettingsPage._vfxColors.entries.map((e) => GestureDetector(
+            onTap: () => onChanged(e.value),
+            child: Container(
+              width: 28, height: 28,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(e.value),
+                border: Border.all(
+                  color: current == e.value ? Colors.white : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: Center(child: Text(e.key, style: const TextStyle(fontSize: 12))),
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateEffect(String key, String field, dynamic value) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('vfx_cfg');
+    Map<String, dynamic> cfg = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
+    cfg[key] ??= {};
+    (cfg[key] as Map<String, dynamic>)[field] = value;
+    await prefs.setString('vfx_cfg', jsonEncode(cfg));
+    widget.onVfxChanged?.call();
+    setState(() {});
   }
 
   Widget _vfxSwitch(String title, String subtitle, String key, bool defaultVal) {
@@ -2209,7 +2429,14 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 10),
         _vfxSwitch('封面模糊', '游戏封面毛玻璃效果', 'vfx_blur', true),
         _vfxSwitch('水晶玻璃统计条', '统计栏毛玻璃+边框发光', 'vfx_glass', true),
-        _vfxSwitch('水晶玻璃光晕', '紫蓝色径向渐变叠加', 'vfx_crystal', false),
+        const SizedBox(height: 6),
+        Text('🎨 封面特效自定义',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[400])),
+        const SizedBox(height: 8),
+        _buildEffectCard('crystal', '🔮 水晶光晕', '径向渐变彩色光晕'),
+        _buildEffectCard('neon', '💜 霓虹边框', '多层发光边框环绕卡片'),
+        _buildEffectCard('sweep', '✨ 光扫', '一道白光来回扫过'),
+        _buildEffectCard('breath', '🫁 呼吸光晕', '卡片外围光晕明暗呼吸'),
         const SizedBox(height: 30),
         SizedBox(
           width: double.infinity,
@@ -2345,3 +2572,64 @@ class _GameDetailCard extends StatelessWidget {
 
 // Trigger build Sun May  3 20:14:20 CST 2026
 // trigger 1777813344
+
+// ── VFX Painters ──
+class _SweepPainter extends CustomPainter {
+  final double time;
+  final double intensity;
+  _SweepPainter({required this.time, required this.intensity});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final x = (time % 2.0) < 1.0
+        ? (time % 2.0) * size.width * 1.4
+        : (2.0 - (time % 2.0)) * size.width * 1.4;
+    final sweepW = size.width * 0.3;
+    final rect = Rect.fromLTWH(x - sweepW / 2, 0, sweepW, size.height);
+    final gradient = LinearGradient(
+      colors: [
+        Colors.white.withOpacity(0),
+        Colors.white.withOpacity(0.1 * intensity),
+        Colors.white.withOpacity(0.35 * intensity),
+        Colors.white.withOpacity(0.1 * intensity),
+        Colors.white.withOpacity(0),
+      ],
+      stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+    );
+    canvas.drawRect(rect, Paint()..shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height)));
+  }
+
+  @override
+  bool shouldRepaint(covariant _SweepPainter old) =>
+      old.time != time || old.intensity != intensity;
+}
+
+class _NeonBorderPainter extends CustomPainter {
+  final Color color;
+  final double intensity;
+  final double time;
+  _NeonBorderPainter({required this.color, required this.intensity, required this.time});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size, const Radius.circular(16),
+    );
+    for (int i = 3; i >= 0; i--) {
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = (2.0 + i * 2.5) * intensity
+        ..color = color.withOpacity((0.06 + i * 0.08) * intensity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawRRect(rrect, paint);
+    }
+    canvas.drawRRect(rrect, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8 * intensity
+      ..color = color.withOpacity(0.7 * intensity));
+  }
+
+  @override
+  bool shouldRepaint(covariant _NeonBorderPainter old) =>
+      old.color != color || old.intensity != intensity || old.time != time;
+}

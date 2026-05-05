@@ -844,6 +844,7 @@ class _HomePageState extends State<HomePage>
                     ),
                   ),
                 ),
+              ],
 
               // ── Game List Title ──
               if (hasData)

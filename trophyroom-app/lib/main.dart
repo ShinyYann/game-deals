@@ -1696,7 +1696,6 @@ v.play().catch(function(){});
       ),
     );
   }
-}
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback? onVfxChanged;

@@ -1288,39 +1288,6 @@ v.play().catch(function(){});
       ],
     );
   }
-    final urlRegex = RegExp(r'https?://[^\s，。；！？、]+');
-    final matches = urlRegex.allMatches(text);
-    if (matches.isEmpty) {
-      return Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 13));
-    }
-    final spans = <InlineSpan>[];
-    int lastEnd = 0;
-    for (final m in matches) {
-      if (m.start > lastEnd) {
-        spans.add(TextSpan(text: text.substring(lastEnd, m.start)));
-      }
-      final url = m.group(0)!;
-      // Use WidgetSpan with GestureDetector — inline tap opens in-app WebView
-      spans.add(WidgetSpan(
-        alignment: PlaceholderAlignment.middle,
-        child: GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WebViewPage(url: url))),
-          child: Text(url,
-              style: TextStyle(color: Colors.cyan[300], fontSize: 13, decoration: TextDecoration.underline)),
-        ),
-      ));
-      lastEnd = m.end;
-    }
-    if (lastEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastEnd)));
-    }
-    return RichText(
-      text: TextSpan(
-        style: TextStyle(color: Colors.grey[300], fontSize: 13),
-        children: spans,
-      ),
-    );
-  }
 
   Future<void> _saveHomeCache(Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
@@ -1696,6 +1663,7 @@ v.play().catch(function(){});
       ),
     );
   }
+}
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback? onVfxChanged;

@@ -311,8 +311,6 @@ class _HomePageState extends State<HomePage>
   Map<String, dynamic>? _cachedHomeData;  // 本地缓存
   int _homeLastRefreshMs = 0;              // 上次刷新时间戳
   // 用 ValueNotifier 避免展开关闭时重建整页
-  final ValueNotifier<String?> _expandedGameId = ValueNotifier<String?>(null);
-  Map<String, List<dynamic>> _gameTrophies = {};
   bool _vfxBlur = true;
   bool _vfxGlass = true;
   bool _videoBg = false;                  // Steam 动态背景
@@ -457,7 +455,6 @@ v.play().catch(function(){});
   void dispose() {
     _animCtrl.dispose();
     _scanCtrl.dispose();
-    _expandedGameId.dispose();
     _vfxCtrl.dispose();
     super.dispose();
   }
@@ -793,16 +790,9 @@ v.play().catch(function(){});
             ? (games.first as Map<String, dynamic>)['cover_url']?.toString() ?? ''
             : '';
 
-        // 后台预取所有游戏奖杯数据，点开秒开
-        if (hasData && games.isNotEmpty) {
-          _prefetchAllGameTrophies(games);
-        }
-
         return RefreshIndicator(
           color: Colors.purple[300],
           onRefresh: () async {
-            _expandedGameId.value = null;
-            _gameTrophies.clear();
             // 下拉刷新：跳过缓存，走 API
             _cachedHomeData = null;
             setState(() {});
@@ -1069,6 +1059,30 @@ v.play().catch(function(){});
                 ),
               ],
 
+              // ── Total Play Time Summary ──
+              if (hasData && games.isNotEmpty) ...[
+                () {
+                  int totalSeconds = 0;
+                  for (final g in games) {
+                    final dur = (g as Map<String, dynamic>)['play_duration_raw']?.toString() ?? '';
+                    final h = RegExp(r'PT(\d+)H').firstMatch(dur);
+                    final m = RegExp(r'(\d+)M').firstMatch(dur);
+                    final s = RegExp(r'(\d+)S').firstMatch(dur);
+                    if (h != null) totalSeconds += int.parse(h.group(1)!) * 3600;
+                    if (m != null) totalSeconds += int.parse(m.group(1)!) * 60;
+                    if (s != null) totalSeconds += int.parse(s.group(1)!);
+                  }
+                  final totalHours = totalSeconds ~/ 3600;
+                  final totalMins = (totalSeconds % 3600) ~/ 60;
+                  final totalTimeStr = totalHours > 0 ? '$totalHours小时${totalMins}分' : '${totalMins}分';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text('🎮 总游戏时长：$totalTimeStr',
+                        style: TextStyle(fontSize: 13, color: Colors.grey[400])),
+                  );
+                }(),
+              ],
+
               // ── Game List Title ──
               if (hasData)
                 Padding(
@@ -1119,17 +1133,7 @@ v.play().catch(function(){});
                   ),
                 )
               else
-                ...games.map((g) {
-                  final game = g as Map<String, dynamic>;
-                  final gameId = game['game_id']?.toString() ?? '';
-                  return ValueListenableBuilder<String?>(
-                    valueListenable: _expandedGameId,
-                    builder: (context, expandedId, _) {
-                      return _buildExpandableGameCard(game,
-                          isExpanded: expandedId == gameId);
-                    },
-                  );
-                }),
+                ...games.map((g) => _buildGameCard(g as Map<String, dynamic>)),
               const SizedBox(height: 20),
             ],
           ),
@@ -1167,496 +1171,123 @@ v.play().catch(function(){});
     );
   }
 
-  Widget _buildExpandableGameCard(Map<String, dynamic> game,
-      {required bool isExpanded}) {
-    final gameId = game['game_id']?.toString() ?? '';
+  Widget _buildGameCard(Map<String, dynamic> game) {
     final name = game['name']?.toString() ?? '';
     final coverUrl = game['cover_url']?.toString() ?? '';
-    final platform = game['platform']?.toString() ?? '';
-    final cr = ((game['completion_rate'] ?? 0) as num).toDouble();
-    final platinum = game['platinum'] ?? 0;
-    final gold = game['gold'] ?? 0;
-    final silver = game['silver'] ?? 0;
-    final bronze = game['bronze'] ?? 0;
-    final playTime = game['play_time']?.toString();
+    final earned = (game['earned'] as num?)?.toInt() ?? 0;
+    final defined = (game['defined'] as num?)?.toInt() ?? 1;
+    final platinum = (game['platinum'] as num?)?.toInt() ?? 0;
+    final gold = (game['gold'] as num?)?.toInt() ?? 0;
+    final silver = (game['silver'] as num?)?.toInt() ?? 0;
+    final bronze = (game['bronze'] as num?)?.toInt() ?? 0;
+    final progress = (game['progress'] as num?)?.toInt() ??
+        (defined > 0 ? (earned * 100 ~/ defined) : 0);
+    final playDuration = game['play_duration']?.toString();
 
-    return Card(
-      color: const Color(0xFF1A1A2E),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isExpanded
-              ? Colors.purple[400]!.withOpacity(0.5)
-              : Colors.grey[800]!,
-        ),
-      ),
-      margin: const EdgeInsets.only(bottom: 10),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          // Header (always visible)
-          InkWell(
-            onTap: () => _toggleGame(gameId),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  // Cover image
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: coverUrl.isNotEmpty
-                          ? Image.network(coverUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  Container(
-                                    color: Colors.grey[850],
-                                    child: Icon(Icons.image,
-                                        color: Colors.grey[700],
-                                        size: 24),
-                                  ))
-                          : Container(
-                              color: Colors.grey[850],
-                              child: Icon(Icons.image,
-                                  color: Colors.grey[700],
-                                  size: 24),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Name + Platform
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        if (platform.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: platform == 'PS5'
-                                  ? Colors.blue[800]
-                                  : platform == 'PS4'
-                                      ? Colors.indigo[800]
-                                      : Colors.grey[700],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(platform,
-                                style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white)),
-                          ),
-                        if (playTime != null && playTime.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text('⏱ $playTime',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[500])),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Trophy counts
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('🥇$gold 🥈$silver 🥉$bronze',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[400])),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 80,
-                        child: LinearProgressIndicator(
-                          value: cr / 100,
-                          minHeight: 4,
-                          backgroundColor: Colors.grey[800],
-                          color: cr >= 100
-                              ? Colors.amber
-                              : Colors.purple[300],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    isExpanded
-                        ? Icons.expand_less
-                        : Icons.expand_more,
-                    color: Colors.grey[500],
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
-          ),
+    // Calculate game level from trophy counts
+    final gamePoints = platinum * 300 + gold * 90 + silver * 30 + bronze * 15;
+    final gameLevel = (gamePoints / 60).ceil().clamp(1, 999);
 
-          // Expanded content (trophy list)
-          if (isExpanded) ...[
-            const Divider(height: 1, color: Colors.grey),
-            if (_gameTrophies.containsKey(gameId))
-              ...(_gameTrophies[gameId] as List<dynamic>).map((t) {
-                final trophy = t as Map<String, dynamic>;
-                return _buildTrophyRow(trophy);
-              })
-            else
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Text('加载中...',
-                      style: TextStyle(
-                          color: Colors.grey[500], fontSize: 12)),
-                ),
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrophyRow(Map<String, dynamic> trophy) {
-    final type = trophy['type']?.toString().toLowerCase() ?? '';
-    final name = trophy['name']?.toString() ?? '';
-    final description = trophy['description']?.toString() ?? '';
-    final earned = trophy['earned'] == true;
-    final iconUrl = trophy['icon_url']?.toString() ?? '';
-    final isPlatinum = type == 'platinum';
-    final earnedDate = trophy['earned_date']?.toString() ?? '';
-    final trophyId = trophy['id']?.toString() ?? '';
-
-    IconData icon;
-    Color iconColor;
-    if (isPlatinum) {
-      icon = Icons.star;
-      iconColor = Colors.cyan[300]!;
-    } else if (type == 'gold') {
-      icon = Icons.emoji_events;
-      iconColor = Colors.amber[400]!;
-    } else if (type == 'silver') {
-      icon = Icons.workspace_premium;
-      iconColor = Colors.grey[400]!;
-    } else {
-      icon = Icons.circle;
-      iconColor = Colors.orange[400]!;
-    }
-
-    return GestureDetector(
-      onTap: () => _showTrophyTips(trophy),
-      child: Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-              color: Colors.grey[850]!, width: 0.5),
-        ),
+        color: const Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Trophy icon
-          if (iconUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Image.network(
-                iconUrl,
-                width: 28,
-                height: 28,
-                fit: BoxFit.cover,
-                color: earned ? null : Colors.grey,
-                colorBlendMode:
-                    earned ? null : BlendMode.saturation,
-                errorBuilder: (_, __, ___) => Icon(
-                  icon,
-                  size: 24,
-                  color: earned
-                      ? iconColor
-                      : iconColor.withOpacity(0.3),
-                ),
-              ),
-            )
-          else
-            Icon(
-              icon,
-              size: 24,
-              color: earned
-                  ? iconColor
-                  : iconColor.withOpacity(0.3),
-            ),
+          // Game icon
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: coverUrl.isNotEmpty
+                ? Image.network(coverUrl, width: 48, height: 48, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 48, height: 48, color: Colors.grey[800],
+                      child: Icon(Icons.videogame_asset, color: Colors.grey[600], size: 24)))
+                : Container(
+                    width: 48, height: 48, color: Colors.grey[800],
+                    child: Icon(Icons.videogame_asset, color: Colors.grey[600], size: 24)),
+          ),
           const SizedBox(width: 12),
-          // Trophy name
+          // Game info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: earned
-                        ? Colors.white
-                        : Colors.grey[600],
-                  ),
-                ),
-                if (description.isNotEmpty)
-                  Text(
-                    description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: earned
-                          ? Colors.grey[500]
-                          : Colors.grey[700],
+                // Name + Level badge row
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(name,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
-                  ),
-                if (earned && earnedDate.isNotEmpty)
-                  Text(
-                    '📅 $earnedDate',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          // Chinese trophy type badge
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: isPlatinum
-                  ? Colors.cyan[800]!.withOpacity(0.3)
-                  : type == 'gold'
-                      ? Colors.amber[800]!.withOpacity(0.2)
-                      : type == 'silver'
-                          ? Colors.grey[700]!.withOpacity(0.3)
-                          : Colors.orange[800]!.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              isPlatinum
-                  ? '白金'
-                  : type == 'gold'
-                      ? '金'
-                      : type == 'silver'
-                          ? '银'
-                          : '铜',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: isPlatinum
-                    ? Colors.cyan[300]
-                    : type == 'gold'
-                        ? Colors.amber[300]
-                        : type == 'silver'
-                            ? Colors.grey[300]
-                            : Colors.orange[300],
-              ),
-            ),
-          ),
-          // Trophy tips button — removed, whole row is tappable now
-        ],
-      ),
-      ),
-    );
-  }
-
-  void _showTrophyTips(Map<String, dynamic> trophy) {
-    final trophyId = trophy['id']?.toString() ?? '';
-    final name = trophy['name']?.toString() ?? '';
-    final description = trophy['description']?.toString() ?? '';
-    final type = trophy['type']?.toString().toLowerCase() ?? '';
-    final earnedDate = trophy['earned_date']?.toString() ?? '';
-    final iconUrl = trophy['icon_url']?.toString() ?? '';
-    final earned = trophy['earned'] == true;
-    final isPlatinum = type == 'platinum';
-
-    final typeLabel = isPlatinum ? '白金' : type == 'gold' ? '金' : type == 'silver' ? '银' : '铜';
-    final typeColor = isPlatinum ? Colors.cyan[300] : type == 'gold' ? Colors.amber[300] : type == 'silver' ? Colors.grey[300] : Colors.orange[300];
-    final typeIcon = isPlatinum ? '🏆' : type == 'gold' ? '🥇' : type == 'silver' ? '🥈' : '🥉';
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        List<Map<String, dynamic>> tipItems = [];
-        bool loading = true;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            if (loading) {
-              _fetchTipsData(trophyId).then((tips) {
-                tipItems = tips;
-                loading = false;
-                if (context.mounted) setDialogState(() {});
-              });
-            }
-            return AlertDialog(
-              backgroundColor: const Color(0xFF1E1E2E),
-              titlePadding: EdgeInsets.zero,
-              contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-              title: Column(
-                children: [
-                  // ── Trophy icon (large) ──
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: Center(
-                      child: iconUrl.isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(iconUrl, width: 64, height: 64,
-                                  fit: BoxFit.cover,
-                                  color: earned ? null : Colors.grey,
-                                  colorBlendMode: earned ? null : BlendMode.saturation,
-                                  errorBuilder: (_, __, ___) =>
-                                      Text(typeIcon, style: const TextStyle(fontSize: 48))),
-                            )
-                          : Text(typeIcon, style: const TextStyle(fontSize: 48)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // ── Trophy name ──
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 8),
-                  // ── Trophy details ──
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: (typeColor ?? Colors.grey).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text('$typeIcon $typeLabel',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: typeColor)),
-                        ),
-                        if (earnedDate.isNotEmpty) ...[
-                          const SizedBox(width: 12),
-                          Text('📅 $earnedDate',
-                              style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (description.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(description,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('Lv.$gameLevel', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
                     ),
                   ],
-                  const SizedBox(height: 4),
-                  // Divider before tips
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Divider(color: Color(0xFF333355), height: 1),
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: loading
-                    ? const Center(
-                        child: SizedBox(width: 24, height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2)))
-                    : tipItems.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: Text('暂无玩家心得 💬',
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                            ),
-                          )
-                        : ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxHeight: MediaQuery.of(context).size.height * 0.4,
-                            ),
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              itemCount: tipItems.length,
-                            separatorBuilder: (_, __) =>
-                                const Divider(color: Color(0xFF333355), height: 1),
-                            itemBuilder: (_, i) {
-                              final tip = tipItems[i];
-                              final avatar = tip['avatar']?.toString() ?? '';
-                              final user = tip['user']?.toString() ?? '';
-                              final content = tip['content']?.toString() ?? '';
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: SizedBox(width: 32, height: 32,
-                                        child: avatar.isNotEmpty
-                                            ? Image.network(avatar, fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) =>
-                                                    Icon(Icons.person, color: Colors.grey[600]))
-                                            : Icon(Icons.person, color: Colors.grey[600])),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(user,
-                                              style: TextStyle(color: Colors.cyan[300],
-                                                  fontSize: 12, fontWeight: FontWeight.w600)),
-                                          const SizedBox(height: 2),
-                                          _buildContentWithLinks(content),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                          ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('关闭', style: TextStyle(color: Colors.cyan)),
                 ),
+                const SizedBox(height: 6),
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: progress / 100,
+                    minHeight: 6,
+                    backgroundColor: Colors.grey[800],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      progress >= 100 ? Colors.cyan[300]! : Colors.purple[300]!),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Trophy counts row
+                Row(
+                  children: [
+                    _trophyCountIcon('◈', platinum, Colors.cyan[300]!),
+                    const SizedBox(width: 8),
+                    _trophyCountIcon('●', gold, Colors.amber[400]!),
+                    const SizedBox(width: 8),
+                    _trophyCountIcon('◉', silver, Colors.grey[400]!),
+                    const SizedBox(width: 8),
+                    _trophyCountIcon('○', bronze, Colors.orange[400]!),
+                    const Spacer(),
+                    Text('$progress%', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  ],
+                ),
+                // Play duration (if available)
+                if (playDuration != null && playDuration.isNotEmpty && playDuration != 'None')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text('⏱️ $playDuration',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  ),
               ],
-            );
-          },
-        );
-      },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildContentWithLinks(String text) {
+  Widget _trophyCountIcon(String icon, int count, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(icon, style: TextStyle(fontSize: 11, color: color)),
+        const SizedBox(width: 2),
+        Text('$count', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+      ],
+    );
+  }
     final urlRegex = RegExp(r'https?://[^\s，。；！？、]+');
     final matches = urlRegex.allMatches(text);
     if (matches.isEmpty) {
@@ -1689,49 +1320,6 @@ v.play().catch(function(){});
         children: spans,
       ),
     );
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchTipsData(String trophyId) async {
-    try {
-      final resp = await http.get(Uri.parse(
-        'http://8.153.97.56/api/psn_trophy_tips?trophy_id=$trophyId',
-      )).timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        final rawTips = data['tips'];
-        if (rawTips is List && rawTips.isNotEmpty) {
-          return rawTips.map((t) => t as Map<String, dynamic>).toList();
-        }
-      }
-    } catch (_) {}
-    return [];
-  }
-
-  void _toggleGame(String gameId) async {
-    if (_expandedGameId.value == gameId) {
-      _expandedGameId.value = null;
-      return;
-    }
-
-    _expandedGameId.value = gameId;
-
-    if (!_gameTrophies.containsKey(gameId)) {
-      try {
-        final resp = await http
-            .get(Uri.parse(
-                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
-            .timeout(const Duration(seconds: 10));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          final trophies = data['trophies'] as List<dynamic>? ?? [];
-          if (mounted) {
-            setState(() {
-              _gameTrophies[gameId] = trophies;
-            });
-          }
-        }
-      } catch (_) {}
-    }
   }
 
   Future<void> _saveHomeCache(Map<String, dynamic> data) async {
@@ -1777,41 +1365,6 @@ v.play().catch(function(){});
       _error = '$e';
     }
     return {'psn_id': _psnId, 'error': _error, 'games': []};
-  }
-
-  void _prefetchAllGameTrophies(List<dynamic> games) {
-    // 并行预取所有游戏奖杯，每组 3 个并发
-    final todo = <String>[];
-    for (final g in games) {
-      final gid = g['game_id']?.toString() ?? '';
-      if (gid.isNotEmpty && !_gameTrophies.containsKey(gid)) {
-        todo.add(gid);
-      }
-    }
-    Future(() async {
-      for (var i = 0; i < todo.length; i += 3) {
-        final batch = todo.skip(i).take(3);
-        await Future.wait(batch.map((gid) => _fetchGameDetailSilent(gid)));
-      }
-    });
-  }
-
-  Future<void> _fetchGameDetailSilent(String gameId) async {
-    try {
-      final resp = await http
-          .get(Uri.parse(
-              'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
-          .timeout(const Duration(seconds: 15));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        final trophies = data['trophies'] as List<dynamic>? ?? [];
-        if (mounted) {
-          setState(() {
-            _gameTrophies[gameId] = trophies;
-          });
-        }
-      }
-    } catch (_) {}
   }
 
   Widget _buildDeals() {
@@ -2227,6 +1780,12 @@ class _SettingsPageState extends State<SettingsPage> {
           _savedNpsso = npsso;
           _savedPsnId = uid;
         });
+        final onlineId = data['online_id']?.toString();
+        if (onlineId != null && onlineId.isNotEmpty && onlineId != uid) {
+          _psnCtrl.text = onlineId;
+          await prefs.setString('psn_id', onlineId);
+          setState(() => _savedPsnId = onlineId);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(data['token_ok'] == true
@@ -2250,6 +1809,55 @@ class _SettingsPageState extends State<SettingsPage> {
     } finally {
       setState(() => _npssoLoading = false);
     }
+  }
+
+  void _showNpssoGuide() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('如何获取 NPSSO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _guideStep('1', '浏览器打开 playstation.com'),
+            _guideStep('2', '登录你的 PSN 账号'),
+            _guideStep('3', 'F12 → Application → Cookies'),
+            _guideStep('4', '找到 npsso，复制值'),
+            _guideStep('5', '粘贴到输入框，点登录'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('知道了', style: TextStyle(color: Colors.amber)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _guideStep(String num, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24, height: 24,
+            decoration: BoxDecoration(
+              color: Colors.amber[700],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(child: Text(num, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold))),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 14))),
+        ],
+      ),
+    );
   }
 
   Future<void> _bindSteam() async {
@@ -2546,6 +2154,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     ? const SizedBox(width: 18, height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : Text(_savedNpsso.isNotEmpty ? '已登录' : '登录'),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(Icons.help_outline, color: Colors.grey[500], size: 20),
+                onPressed: _showNpssoGuide,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
             ],
           ),

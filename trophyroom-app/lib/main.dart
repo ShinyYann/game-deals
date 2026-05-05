@@ -10,7 +10,6 @@ import 'pages/game_detail_page.dart';
 import 'pages/web_view_page.dart';
 import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:video_player/video_player.dart';
 import 'services/steam_video.dart';
 
 void main() {
@@ -316,7 +315,7 @@ class _HomePageState extends State<HomePage>
   bool _vfxBlur = true;
   bool _vfxGlass = true;
   bool _videoBg = false;                  // Steam 动态背景
-  VideoPlayerController? _videoController;
+  WebViewController? _videoWebCtrl;
   String? _trailerUrl;
   bool _videoLoading = false;
   Map<String, dynamic> _vfx = {};        // {crystal/neon/sweep/breath: {en,intensity,color,speed}}
@@ -386,10 +385,8 @@ class _HomePageState extends State<HomePage>
     if (_videoBg) {
       _loadTrailer();
     } else {
-      _videoController?.pause();
-      _videoController?.dispose();
-      _videoController = null;
       _trailerUrl = null;
+      _videoWebCtrl = null;
       setState(() {});
     }
   }
@@ -405,23 +402,35 @@ class _HomePageState extends State<HomePage>
     final url = await SteamVideoService.findTrailer(_lastGame ?? '');
     if (mounted && url != null) {
       _trailerUrl = url;
-      _initVideoPlayer();
+      _initVideoWebView();
     }
     if (mounted) setState(() => _videoLoading = false);
   }
 
-  void _initVideoPlayer() {
-    _videoController?.dispose();
+  void _initVideoWebView() {
     if (_trailerUrl == null) return;
-    _videoController = VideoPlayerController.networkUrl(Uri.parse(_trailerUrl!))
-      ..initialize().then((_) {
-        if (mounted) {
-          _videoController!.setLooping(true);
-          _videoController!.setVolume(0);
-          _videoController!.play();
-          setState(() {});
-        }
-      });
+    _videoWebCtrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.transparent)
+      ..loadHtmlString('''
+<!DOCTYPE html>
+<html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000}
+video{width:100%;height:100%;object-fit:cover}
+</style></head>
+<body>
+<video autoplay muted loop playsinline webkit-playsinline>
+  <source src="$_trailerUrl" type="application/x-mpegURL">
+</video>
+<script>
+var v=document.querySelector("video");
+v.play().catch(function(){});
+</script>
+</body></html>
+''');
+    setState(() {});
   }
 
   Future<void> _toggleVideoBg(bool on) async {
@@ -431,9 +440,7 @@ class _HomePageState extends State<HomePage>
     if (on) {
       _loadTrailer();
     } else {
-      _videoController?.pause();
-      _videoController?.dispose();
-      _videoController = null;
+      _videoWebCtrl = null;
       _trailerUrl = null;
     }
     setState(() {});
@@ -445,7 +452,6 @@ class _HomePageState extends State<HomePage>
     _scanCtrl.dispose();
     _expandedGameId.dispose();
     _vfxCtrl.dispose();
-    _videoController?.dispose();
     super.dispose();
   }
 
@@ -823,15 +829,11 @@ class _HomePageState extends State<HomePage>
                       fit: StackFit.expand,
                       children: [
                         // Layer 0: Steam video background
-                        if (_videoBg && _videoController != null && _videoController!.value.isInitialized)
+                        if (_videoBg && _videoWebCtrl != null)
                           Positioned.fill(
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              child: SizedBox(
-                                width: _videoController!.value.size.width,
-                                height: _videoController!.value.size.height,
-                                child: VideoPlayer(_videoController!),
-                              ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: WebViewWidget(controller: _videoWebCtrl!),
                             ),
                           ),
                         // Layer 1: Blurred game cover background

@@ -399,7 +399,14 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadTrailer() async {
     if (_videoLoading || _trailerUrl != null) return;
     setState(() => _videoLoading = true);
-    final url = await SteamVideoService.findTrailer(_lastGame ?? '');
+    // Get latest game name from cached data
+    final games = _cachedHomeData?['games'] as List<dynamic>?;
+    final gameName = games?.isNotEmpty == true
+        ? (games!.first as Map<String, dynamic>)['game_name']?.toString() ?? ''
+        : '';
+    final url = gameName.isNotEmpty
+        ? await SteamVideoService.findTrailer(gameName)
+        : null;
     if (mounted && url != null) {
       _trailerUrl = url;
       _initVideoWebView();
@@ -411,7 +418,6 @@ class _HomePageState extends State<HomePage>
     if (_trailerUrl == null) return;
     _videoWebCtrl = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.transparent)
       ..loadHtmlString('''
 <!DOCTYPE html>
 <html><head><meta name="viewport" content="width=device-width,initial-scale=1">

@@ -305,6 +305,7 @@ class _HomePageState extends State<HomePage>
   bool _psnWebLoading = true;
   String _psnId = '';
   String _steamId = '';
+  String _npsso = '';
   bool _accountsLoaded = false;
   String _error = '';
   Map<String, dynamic>? _cachedHomeData;  // 本地缓存
@@ -532,6 +533,7 @@ v.play().catch(function(){});
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
+    final npsso = prefs.getString('psn_npsso') ?? '';
 
     // 读取本地缓存：秒开关键
     final cacheKey = 'home_cache_$psn';
@@ -546,6 +548,7 @@ v.play().catch(function(){});
     setState(() {
       _psnId = psn;
       _steamId = steam;
+      _npsso = npsso;
       _accountsLoaded = true;
     });
 
@@ -1759,7 +1762,8 @@ v.play().catch(function(){});
     }
     try {
       final apiBase = 'http://8.153.97.56';
-      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId'))
+      final url = '${apiBase}/api/psn?uid=$_psnId${_npsso.isNotEmpty ? '&npsso=$_npsso' : ''}';
+      final resp = await http.get(Uri.parse(url))
           .timeout(const Duration(seconds: 30));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
@@ -2157,9 +2161,12 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
+  final TextEditingController _npssoCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
+  String _savedNpsso = '';
   bool _loaded = false;
+  bool _npssoLoading = false;
   Map<String, dynamic> _vfxCfg = {};
   bool _videoBg = false;
 
@@ -2175,8 +2182,10 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
+      _savedNpsso = prefs.getString('psn_npsso') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
+      _npssoCtrl.text = _savedNpsso;
       _vfxCfg = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
       _videoBg = prefs.getBool('video_bg') ?? false;
       _loaded = true;
@@ -2193,6 +2202,53 @@ class _SettingsPageState extends State<SettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('PSN 账号已绑定')),
       );
+    }
+  }
+
+  Future<void> _loginPsn() async {
+    final npsso = _npssoCtrl.text.trim();
+    final uid = _savedPsnId.isNotEmpty ? _savedPsnId : _psnCtrl.text.trim();
+    if (npsso.isEmpty || uid.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先绑定 PSN ID 并输入 NPSSO')),
+      );
+      return;
+    }
+    setState(() => _npssoLoading = true);
+    try {
+      final uri = Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=$uid&npsso=$npsso');
+      final resp = await http.get(uri).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(resp.body);
+      if (data['ok'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('psn_npsso', npsso);
+        await prefs.setString('psn_id', uid);
+        setState(() {
+          _savedNpsso = npsso;
+          _savedPsnId = uid;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['token_ok'] == true
+                ? 'PSN 登录成功！可正常加载游戏数据'
+                : 'NPSSO 已保存，但 Token 验证失败：${data['error'] ?? ''}')),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('登录失败：${data['error']}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('网络错误：$e')),
+        );
+      }
+    } finally {
+      setState(() => _npssoLoading = false);
     }
   }
 
@@ -2342,11 +2398,14 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('psn_id');
     await prefs.remove('steam_id');
+    await prefs.remove('psn_npsso');
     setState(() {
       _savedPsnId = '';
       _savedSteamId = '';
+      _savedNpsso = '';
       _psnCtrl.clear();
       _steamCtrl.clear();
+      _npssoCtrl.clear();
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2359,6 +2418,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
+    _npssoCtrl.dispose();
     super.dispose();
   }
 
@@ -2435,6 +2495,69 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
+        // NPSSO login (manual once per user)
+        if (_savedPsnId.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            '🔐 PSN 登录凭证',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.amber[300]),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '从浏览器登录 PSN 后抓取 NPSSO cookie，仅需一次',
+            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _npssoCtrl,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: '粘贴 NPSSO 令牌',
+                    hintStyle: TextStyle(color: Colors.grey[600]),
+                    filled: true,
+                    fillColor: Colors.grey[850],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    suffixIcon: _savedNpsso.isNotEmpty
+                        ? Icon(Icons.check_circle, color: Colors.green[400], size: 20)
+                        : null,
+                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: _npssoLoading ? null : _loginPsn,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[700],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _npssoLoading
+                    ? const SizedBox(width: 18, height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(_savedNpsso.isNotEmpty ? '已登录' : '登录'),
+              ),
+            ],
+          ),
+          if (_savedNpsso.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 4),
+              child: Text(
+                '✅ 已登录，游戏数据通过 PSN API 直连',
+                style: TextStyle(fontSize: 11, color: Colors.green[400]),
+              ),
+            ),
+        ],
         const SizedBox(height: 24),
         // Steam account
         Text(

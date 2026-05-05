@@ -311,6 +311,9 @@ class _HomePageState extends State<HomePage>
   // 用 ValueNotifier 避免展开关闭时重建整页
   final ValueNotifier<String?> _expandedGameId = ValueNotifier<String?>(null);
   Map<String, List<dynamic>> _gameTrophies = {};
+  bool _vfxBlur = true;
+  bool _vfxGlass = true;
+  bool _vfxCrystal = false;
 
   @override
   void initState() {
@@ -335,6 +338,16 @@ class _HomePageState extends State<HomePage>
     _initPSNWebView();
     _checkNetwork();
     _loadAccounts();
+    _loadVfxPrefs();
+  }
+
+  Future<void> _loadVfxPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _vfxBlur = prefs.getBool('vfx_blur') ?? true;
+      _vfxGlass = prefs.getBool('vfx_glass') ?? true;
+      _vfxCrystal = prefs.getBool('vfx_crystal') ?? false;
+    });
   }
 
   @override
@@ -566,7 +579,7 @@ class _HomePageState extends State<HomePage>
           _buildHome(),
           _buildDeals(),
           _buildGuide(),
-          const SettingsPage(),
+          SettingsPage(onVfxChanged: () => _loadVfxPrefs()),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -701,7 +714,7 @@ class _HomePageState extends State<HomePage>
                       fit: StackFit.expand,
                       children: [
                         // Layer 1: Blurred game cover background
-                        if (recentCoverUrl.isNotEmpty)
+                        if (recentCoverUrl.isNotEmpty && _vfxBlur)
                           Positioned.fill(
                             child: ImageFiltered(
                               imageFilter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
@@ -720,6 +733,23 @@ class _HomePageState extends State<HomePage>
                               ),
                             ),
                           ),
+                        // Non-blurred cover (VFX off)
+                        if (recentCoverUrl.isNotEmpty && !_vfxBlur)
+                          Positioned.fill(
+                            child: Image.network(
+                              recentCoverUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         // Fallback gradient when no cover
                         if (recentCoverUrl.isEmpty)
                           Positioned.fill(
@@ -729,6 +759,23 @@ class _HomePageState extends State<HomePage>
                                   colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
+                                ),
+                              ),
+                            ),
+                          ),
+                        // Crystal glass tint overlay
+                        if (_vfxCrystal)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: RadialGradient(
+                                  center: const Alignment(0.0, -0.4),
+                                  radius: 0.7,
+                                  colors: [
+                                    Colors.purple[400]!.withOpacity(0.12),
+                                    Colors.blue[900]!.withOpacity(0.05),
+                                    Colors.transparent,
+                                  ],
                                 ),
                               ),
                             ),
@@ -801,6 +848,7 @@ class _HomePageState extends State<HomePage>
                                   ],
                                 ),
                                 // Row 3: Stats strip (crystal glass)
+                                if (_vfxGlass)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: BackdropFilter(
@@ -1922,7 +1970,8 @@ class _HomePageState extends State<HomePage>
 }
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final VoidCallback? onVfxChanged;
+  const SettingsPage({super.key, this.onVfxChanged});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -1976,6 +2025,29 @@ class _SettingsPageState extends State<SettingsPage> {
         const SnackBar(content: Text('Steam 账号已绑定')),
       );
     }
+  }
+
+  Future<void> _toggleVfx(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+    widget.onVfxChanged?.call();
+  }
+
+  Widget _vfxSwitch(String title, String subtitle, String key, bool defaultVal) {
+    return FutureBuilder<bool>(
+      future: SharedPreferences.getInstance().then((p) => p.getBool(key) ?? defaultVal),
+      builder: (context, snap) {
+        final value = snap.data ?? defaultVal;
+        return SwitchListTile(
+          title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey[200])),
+          subtitle: Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+          value: value,
+          activeColor: Colors.purple[300],
+          onChanged: (v) => _toggleVfx(key, v),
+          contentPadding: EdgeInsets.zero,
+        );
+      },
+    );
   }
 
   Future<void> _logout() async {
@@ -2131,6 +2203,14 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         const SizedBox(height: 40),
+        // ── VFX Settings ──
+        Text('✨ 特效设置',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300])),
+        const SizedBox(height: 10),
+        _vfxSwitch('封面模糊', '游戏封面毛玻璃效果', 'vfx_blur', true),
+        _vfxSwitch('水晶玻璃统计条', '统计栏毛玻璃+边框发光', 'vfx_glass', true),
+        _vfxSwitch('水晶玻璃光晕', '紫蓝色径向渐变叠加', 'vfx_crystal', false),
+        const SizedBox(height: 30),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(

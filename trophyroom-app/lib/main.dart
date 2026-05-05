@@ -2083,6 +2083,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _savedPsnId = '';
   String _savedSteamId = '';
   bool _loaded = false;
+  Map<String, dynamic> _vfxCfg = {};
 
   @override
   void initState() {
@@ -2092,11 +2093,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('vfx_cfg');
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
+      _vfxCfg = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
       _loaded = true;
     });
   }
@@ -2134,61 +2137,49 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildEffectCard(String key, String title, String subtitle) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: SharedPreferences.getInstance().then((p) {
-        final raw = p.getString('vfx_cfg');
-        if (raw != null) {
-          final cfg = Map<String, dynamic>.from(jsonDecode(raw));
-          return Map<String, dynamic>.from(cfg[key] ?? {});
-        }
-        return {};
-      }),
-      builder: (context, snap) {
-        final data = snap.data ?? {};
-        final enabled = data['en'] == true;
-        final intensity = (data['intensity'] ?? 0.4).toDouble();
-        final color = data['color'] ?? 0xFF7C3AED;
-        final speed = (data['speed'] ?? 1.0).toDouble();
-        final hasSpeed = key == 'sweep' || key == 'breath';
-        final hasColor = key != 'sweep';
+    final data = Map<String, dynamic>.from(_vfxCfg[key] ?? {});
+    final enabled = data['en'] == true;
+    final intensity = (data['intensity'] ?? 0.4).toDouble();
+    final color = data['color'] ?? 0xFF7C3AED;
+    final speed = (data['speed'] ?? 1.0).toDouble();
+    final hasSpeed = key == 'sweep' || key == 'breath';
+    final hasColor = key != 'sweep';
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey[850],
-            borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[850],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SwitchListTile(
+            title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey[200])),
+            subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+            value: enabled,
+            activeColor: Colors.purple[300],
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            onChanged: (v) => _updateEffect(key, 'en', v),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SwitchListTile(
-                title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey[200])),
-                subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                value: enabled,
-                activeColor: Colors.purple[300],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                onChanged: (v) => _updateEffect(key, 'en', v),
+          if (enabled) ...[
+            const Divider(height: 1, color: Colors.white10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSlider('强度', intensity, (v) => _updateEffect(key, 'intensity', v)),
+                  if (hasSpeed)
+                    _buildSlider('速度', speed, (v) => _updateEffect(key, 'speed', v), min: 0.2, max: 3.0),
+                  if (hasColor)
+                    _buildColorRow(color, (c) => _updateEffect(key, 'color', c)),
+                ],
               ),
-              if (enabled) ...[
-                const Divider(height: 1, color: Colors.white10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSlider('强度', intensity, (v) => _updateEffect(key, 'intensity', v)),
-                      if (hasSpeed)
-                        _buildSlider('速度', speed, (v) => _updateEffect(key, 'speed', v), min: 0.2, max: 3.0),
-                      if (hasColor)
-                        _buildColorRow(color, (c) => _updateEffect(key, 'color', c)),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -2244,11 +2235,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _updateEffect(String key, String field, dynamic value) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('vfx_cfg');
-    Map<String, dynamic> cfg = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
-    cfg[key] ??= {};
-    (cfg[key] as Map<String, dynamic>)[field] = value;
-    await prefs.setString('vfx_cfg', jsonEncode(cfg));
+    _vfxCfg[key] ??= <String, dynamic>{};
+    (_vfxCfg[key] as Map<String, dynamic>)[field] = value;
+    await prefs.setString('vfx_cfg', jsonEncode(_vfxCfg));
     widget.onVfxChanged?.call();
     setState(() {});
   }

@@ -1760,7 +1760,7 @@ v.play().catch(function(){});
     try {
       final apiBase = 'http://8.153.97.56';
       final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId'))
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 30));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         if (data['psn_id'] != null) {

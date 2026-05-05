@@ -35,7 +35,7 @@ class TrophyRoomApp extends StatelessWidget {
   }
 }
 
-/// 启动动画：纯 Flutter 粒子碎裂 → TROPHYROOM → 奖杯屋大字 → 过渡到首页
+// v4.0: PSN API native + PS App-style trophy cards + NPSSO auth
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override

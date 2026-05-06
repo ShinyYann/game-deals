@@ -2,11 +2,9 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/psn_api_client.dart';
 import 'services/psnine_client.dart';
 
 void main() {
@@ -291,7 +289,6 @@ class _HomePageState extends State<HomePage>
   int _currentTab = 0;
   String _netStatus = '检测中...';
   bool _netChecked = false;
-  String _npsso = '';
   late AnimationController _animCtrl;
   late Animation<double> _titleSlide;
   late AnimationController _scanCtrl;
@@ -413,11 +410,9 @@ class _HomePageState extends State<HomePage>
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
-    final npsso = prefs.getString('psn_npsso') ?? '';
     setState(() {
       _psnId = psn;
       _steamId = steam;
-      _npsso = npsso;
       _accountsLoaded = true;
     });
   }
@@ -795,7 +790,7 @@ class _HomePageState extends State<HomePage>
                         Text("数据加载失败", style: TextStyle(fontSize: 18, color: Colors.grey[400], fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Text(
-                          "请检查 NPSSO 令牌是否有效",
+                          "请检查网络连接，在「设置」页绑定 PSN 账号",
                           style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                         ),
                         const SizedBox(height: 16),
@@ -1249,13 +1244,9 @@ class _HomePageState extends State<HomePage>
 
       // 2. 服务器兜底
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final npsso = prefs.getString('psn_npsso') ?? '';
-        final npssoParam =
-            npsso.isNotEmpty ? '&npsso=${Uri.encodeComponent(npsso)}' : '';
         final resp = await http
             .get(Uri.parse(
-                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId$npssoParam'))
+                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
             .timeout(const Duration(seconds: 10));
         if (resp.statusCode == 200) {
           final data = json.decode(resp.body);
@@ -1283,7 +1274,7 @@ class _HomePageState extends State<HomePage>
     Map<String, dynamic>? serverData;
     try {
       final apiBase = 'http://8.153.97.56';
-      final url = '$apiBase/api/psn?uid=$_psnId${_npsso.isNotEmpty ? '&npsso=$_npsso' : ''}';
+      final url = '$apiBase/api/psn?uid=$_psnId';
       final resp = await http.get(Uri.parse(url))
           .timeout(const Duration(seconds: 8));
       if (resp.statusCode == 200) {
@@ -1309,40 +1300,12 @@ class _HomePageState extends State<HomePage>
       if (data['games'] is List && (data['games'] as List).isNotEmpty) {
         print('[Fetch] psnine OK: ${(data['games'] as List).length} games');
         _cachedHomeData = data;
-        // 异步获取 NPSSO 游玩时间并合并
-        if (_npsso.isNotEmpty) {
-          _mergePlayDurations(data).then((_) {
-            if (mounted) setState(() {});
-          });
-        }
         // 异步发送到服务器做缓存
         _cacheToServer(data);
         return data;
       }
     } catch (e) {
       print('[Fetch] psnine failed: $e');
-    }
-
-    // 3. 最后走 NPSSO 索尼 API
-    if (_npsso.isNotEmpty) {
-      try {
-        final client = PsnApiClient(_npsso);
-        final onlineId = await client.getOnlineId();
-        final games = await client.getGames();
-        if (onlineId != null && games != null) {
-          final mapped = _mapSonyGames(games);
-          final data = {
-            'psn_id': onlineId,
-            'online_id': onlineId,
-            'games': mapped,
-            'source': 'sony_direct',
-          };
-          _cachedHomeData = data;
-          return data;
-        }
-      } catch (e) {
-        print('[Fetch] PSN Direct failed: $e');
-      }
     }
 
     return {'psn_id': _psnId, 'error': '加载失败', 'games': []};
@@ -1355,9 +1318,6 @@ class _HomePageState extends State<HomePage>
       final data = await psnine.fetchFullData();
       if (data['games'] is List && (data['games'] as List).isNotEmpty) {
         print('[BgRefresh] psnine OK: ${(data['games'] as List).length} games');
-        if (_npsso.isNotEmpty) {
-          await _mergePlayDurations(data);
-        }
         _cacheToServer(data);
         if (mounted) {
           setState(() => _cachedHomeData = data);
@@ -1460,76 +1420,6 @@ class _HomePageState extends State<HomePage>
   }
 
   /// 从索尼 API 获取精确游玩时间并合并到 psnine 数据中（不覆盖奖杯状态）
-  Future<void> _mergePlayDurations(Map<String, dynamic> psnineData) async {
-    try {
-      final client = PsnApiClient(_npsso);
-      final games = await client.getGames();
-      if (games == null) return;
-      // 按名字建立 名称→游玩时间 映射
-      final durationMap = <String, int>{};
-      for (final g in games) {
-        final name = (g['name']?.toString() ?? '').trim();
-        final dur = _parseDuration(g['playDuration']?.toString() ?? '');
-        if (name.isNotEmpty && dur > 0) {
-          durationMap[name.toLowerCase()] = dur;
-        }
-      }
-      if (durationMap.isEmpty) return;
-      // 合并到 psnine 游戏数据中
-      final psnineGames = psnineData['games'] as List;
-      bool changed = false;
-      for (final pg in psnineGames) {
-        final name = (pg['name']?.toString() ?? '').trim().toLowerCase();
-        if (durationMap.containsKey(name)) {
-          pg['playDuration'] = durationMap[name];
-          changed = true;
-        }
-      }
-      if (changed) {
-        // 直接修改了 _cachedHomeData 的引用，不需要重新 setState
-        print('[Merge] play durations merged into psnine data');
-      }
-    } catch (e) {
-      print('[Merge Duration] failed: $e');
-    }
-  }
-
-  /// 索尼 API 游戏列表 → App 格式
-  List<Map<String, dynamic>> _mapSonyGames(List<Map<String, dynamic>> raw) {
-    return raw.map((g) {
-      final titleId = g['titleId']?.toString() ?? '';
-      final name = g['name']?.toString() ?? '未知游戏';
-      final duration = _parseDuration(g['playDuration']?.toString() ?? '');
-      final imageUrl = g['imageUrl']?.toString() ?? g['localImageUrl']?.toString() ?? '';
-      final summaries = g['trophyTitleSummaries'] as List? ?? [];
-      int bronze = 0, silver = 0, gold = 0, platinum = 0;
-      String npCommId = '';
-      if (summaries.isNotEmpty) {
-        final s = summaries[0] as Map? ?? {};
-        final def = (s?['definedTrophies'] as Map?) ?? {};
-        bronze = def?['bronze'] ?? 0;
-        silver = def?['silver'] ?? 0;
-        gold = def?['gold'] ?? 0;
-        platinum = def?['platinum'] ?? 0;
-        npCommId = s?['npCommunicationId']?.toString() ?? '';
-      }
-      return {
-        'id': titleId, 'name': name, 'img': imageUrl,
-        'playDuration': duration, 'bronze': bronze, 'silver': silver,
-        'gold': gold, 'platinum': platinum, 'npCommId': npCommId,
-        'platform': 'PSN', 'source': 'sony_direct',
-      };
-    }).toList();
-  }
-
-  int _parseDuration(String iso) {
-    if (iso.isEmpty) return 0;
-    final m = RegExp(r'PT(?:(\d+)H)?(?:(\d+)M)?').firstMatch(iso);
-    if (m == null) return 0;
-    return (int.tryParse(m.group(1) ?? '0') ?? 0) * 60 +
-           (int.tryParse(m.group(2) ?? '0') ?? 0);
-  }
-
   Widget _buildDeals() {
     List<Map<String, dynamic>> filtered;
     if (_platform == 'newlow') {
@@ -1811,31 +1701,9 @@ class _HomePageState extends State<HomePage>
   }
 
   /// 打开外部链接
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF1A1A2E),
-            title: const Text('打开链接'),
-            content: Text('请复制链接到浏览器打开:\n$url',
-                style: const TextStyle(fontSize: 12)),
-            actions: [
-              TextButton(
-                child: const Text('关闭'),
-                onPressed: () => Navigator.pop(ctx),
-              ),
-            ],
-          ),
-        );
-      }
-    }
-  }
-  
+  /// 打开外部链接（占位）
+  Future<void> _launchUrl(String url) async {}
+
   void _showGameDetail(BuildContext context, Map<String, dynamic> game) {
     showDialog(
       context: context,
@@ -2091,12 +1959,9 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
-  final TextEditingController _npssoCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
-  String _savedNpsso = '';
   bool _loaded = false;
-  bool _npssoLoading = false;
 
   @override
   void initState() {
@@ -2104,158 +1969,13 @@ class _SettingsPageState extends State<SettingsPage> {
     _loadSettings();
   }
 
-  /// 用 NPSSO 验证登录，自动获取 PSN ID
-  Future<void> _loginNpsso() async {
-    final npsso = _npssoCtrl.text.trim();
-    if (npsso.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先粘贴 NPSSO 令牌')),
-      );
-      return;
-    }
-    setState(() => _npssoLoading = true);
-
-    String? onlineId;
-    // 1. 手机端直连索尼 API
-    try {
-      final client = PsnApiClient(npsso);
-      onlineId = await client.getOnlineId();
-    } catch (_) {}
-
-    // 2. 直连成功 → NPSSO + PSN ID 都保存
-    if (onlineId != null && onlineId.isNotEmpty) {
-      final id = onlineId;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('psn_npsso', npsso);
-      await prefs.setString('psn_id', id);
-      setState(() {
-        _savedNpsso = npsso;
-        _savedPsnId = id;
-        _psnCtrl.text = id;
-        _npssoLoading = false;
-      });
-      widget.onNpssoChanged?.call();
-      // 异步存到服务器
-      _saveNpssoToServer(npsso);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ 登录成功！PSN：$id')),
-        );
-      }
-      return;
-    }
-
-    // 3. 走服务器兜底验证
-    try {
-      final uri = Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso');
-      final resp = await http.get(uri).timeout(const Duration(seconds: 10));
-      final data = jsonDecode(resp.body);
-      if (data['ok'] == true) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('psn_npsso', npsso);
-        final serverId = data['online_id']?.toString() ?? '';
-        if (serverId.isNotEmpty) {
-          await prefs.setString('psn_id', serverId);
-        }
-        setState(() {
-          _savedNpsso = npsso;
-          if (serverId.isNotEmpty) {
-            _savedPsnId = serverId;
-            _psnCtrl.text = serverId;
-          }
-          _npssoLoading = false;
-        });
-        widget.onNpssoChanged?.call();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(serverId.isNotEmpty
-                ? '✅ 登录成功！PSN：$serverId'
-                : '✅ NPSSO 已保存，请手动输入 PSN ID')),
-          );
-        }
-        return;
-      }
-    } catch (_) {}
-
-    setState(() => _npssoLoading = false);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ NPSSO 验证失败，请确认令牌有效')),
-      );
-    }
-  }
-
-  Future<void> _saveNpssoToServer(String npsso) async {
-    try {
-      await http.get(
-        Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso'),
-      ).timeout(const Duration(seconds: 5));
-    } catch (_) {}
-  }
-
-  void _showNpssoGuide() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('如何获取 NPSSO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _guideStep('1', '浏览器打开 playstation.com'),
-            _guideStep('2', '登录你的 PSN 账号'),
-            _guideStep('3', 'F12 → Application → Cookies'),
-            _guideStep('4', '找到 npsso，复制值'),
-            _guideStep('5', '粘贴到输入框，点登录'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('知道了', style: TextStyle(color: Colors.blue)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _guideStep(String num, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: const BoxDecoration(
-              color: Color(0xFF7C3AED),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(num, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
-      _savedNpsso = prefs.getString('psn_npsso') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
-      _npssoCtrl.text = _savedNpsso;
       _loaded = true;
     });
   }
@@ -2271,6 +1991,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SnackBar(content: Text('PSN 账号已绑定')),
       );
     }
+    widget.onNpssoChanged?.call();
   }
 
   Future<void> _bindSteam() async {
@@ -2290,14 +2011,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('psn_id');
     await prefs.remove('steam_id');
-    await prefs.remove('psn_npsso');
     setState(() {
       _savedPsnId = '';
       _savedSteamId = '';
-      _savedNpsso = '';
       _psnCtrl.clear();
       _steamCtrl.clear();
-      _npssoCtrl.clear();
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2310,7 +2028,6 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
-    _npssoCtrl.dispose();
     super.dispose();
   }
 
@@ -2324,18 +2041,11 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.all(16),
       children: [
         const SizedBox(height: 12),
-        Text(
-          '账号设置',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[100],
-          ),
+        Text('账号设置',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.grey[100]),
         ),
         const SizedBox(height: 32),
-        // PSN account
-        Text(
-          'PSN 账号',
+        Text('PSN 账号',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
         ),
         const SizedBox(height: 8),
@@ -2353,210 +2063,42 @@ class _SettingsPageState extends State<SettingsPage> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             ElevatedButton(
               onPressed: _bindPsn,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[700],
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('绑定'),
+              child: Text('绑定'),
             ),
           ],
         ),
         if (_savedPsnId.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 8, left: 4),
+            padding: EdgeInsets.only(top: 8, left: 4),
             child: Row(
               children: [
                 Icon(Icons.check_circle, size: 16, color: Colors.green[400]),
-                const SizedBox(width: 6),
-                Text(
-                  '已绑定 PSN: $_savedPsnId',
+                SizedBox(width: 6),
+                Text('已绑定 PSN: $_savedPsnId',
                   style: TextStyle(fontSize: 13, color: Colors.green[400]),
                 ),
               ],
             ),
           ),
-        const SizedBox(height: 16),
-        // 🔐 PSN 登录
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.vpn_key, size: 20, color: Colors.amber),
-                  const SizedBox(width: 8),
-                  Text('🔐 PSN 登录',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.amber[300])),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // 已登录提示
-              if (_savedPsnId.isNotEmpty && _savedNpsso.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, size: 18, color: Colors.green[400]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '已登录 PSN: $_savedPsnId',
-                          style: TextStyle(fontSize: 14, color: Colors.green[400], fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // 步骤说明
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[850],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _guideStep('①', '在系统浏览器打开 playstation.com 并登录'),
-                    const SizedBox(height: 6),
-                    _guideStep('②', '返回本 App，粘贴下方的 NPSSO'),
-                    const SizedBox(height: 6),
-                    _guideStep('③', '点击「登录」自动验证'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // 打开 PSN 网页 + 获取指引按钮
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await launchUrl(
-                              Uri.parse('https://www.playstation.com/'),
-                              mode: LaunchMode.externalApplication,
-                            );
-                          } catch (_) {}
-                        },
-                        icon: const Icon(Icons.open_in_browser, size: 16),
-                        label: const Text('打开 PSN 网页', style: TextStyle(fontSize: 12)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.blue[300],
-                          side: BorderSide(color: Colors.blue[300]!),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await launchUrl(
-                              Uri.parse('http://8.153.97.56/api/npsso'),
-                              mode: LaunchMode.externalApplication,
-                            );
-                          } catch (_) {}
-                        },
-                        icon: const Icon(Icons.vpn_key, size: 16),
-                        label: const Text('获取 NPSSO', style: TextStyle(fontSize: 12)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.amber[300],
-                          side: BorderSide(color: Colors.amber[300]!),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // NPSSO 输入框 + 登录按钮
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _npssoCtrl,
-                      obscureText: _savedNpsso.isEmpty,
-                      decoration: InputDecoration(
-                        hintText: '粘贴 NPSSO 令牌',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
-                        filled: true,
-                        fillColor: Colors.grey[850],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        suffixIcon: _savedNpsso.isNotEmpty
-                            ? Icon(Icons.check_circle, color: Colors.green[400], size: 20)
-                            : null,
-                      ),
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _npssoLoading ? null : _loginNpsso,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _savedNpsso.isNotEmpty ? Colors.green[700] : Colors.amber[700],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _npssoLoading
-                        ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(_savedNpsso.isNotEmpty ? '已登录' : '登录'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: _showNpssoGuide,
-                child: Text('NPSSO 怎么获取？（详细指引）',
-                  style: TextStyle(fontSize: 12, color: Colors.blue[400], decoration: TextDecoration.underline)),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        // Steam accountconst SizedBox(height: 24),
-        // Steam account
-        Text(
-          'Steam 账号',
+        SizedBox(height: 24),
+        Text('Steam 账号',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Row(
           children: [
             Expanded(
@@ -2571,53 +2113,48 @@ class _SettingsPageState extends State<SettingsPage> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             ElevatedButton(
               onPressed: _bindSteam,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange[700],
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('绑定'),
+              child: Text('绑定'),
             ),
           ],
         ),
         if (_savedSteamId.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 8, left: 4),
+            padding: EdgeInsets.only(top: 8, left: 4),
             child: Row(
               children: [
                 Icon(Icons.check_circle, size: 16, color: Colors.green[400]),
-                const SizedBox(width: 6),
-                Text(
-                  '已绑定 Steam: $_savedSteamId',
+                SizedBox(width: 6),
+                Text('已绑定 Steam: $_savedSteamId',
                   style: TextStyle(fontSize: 13, color: Colors.green[400]),
                 ),
               ],
             ),
           ),
-        const SizedBox(height: 40),
+        SizedBox(height: 40),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            icon: const Icon(Icons.logout),
-            label: const Text('退出登录', style: TextStyle(fontSize: 16)),
+            icon: Icon(Icons.logout),
+            label: Text('退出登录', style: TextStyle(fontSize: 16)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[700],
+              backgroundColor: Colors.red[800],
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              padding: EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: _logout,
           ),

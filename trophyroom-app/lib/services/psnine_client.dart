@@ -3,52 +3,14 @@ import 'package:http/http.dart' as http;
 
 class PsnineClient {
   final String psnId;
-  final String? npsso;
-  final String? oauthUid;
 
-  PsnineClient(this.psnId, {this.npsso, this.oauthUid});
+  PsnineClient(this.psnId);
 
-  /// 从 psnine 抓取 PSN 概要数据
-  Future<Map<String, dynamic>> fetchProfile() async {
-    final html = await _fetch('https://www.psnine.com/psnid/$psnId');
-    return {
-      'psn_id': psnId,
-      'platinum': _findInt(html, r'<span class="text-platinum">白(\d+)'),
-      'gold': _findInt(html, r'<span class="text-gold">金(\d+)'),
-      'silver': _findInt(html, r'<span class="text-silver">银(\d+)'),
-      'bronze': _findInt(html, r'<span class="text-bronze">铜(\d+)'),
-      'level': _findInt(html, r'Lv\s*(\d+)'),
-      'total_games': _findInt(html, r'(\d+)<em>总游戏'),
-      'perfect_games': _findInt(html, r'(\d+)<em>完美数'),
-      'total_trophies': _findInt(html, r'(\d+)<em>总奖杯'),
-      'completion_rate': _find(html, r'([\d.]+)<em>完成率'),
-      'total_points': _findInt(html, r'总点数[：:]\s*(\d+)'),
-      'platform': 'psn',
-    };
-  }
-
-  /// 从 psnine 抓取游戏列表（含封面、完成率、游玩时间）
-  Future<List<Map<String, dynamic>>> fetchGames() async {
+  /// 从 psnine 抓取 PSN 概要数据 + 游戏列表（一次请求合并）
+  Future<Map<String, dynamic>> fetchFullData() async {
+    // 一次请求拿游戏列表页（含完成率、封面、奖杯数）
     final html = await _fetch(
         'https://www.psnine.com/psnid/$psnId/psngame');
-
-    // 额外拉取主页获取游玩时间
-    final profileHtml =
-        await _fetch('https://www.psnine.com/psnid/$psnId');
-    final playTimes = <String, String>{};
-    final ptRegex = RegExp(
-        r'psngame/(\d+)\?psnid=' + RegExp.escape(psnId));
-    final ptMatches = ptRegex.allMatches(profileHtml);
-    for (final m in ptMatches) {
-      final gid = m.group(1)!;
-      final after = profileHtml.substring(
-          m.start, (m.start + 2000).clamp(0, profileHtml.length));
-      final ptM = RegExp(r'<td[^>]*class="twoge h-p"[^>]*>([^<]+)<em>总耗时')
-          .firstMatch(after);
-      if (ptM != null) {
-        playTimes[gid] = ptM.group(1)!.trim();
-      }
-    }
 
     final games = <Map<String, dynamic>>[];
     final trRegex = RegExp(r'<tr[^>]*>(.*?)</tr>', dotAll: true);
@@ -61,23 +23,39 @@ class PsnineClient {
       if (gidM == null) continue;
       final gid = gidM.group(1)!;
 
-      final gnameM = RegExp(r'alt="([^"]+)"').firstMatch(tr);
-      final gname = gnameM != null ? gnameM.group(1)! : 'Unknown';
+      // 游戏名：从 <a href> 文本提取（比 alt 更可靠）
+      String gname = 'Unknown';
+      final aM = RegExp(r'<a[^>]*href="/psngame/' + RegExp.escape(gid) +
+          r'[^>]*>(.*?)</a>', dotAll: true, caseSensitive: false).firstMatch(tr);
+      if (aM != null) {
+        gname = aM.group(1)!.trim();
+      } else {
+        // 兜底：从封面图 alt 提取
+        final altM = RegExp(r'alt="([^"]+)"').firstMatch(tr);
+        if (altM != null) gname = altM.group(1)!.trim();
+      }
 
+      // 封面
       final coverM = RegExp(
               r'<img[^>]*src="([^"]+\.(?:playstation|psnobj)[^"]*)"[^>]*width="(?:91|50)"')
           .firstMatch(tr);
       final cover = coverM?.group(1);
 
-      final rateM =
-          RegExp(r'(\d+)%</div></div>').firstMatch(tr);
-      final rate =
-          rateM != null ? int.tryParse(rateM.group(1)!) ?? 0 : 0;
+      // 完成率
+      final rateM = RegExp(r'(\d+)%</div></div>').firstMatch(tr);
+      final rate = rateM != null ? int.tryParse(rateM.group(1)!) ?? 0 : 0;
 
+      // 各类型奖杯数
       final pt = RegExp(r'text-platinum[^>]*>白(\d+)').firstMatch(tr);
       final gd = RegExp(r'text-gold[^>]*>金(\d+)').firstMatch(tr);
       final sv = RegExp(r'text-silver[^>]*>银(\d+)').firstMatch(tr);
       final bz = RegExp(r'text-bronze[^>]*>铜(\d+)').firstMatch(tr);
+
+      // 游玩时间（从同一页面提取：<td class="twoge h-p">）
+      String playTime = '';
+      final ptM = RegExp(r'<td[^>]*class="twoge h-p"[^>]*>([^<]+)<em>总耗时')
+          .firstMatch(tr);
+      if (ptM != null) playTime = ptM.group(1)!.trim();
 
       games.add({
         'game_id': gid,
@@ -88,11 +66,30 @@ class PsnineClient {
         'gold': gd != null ? int.tryParse(gd.group(1)!) ?? 0 : 0,
         'silver': sv != null ? int.tryParse(sv.group(1)!) ?? 0 : 0,
         'bronze': bz != null ? int.tryParse(bz.group(1)!) ?? 0 : 0,
-        'play_time': playTimes[gid],
+        'play_time': playTime,
       });
     }
 
-    return games;
+    // 从同一页提取档案统计数据
+    final profile = {
+      'psn_id': psnId,
+      'platinum': _findInt(html, r'<span class="text-platinum">白(\d+)'),
+      'gold': _findInt(html, r'<span class="text-gold">金(\d+)'),
+      'silver': _findInt(html, r'<span class="text-silver">银(\d+)'),
+      'bronze': _findInt(html, r'<span class="text-bronze">铜(\d+)'),
+      'level': _findInt(html, r'Lv\s*(\d+)'),
+      'total_games': _findInt(html, r'(\d+)<em>总游戏'),
+      'perfect_games': _findInt(html, r'(\d+)<em>完美数'),
+      'total_trophies': _findInt(html, r'(\d+)<em>总奖杯'),
+      'completion_rate': _find(html, r'([\d.]+)<em>完成率'),
+      'total_points': _findInt(html, r'总点数[：:]\s*(\d+)'),
+      'platform': 'psn',
+      'games': games,
+      'psn_data_source': 'psnine.com',
+    };
+
+    print('[psnine] Fetched ${games.length} games for $psnId');
+    return profile;
   }
 
   /// 从 psnine 抓取单个游戏的奖杯列表（含获得/未获得状态）
@@ -226,25 +223,6 @@ class PsnineClient {
       print('[psnine] fetchTips failed: $e');
       return [];
     }
-  }
-
-  /// 合并 profile + games 为统一格式
-  Future<Map<String, dynamic>> fetchFullData() async {
-    final profile = await fetchProfile();
-    final games = await fetchGames();
-    // 补充进度数据
-    for (final g in games) {
-      final earned = g['earned'] as int? ?? 0;
-      final total = (g['bronze'] as int? ?? 0) +
-                    (g['silver'] as int? ?? 0) +
-                    (g['gold'] as int? ?? 0) +
-                    (g['platinum'] as int? ?? 0);
-      g['defined'] = total;
-      g['progress'] = total > 0 ? (earned * 100 ~/ total) : 0;
-    }
-    profile['games'] = games;
-    profile['psn_data_source'] = 'psnine.com';
-    return profile;
   }
 
   // ─── 内部工具方法 ───

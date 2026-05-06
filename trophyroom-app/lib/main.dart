@@ -1203,14 +1203,17 @@ v.play().catch(function(){});
     final coverUrl = game['cover_url']?.toString() ?? '';
     final npId = game['np_id']?.toString() ?? '';
     final gameId = game['id']?.toString() ?? '';
+    // psnine 用 game_id（数字 ID），作为展开键
+    final psnineGameId = game['game_id']?.toString() ?? '';
     final earned = (game['earned'] as num?)?.toInt() ?? 0;
-    final defined = (game['defined'] as num?)?.toInt() ?? 1;
+    final defined = (game['defined'] as num?)?.toInt() ?? 0;
     final platinum = (game['platinum'] as num?)?.toInt() ?? 0;
     final gold = (game['gold'] as num?)?.toInt() ?? 0;
     final silver = (game['silver'] as num?)?.toInt() ?? 0;
     final bronze = (game['bronze'] as num?)?.toInt() ?? 0;
+    final totalTrophies = platinum + gold + silver + bronze;
     final progress = (game['progress'] as num?)?.toInt() ??
-        (defined > 0 ? (earned * 100 ~/ defined) : 0);
+        (totalTrophies > 0 && defined > 0 ? (earned * 100 ~/ totalTrophies) : 0);
     final playDuration = game['play_duration']?.toString();
 
     // Calculate game level from trophy counts
@@ -1218,7 +1221,7 @@ v.play().catch(function(){});
     final gameLevel = (gamePoints / 60).ceil().clamp(1, 999);
 
     return GestureDetector(
-      onTap: () => _toggleGameExpand(gameId, npId),
+      onTap: () => _toggleGameExpand(gameId, npId, psnineGameId),
       child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -1323,43 +1326,64 @@ v.play().catch(function(){});
 
   // ═══ Expanded game trophies ═══
 
-  void _toggleGameExpand(String gameId, String npId) {
-    final key = gameId.isNotEmpty ? gameId : npId;
+  void _toggleGameExpand(String gameId, String npId, String psnineGameId) {
+    final key = psnineGameId.isNotEmpty ? psnineGameId : (gameId.isNotEmpty ? gameId : npId);
     if (key.isEmpty) return;
     setState(() {
       if (_expandedGames.contains(key)) {
         _expandedGames.remove(key);
       } else {
         _expandedGames.add(key);
-        _fetchGameTrophies(gameId, npId);
+        _fetchGameTrophies(psnineGameId, gameId, npId);
       }
     });
   }
 
-  Future<void> _fetchGameTrophies(String gameId, String npId) async {
-    final gid = gameId.isNotEmpty ? gameId : npId;
-    if (_gameTrophiesCache.containsKey(gid)) return;
-    _gameTrophiesLoading.add(gid);
+  Future<void> _fetchGameTrophies(String psnineGameId, String gameId, String npId) async {
+    // 展开键 = psnineGameId（优先）
+    final key = psnineGameId.isNotEmpty ? psnineGameId : (gameId.isNotEmpty ? gameId : npId);
+    if (key.isEmpty || _gameTrophiesCache.containsKey(key)) return;
+
+    _gameTrophiesLoading.add(key);
+
+    // 1️⃣ 优先手机直连 psnine（快、带获得/未获得状态）
+    if (psnineGameId.isNotEmpty && _psnId.isNotEmpty) {
+      try {
+        final psnine = PsnineClient(_psnId);
+        final trophies = await psnine.fetchGameTrophies(psnineGameId);
+        if (trophies.isNotEmpty) {
+          _gameTrophiesCache[key] = trophies;
+          _gameTrophiesLoading.remove(key);
+          if (mounted) setState(() {});
+          return;
+        }
+      } catch (e) {
+        print('[Trophies] psnine direct failed: $e');
+      }
+    }
+
+    // 2️⃣ 降级：服务器中转 API
     try {
       final base = 'http://8.153.97.56';
-      var url = '$base/api/psn_game_detail?game_id=$gid&uid=$_psnId';
-      if (npId.isNotEmpty && npId != gid) url += '&np_id=${Uri.encodeComponent(npId)}';
+      var url = '$base/api/psn_game_detail?game_id=$key&uid=$_psnId';
+      if (npId.isNotEmpty) url += '&np_id=${Uri.encodeComponent(npId)}';
       if (_npsso.isNotEmpty) url += '&npsso=${Uri.encodeComponent(_npsso)}';
       if (_oauthUid.isNotEmpty) url += '&oauth_uid=$_oauthUid';
       final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         if (data is Map<String, dynamic> && data['error'] == null) {
-          _gameTrophiesCache[gid] = (data['trophies'] as List?) ?? [];
+          _gameTrophiesCache[key] = (data['trophies'] as List?) ?? [];
         }
       }
     } catch (_) {}
-    _gameTrophiesLoading.remove(gid);
+
+    _gameTrophiesLoading.remove(key);
     if (mounted) setState(() {});
   }
 
   Widget _buildExpandedTrophies(Map<String, dynamic> game) {
-    final gid = game['id']?.toString() ?? game['np_id']?.toString() ?? '';
+    final gid = game['game_id']?.toString() ?? game['id']?.toString() ?? game['np_id']?.toString() ?? '';
     if (gid.isEmpty) return const SizedBox.shrink();
     final loading = _gameTrophiesLoading.contains(gid);
     final trophies = _gameTrophiesCache[gid];

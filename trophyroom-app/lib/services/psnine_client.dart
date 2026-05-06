@@ -94,10 +94,94 @@ class PsnineClient {
     return games;
   }
 
+  /// 从 psnine 抓取单个游戏的奖杯列表（含获得/未获得状态）
+  Future<List<Map<String, dynamic>>> fetchGameTrophies(String gameId) async {
+    if (gameId.isEmpty) throw Exception('empty game_id');
+    final html = await _fetch('https://www.psnine.com/psngame/$gameId?psnid=$psnId');
+    
+    final trophies = <Map<String, dynamic>>[];
+    
+    // 查找奖杯列表区域 — psnine 奖杯行在 #trophy_list table tbody tr
+    final blockM = RegExp(r'<table[^>]*id="trophy_list"[^>]*>(.*?)</table>',
+        dotAll: true).firstMatch(html);
+    final block = blockM?.group(1) ?? html;
+
+    // 解析每个奖杯行
+    final trRegex = RegExp(r'<tr[^>]*>(.*?)</tr>', dotAll: true);
+    for (final trm in trRegex.allMatches(block)) {
+      final tr = trm.group(1)!;
+      
+      // 判断是否已获得：行有 class="obtained" 或包含 ✓ 标记
+      final earned = tr.contains('class="obtained"') ||
+                     tr.contains('✅') ||
+                     tr.contains('已获得') ||
+                     tr.contains('✔');
+      
+      // 奖杯名称
+      final nameM = RegExp(r'<td[^>]*class="trophy_name"[^>]*>(.*?)</td>',
+          dotAll: true).firstMatch(tr);
+      final name = nameM?.group(1)?.replaceAll(RegExp(r'<[^>]*>'), '').trim() ?? '';
+      if (name.isEmpty) continue;
+      
+      // 奖杯类型
+      String type = 'bronze';
+      if (tr.contains('text-platinum') || tr.contains('白金')) type = 'platinum';
+      else if (tr.contains('text-gold') || tr.contains('金')) type = 'gold';
+      else if (tr.contains('text-silver') || tr.contains('银')) type = 'silver';
+      else if (tr.contains('text-bronze') || tr.contains('铜')) type = 'bronze';
+      
+      // 奖杯图标
+      String iconUrl = '';
+      final imgM = RegExp(r'<img[^>]*src="([^"]*trophy[^"]*)"[^>]*>',
+          dotAll: true).firstMatch(tr);
+      if (imgM != null) iconUrl = imgM.group(1)!;
+      
+      // 获取日期
+      String earnedDate = '';
+      final dateM = RegExp(r'(\d{4}-\d{2}-\d{2})').firstMatch(tr);
+      if (dateM != null && earned) earnedDate = dateM.group(1)!;
+      
+      // 奖杯描述
+      String description = '';
+      final descM = RegExp(r'<td[^>]*class="trophy_desc"[^>]*>(.*?)</td>',
+          dotAll: true).firstMatch(tr);
+      if (descM != null) {
+        description = descM.group(1)!.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+      }
+      
+      // 奖杯 ID（从 onclick 或链接中提取）
+      String trophyId = '';
+      final idM = RegExp(r'trophy[=/](\d+)').firstMatch(tr);
+      if (idM != null) trophyId = idM.group(1)!;
+      
+      trophies.add({
+        'name': name,
+        'type': type,
+        'earned': earned,
+        'earned_date': earnedDate,
+        'icon_url': iconUrl,
+        'description': description,
+        'id': trophyId,
+      });
+    }
+    
+    return trophies;
+  }
+
   /// 合并 profile + games 为统一格式
   Future<Map<String, dynamic>> fetchFullData() async {
     final profile = await fetchProfile();
     final games = await fetchGames();
+    // 补充进度数据
+    for (final g in games) {
+      final earned = g['earned'] as int? ?? 0;
+      final total = (g['bronze'] as int? ?? 0) +
+                    (g['silver'] as int? ?? 0) +
+                    (g['gold'] as int? ?? 0) +
+                    (g['platinum'] as int? ?? 0);
+      g['defined'] = total;
+      g['progress'] = total > 0 ? (earned * 100 ~/ total) : 0;
+    }
     profile['games'] = games;
     profile['psn_data_source'] = 'psnine.com';
     return profile;

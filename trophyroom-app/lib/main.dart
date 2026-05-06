@@ -917,6 +917,24 @@ class _HomePageState extends State<HomePage>
                       child: coverUrl.isNotEmpty
                           ? Image.network(coverUrl,
                               fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (_, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  color: Colors.grey[850],
+                                  child: const Center(
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child:
+                                          CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                               errorBuilder: (_, __, ___) =>
                                   Container(
                                     color: Colors.grey[850],
@@ -1056,7 +1074,9 @@ class _HomePageState extends State<HomePage>
       iconColor = Colors.orange[400]!;
     }
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _showTrophyDetailBottomSheet(context, trophy),
+      child: Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -1130,30 +1150,60 @@ class _HomePageState extends State<HomePage>
             ),
           ),
           // Trophy type badge
-          if (isPlatinum)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.cyan[800]!.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text('P',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.cyan[300])),
-            )
-          else
-            Text(
-              type.isNotEmpty ? type[0].toUpperCase() : '?',
-              style: TextStyle(
-                  fontSize: 11,
-                  color: earned
-                      ? Colors.grey[500]
-                      : Colors.grey[700]),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: isPlatinum
+                  ? Colors.cyan[800]!.withOpacity(0.3)
+                  : (type == 'gold'
+                      ? Colors.amber[800]!.withOpacity(0.3)
+                      : (type == 'silver'
+                          ? Colors.grey[700]!.withOpacity(0.3)
+                          : Colors.orange[800]!.withOpacity(0.3))),
+              borderRadius: BorderRadius.circular(4),
             ),
+            child: Text(
+              isPlatinum ? '白金' : (type == 'gold' ? '金' : (type == 'silver' ? '银' : '铜')),
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isPlatinum
+                      ? Colors.cyan[300]
+                      : (type == 'gold'
+                          ? Colors.amber[400]
+                          : (type == 'silver'
+                              ? Colors.grey[400]
+                              : Colors.orange[400]))),
+            ),
+          ),
         ],
+      ),
+    ),
+    );
+  }
+
+  void _showTrophyDetailBottomSheet(BuildContext context, Map<String, dynamic> trophy) {
+    final name = trophy['name']?.toString() ?? '';
+    final type = trophy['type']?.toString() ?? 'bronze';
+    final earned = trophy['earned'] == true;
+    final earnedDate = trophy['earned_date']?.toString() ?? '';
+    final iconUrl = trophy['icon_url']?.toString() ?? '';
+    final description = trophy['description']?.toString() ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A24),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _TrophyDetailSheet(
+        name: name,
+        type: type,
+        earned: earned,
+        earnedDate: earnedDate,
+        iconUrl: iconUrl,
+        description: description,
       ),
     );
   }
@@ -1210,7 +1260,9 @@ class _HomePageState extends State<HomePage>
         _cachedHomeData = data;
         // 异步获取 NPSSO 游玩时间并合并（不覆盖奖杯数据）
         if (_npsso.isNotEmpty) {
-          _mergePlayDurations(data);
+          _mergePlayDurations(data).then((_) {
+            if (mounted) setState(() {});
+          });
         }
         // 异步发送到服务器做缓存
         _cacheToServer(data);
@@ -1656,6 +1708,160 @@ class _HomePageState extends State<HomePage>
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: _GameDetailCard(game: game),
+      ),
+    );
+  }
+}
+
+class _TrophyDetailSheet extends StatefulWidget {
+  final String name;
+  final String type;
+  final bool earned;
+  final String earnedDate;
+  final String iconUrl;
+  final String description;
+
+  const _TrophyDetailSheet({
+    required this.name,
+    required this.type,
+    required this.earned,
+    required this.earnedDate,
+    required this.iconUrl,
+    required this.description,
+  });
+
+  @override
+  State<_TrophyDetailSheet> createState() => _TrophyDetailSheetState();
+}
+
+class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
+  @override
+  Widget build(BuildContext context) {
+    final typeLabel = widget.type == 'platinum' ? '白金' :
+                      widget.type == 'gold' ? '金' :
+                      widget.type == 'silver' ? '银' : '铜';
+    final typeColor = widget.type == 'platinum' ? Colors.cyan[300] :
+                      widget.type == 'gold' ? Colors.amber[400] :
+                      widget.type == 'silver' ? Colors.grey[400] : Colors.orange[400];
+
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[700],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Icon
+          if (widget.iconUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                widget.iconUrl,
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                color: widget.earned ? null : Colors.grey,
+                colorBlendMode: widget.earned ? null : BlendMode.saturation,
+              ),
+            )
+          else
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.grey[850],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.emoji_events, size: 32, color: typeColor),
+            ),
+          const SizedBox(height: 16),
+          // Name
+          Text(
+            widget.name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Type badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey[850],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              typeLabel,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: typeColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Description
+          if (widget.description.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                widget.description,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[400],
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
+          // Earned status
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: widget.earned
+                  ? Colors.green[900]!.withOpacity(0.3)
+                  : Colors.grey[850],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  widget.earned ? Icons.check_circle : Icons.lock,
+                  size: 16,
+                  color: widget.earned ? Colors.green[300] : Colors.grey[600],
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  widget.earned
+                      ? (widget.earnedDate.isNotEmpty
+                          ? '已获得 · ${widget.earnedDate}'
+                          : '已获得')
+                      : '未获得',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: widget.earned ? Colors.green[300] : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }

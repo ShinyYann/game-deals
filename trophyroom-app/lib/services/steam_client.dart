@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class SteamClient {
-  static const String _server = 'http://8.153.97.56:3000';
+  static const String _server = 'http://8.153.97.56';
 
   final String steamId;
 

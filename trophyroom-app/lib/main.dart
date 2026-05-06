@@ -732,13 +732,13 @@ class _HomePageState extends State<HomePage>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _trophyStat(
-                              '🏆', '$platinum', Colors.cyan[300]!),
+                              '🏆', '$platinum', '白金', Colors.cyan[300]!),
                           _trophyStat(
-                              '🥇', '$gold', Colors.amber[400]!),
+                              '🥇', '$gold', '金', Colors.amber[400]!),
                           _trophyStat(
-                              '🥈', '$silver', Colors.grey[400]!),
+                              '🥈', '$silver', '银', Colors.grey[400]!),
                           _trophyStat(
-                              '🥉', '$bronze', Colors.orange[400]!),
+                              '🥉', '$bronze', '铜', Colors.orange[400]!),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -857,16 +857,20 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _trophyStat(String emoji, String count, Color color) {
+  Widget _trophyStat(String emoji, String count, String label, Color color) {
     return Column(
       children: [
         Text(emoji, style: const TextStyle(fontSize: 24)),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(count,
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: color)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.8))),
       ],
     );
   }
@@ -969,7 +973,7 @@ class _HomePageState extends State<HomePage>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('🥇$gold 🥈$silver 🥉$bronze',
+                      Text('🥇金 $gold   🥈银 $silver   🥉铜 $bronze',
                           style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey[400])),
@@ -1204,6 +1208,10 @@ class _HomePageState extends State<HomePage>
       if (data['games'] is List && (data['games'] as List).isNotEmpty) {
         print('[PSN] psnine OK: ${(data['games'] as List).length} games');
         _cachedHomeData = data;
+        // 异步获取 NPSSO 游玩时间并合并（不覆盖奖杯数据）
+        if (_npsso.isNotEmpty) {
+          _mergePlayDurations(data);
+        }
         // 异步发送到服务器做缓存
         _cacheToServer(data);
         return data;
@@ -1212,7 +1220,7 @@ class _HomePageState extends State<HomePage>
       print('[PSN] psnine failed: $e');
     }
 
-    // 2. 如果有 NPSSO，尝试手机端索尼 API（获取精确游玩时间）
+    // 2. 如果有 NPSSO 且 psnine 失败，兜底用手机端索尼 API
     if (_npsso.isNotEmpty) {
       try {
         final client = PsnApiClient(_npsso);
@@ -1263,6 +1271,41 @@ class _HomePageState extends State<HomePage>
         body: json.encode({'uid': _psnId, 'games': games}),
       ).timeout(const Duration(seconds: 5));
     } catch (_) {}
+  }
+
+  /// 从索尼 API 获取精确游玩时间并合并到 psnine 数据中（不覆盖奖杯状态）
+  Future<void> _mergePlayDurations(Map<String, dynamic> psnineData) async {
+    try {
+      final client = PsnApiClient(_npsso);
+      final games = await client.getGames();
+      if (games == null) return;
+      // 按名字建立 名称→游玩时间 映射
+      final durationMap = <String, int>{};
+      for (final g in games) {
+        final name = (g['name']?.toString() ?? '').trim();
+        final dur = _parseDuration(g['playDuration']?.toString() ?? '');
+        if (name.isNotEmpty && dur > 0) {
+          durationMap[name.toLowerCase()] = dur;
+        }
+      }
+      if (durationMap.isEmpty) return;
+      // 合并到 psnine 游戏数据中
+      final psnineGames = psnineData['games'] as List;
+      bool changed = false;
+      for (final pg in psnineGames) {
+        final name = (pg['name']?.toString() ?? '').trim().toLowerCase();
+        if (durationMap.containsKey(name)) {
+          pg['playDuration'] = durationMap[name];
+          changed = true;
+        }
+      }
+      if (changed) {
+        // 直接修改了 _cachedHomeData 的引用，不需要重新 setState
+        print('[Merge] play durations merged into psnine data');
+      }
+    } catch (e) {
+      print('[Merge Duration] failed: $e');
+    }
   }
 
   /// 索尼 API 游戏列表 → App 格式

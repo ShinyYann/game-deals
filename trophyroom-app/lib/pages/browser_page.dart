@@ -235,6 +235,16 @@ class _BrowserPageState extends State<BrowserPage> {
   }
 
   Future<void> _launchExternal(String url) async {
+    // Steam 链接优先用 Steam App 打开（Steam 自带网络通道）
+    if (url.contains('steamcommunity.com') || url.contains('store.steampowered.com')) {
+      final steamUrl = url.replaceFirst('https://', 'steam://openurl/');
+      final steamUri = Uri.tryParse(steamUrl);
+      if (steamUri != null && await canLaunchUrl(steamUri)) {
+        await launchUrl(steamUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+    }
+    // 兜底：系统浏览器
     final uri = Uri.tryParse(url);
     if (uri != null && await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);

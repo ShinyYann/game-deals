@@ -121,7 +121,7 @@ class PsnineClient {
       'gold': totalGold,
       'silver': totalSilver,
       'bronze': totalBronze,
-      'level': _findInt(html, r'Lv\s*(\d+)'),
+      'level': await _extractLevel(psnId),
       'total_games': games.length,
       'perfect_games': perfectCount,
       'total_trophies': totalTrophyCount,
@@ -306,5 +306,24 @@ class PsnineClient {
   String? _find(String html, String pattern) {
     final m = RegExp(pattern).firstMatch(html);
     return m?.group(1);
+  }
+
+  /// 从 psnine 用户主页提取等级（游戏列表页可能不显示等级）
+  Future<int> _extractLevel(String psnId) async {
+    try {
+      final html = await _fetch('https://www.psnine.com/psnid/$psnId');
+      // 尝试多种格式
+      for (final pattern in [
+        r'Lv\s*(\d+)',
+        r'等级[：:]\s*(\d+)',
+        r'class="[^"]*level[^"]*"[^>]*>(\d+)',
+        r'LEVEL\s*(\d+)',
+        r'(\d+)\s*级',
+      ]) {
+        final v = _findInt(html, pattern);
+        if (v > 0) return v;
+      }
+    } catch (_) {}
+    return 0;
   }
 }

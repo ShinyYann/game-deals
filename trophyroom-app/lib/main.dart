@@ -8,6 +8,9 @@ import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/psnine_client.dart';
 import 'services/bookmark_service.dart';
+import 'services/steam_client.dart';
+import 'services/switch_service.dart';
+import 'models/switch_game.dart';
 import 'pages/browser_page.dart';
 import 'widgets/trophy_icon.dart';
 
@@ -307,6 +310,10 @@ class _HomePageState extends State<HomePage>
   bool _accountsLoaded = false;
   String _error = '';
   Map<String, dynamic>? _cachedHomeData;
+  Map<String, dynamic>? _steamData;
+  bool _steamLoading = false;
+  List<SwitchGame> _switchGames = [];
+  bool _switchLoaded = false;
   String? _expandedGameId;
   Map<String, List<dynamic>> _gameTrophies = {};
   Map<String, bool> _expandedLoading = {};
@@ -419,6 +426,10 @@ class _HomePageState extends State<HomePage>
       _steamId = steam;
       _accountsLoaded = true;
     });
+    // 如果有 Steam ID，自动拉取 Steam 数据
+    if (steam.isNotEmpty && _steamData == null) {
+      _fetchSteamData();
+    }
   }
 
   @override
@@ -546,9 +557,11 @@ class _HomePageState extends State<HomePage>
         _buildHome(),
         _buildDeals(),
         _buildGuide(),
+        _buildSwitchTab(),
         SettingsPage(onNpssoChanged: () async {
           // 先加载账号再清缓存，确保 FutureBuilder 拿到最新 _psnId
           await _loadAccounts();
+          _loadSwitchGames();
           if (mounted) {
             setState(() {
               _cachedHomeData = null;
@@ -566,6 +579,7 @@ class _HomePageState extends State<HomePage>
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
           BottomNavigationBarItem(icon: Icon(Icons.local_offer), label: '折扣'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '攻略'),
+          BottomNavigationBarItem(icon: Icon(Icons.sports_esports), label: 'Switch'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: '设置'),
         ],
       ),
@@ -598,7 +612,7 @@ class _HomePageState extends State<HomePage>
                 backgroundColor: Colors.purple[700],
                 foregroundColor: Colors.white,
               ),
-              onPressed: () => setState(() => _currentTab = 3),
+              onPressed: () => setState(() => _currentTab = 4),
             ),
           ],
         ),
@@ -769,6 +783,33 @@ class _HomePageState extends State<HomePage>
                 const SizedBox(height: 20),
               ],
 
+              // ── Steam Profile Card ──
+              if (_steamId.isNotEmpty) ...[
+                if (_steamLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  )
+                else if (_steamData != null && !_steamData!.containsKey('error'))
+                  _buildSteamCard(_steamData!)
+                else if (_steamData != null && _steamData!.containsKey('error'))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber, size: 16, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Steam 数据加载失败 — 确保服务器已配置 API Key',
+                            style: TextStyle(fontSize: 12, color: Colors.orange[300]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+
               // ── Game List Title ──
               if (hasData)
                 Padding(
@@ -800,7 +841,7 @@ class _HomePageState extends State<HomePage>
                         ),
                         const SizedBox(height: 16),
                         TextButton.icon(
-                          onPressed: () => setState(() => _currentTab = 3),
+                          onPressed: () => setState(() => _currentTab = 4),
                           icon: Icon(Icons.settings, size: 18, color: Colors.purple[300]),
                           label: Text("前往设置", style: TextStyle(color: Colors.purple[300])),
                         ),
@@ -1473,6 +1514,411 @@ class _HomePageState extends State<HomePage>
       if (lower == entry.key.toLowerCase()) return entry.value;
     }
     return name;
+  }
+
+  /// 从服务器获取 Steam 数据
+  Future<Map<String, dynamic>> _fetchSteamData() async {
+    if (_steamId.isEmpty) return {};
+    setState(() => _steamLoading = true);
+    try {
+      final client = SteamClient(_steamId);
+      final profile = await client.fetchProfile();
+      final gamesData = await client.fetchGames();
+      final result = {
+        ...profile,
+        ...gamesData,
+        'platform': 'steam',
+      };
+      setState(() {
+        _steamData = result;
+        _steamLoading = false;
+      });
+      return result;
+    } catch (e) {
+      print('[Steam] fetch error: $e');
+      setState(() {
+        _steamData = {'error': e.toString()};
+        _steamLoading = false;
+      });
+      return {};
+    }
+  }
+
+  /// 构建 Steam 档案卡片
+  Widget _buildSteamCard(Map<String, dynamic> data) {
+    final name = data['name'] ?? 'Unknown';
+    final avatar = data['avatar'] ?? '';
+    final gameCount = data['game_count'] ?? 0;
+    final games = data['games'] as List? ?? [];
+    int totalPlaytime = 0;
+    for (final g in games) {
+      totalPlaytime += (g['playtime_forever'] ?? 0) as int;
+    }
+    final totalHours = (totalPlaytime / 60).toStringAsFixed(1);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A3A5C), Color(0xFF0D1B2A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.blueGrey.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            children: [
+              const Icon(Icons.sports_esports, color: Color(0xFF66C0F4), size: 20),
+              const SizedBox(width: 8),
+              const Text('Steam',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                  color: Color(0xFF66C0F4))),
+              const Spacer(),
+              if (name != 'Unknown')
+                Text(name,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[400])),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Stats row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _statItem('🎮', '$gameCount', '游戏'),
+              _statItem('⏱️', '$totalHours h', '时长'),
+              _statItem('📊', '${games.where((g) => (g['playtime_forever'] ?? 0) > 0).length}', '玩过'),
+            ],
+          ),
+          // Top games preview
+          if (games.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white12),
+            const SizedBox(height: 8),
+            ...games.take(5).map((g) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  if ((g['img_icon_url'] ?? '').isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.network(
+                        g['img_icon_url'],
+                        width: 24, height: 24,
+                        errorBuilder: (_, __, ___) => const SizedBox(width: 24, height: 24),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 24, height: 24),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      g['name'] ?? '',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[300]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    '${((g['playtime_forever'] ?? 0) as int) ~/ 60}h',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  ),
+                ],
+              ),
+            )),
+            if (games.length > 5)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  '... 还有 ${games.length - 5} 款游戏',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 加载 Switch 游戏库
+  Future<void> _loadSwitchGames() async {
+    final games = await SwitchService.loadGames(_psnId);
+    setState(() {
+      _switchGames = games;
+      _switchLoaded = true;
+    });
+  }
+
+  /// 构建 Switch 游戏库页面
+  Widget _buildSwitchTab() {
+    if (!_accountsLoaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (!_switchLoaded) {
+      _loadSwitchGames();
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0A12),
+      body: _switchGames.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.sports_esports, size: 64, color: Colors.grey[700]),
+                  const SizedBox(height: 16),
+                  Text('Switch 游戏库',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+                      color: Colors.grey[400])),
+                  const SizedBox(height: 8),
+                  Text('点击右下角按钮添加游戏',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  const SizedBox(height: 16),
+                  Text('手动记录游戏 + 游玩时长',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _switchGames.length + 1,
+              itemBuilder: (ctx, i) {
+                if (i == 0) {
+                  final totalH = _switchGames.fold<int>(0,
+                    (s, g) => s + g.totalMinutes) ~/ 60;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      children: [
+                        Text('🎮 Switch 游戏库 (${_switchGames.length})',
+                          style: const TextStyle(fontSize: 18,
+                            fontWeight: FontWeight.bold, color: Colors.white)),
+                        const Spacer(),
+                        Text('共 ${totalH}h',
+                          style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                      ],
+                    ),
+                  );
+                }
+                final idx = i - 1;
+                final game = _switchGames[idx];
+                return Card(
+                  color: const Color(0xFF1A1A2E),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
+                    leading: Container(
+                      width: 48, height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE60012),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.sports_esports,
+                        color: Colors.white, size: 24),
+                    ),
+                    title: Text(game.name,
+                      style: const TextStyle(fontSize: 15,
+                        fontWeight: FontWeight.w600)),
+                    subtitle: Text(
+                      game.totalMinutes > 0
+                          ? game.playTimeDisplay
+                          : '点击记录游玩时长',
+                      style: TextStyle(fontSize: 12,
+                        color: game.totalMinutes > 0
+                            ? Colors.grey[400] : Colors.orange[300])),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.timer_outlined,
+                            size: 20, color: Colors.grey[500]),
+                          onPressed: () => _showSwitchTimeDialog(idx),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete_outline,
+                            size: 20, color: Colors.red[300]),
+                          onPressed: () => _deleteSwitchGame(idx),
+                        ),
+                      ],
+                    ),
+                    onTap: () => _showSwitchTimeDialog(idx),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFE60012),
+        onPressed: _showAddSwitchGameDialog,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  /// 添加 Switch 游戏对话框
+  void _showAddSwitchGameDialog() {
+    final nameCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text('添加 Switch 游戏', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: nameCtrl,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: '输入游戏名称',
+            hintStyle: TextStyle(color: Colors.grey[600]),
+            filled: true,
+            fillColor: const Color(0xFF0A0A12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE60012)),
+            onPressed: () async {
+              final name = nameCtrl.text.trim();
+              if (name.isNotEmpty) {
+                await SwitchService.addGame(_psnId,
+                  SwitchGame(name: name, addedAt: DateTime.now()));
+                _loadSwitchGames();
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('添加'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 记录游玩时长对话框
+  void _showSwitchTimeDialog(int index) {
+    final game = _switchGames[index];
+    final hourCtrl = TextEditingController(text: game.hoursPlayed.toString());
+    final minCtrl = TextEditingController(text: game.minutesPlayed.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: Text(game.name,
+          style: const TextStyle(color: Colors.white, fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: hourCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '小时',
+                      labelStyle: TextStyle(color: Colors.grey[500]),
+                      filled: true,
+                      fillColor: const Color(0xFF0A0A12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: minCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '分钟',
+                      labelStyle: TextStyle(color: Colors.grey[500]),
+                      filled: true,
+                      fillColor: const Color(0xFF0A0A12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE60012)),
+            onPressed: () async {
+              final h = int.tryParse(hourCtrl.text.trim()) ?? 0;
+              final m = int.tryParse(minCtrl.text.trim()) ?? 0;
+              await SwitchService.updatePlayTime(_psnId, index, h, m);
+              _loadSwitchGames();
+              Navigator.pop(ctx);
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteSwitchGame(int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text('删除游戏',
+          style: TextStyle(color: Colors.white)),
+        content: Text('确定删除「${_switchGames[index].name}」？',
+          style: TextStyle(color: Colors.grey[400])),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('删除', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await SwitchService.removeGame(_psnId, index);
+      _loadSwitchGames();
+    }
   }
 
   /// 从索尼 API 获取精确游玩时间并合并到 psnine 数据中（不覆盖奖杯状态）
@@ -2228,9 +2674,11 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
+  final TextEditingController _steamKeyCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
   bool _loaded = false;
+  bool _steamKeyVerified = false;
 
   @override
   void initState() {
@@ -2276,6 +2724,30 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _setSteamKey() async {
+    final key = _steamKeyCtrl.text.trim();
+    if (key.isEmpty) return;
+    try {
+      final result = await SteamClient.setApiKey(key);
+      setState(() => _steamKeyVerified = result['verified'] == true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(
+            _steamKeyVerified
+                ? 'Steam API Key 验证成功 ✅ (${result['test_name'] ?? ''})'
+                : 'Key 已保存但验证失败: ${result['error'] ?? '未知'}',
+          )),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('设置失败: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('psn_id');
@@ -2297,6 +2769,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
+    _steamKeyCtrl.dispose();
     super.dispose();
   }
 
@@ -2412,6 +2885,54 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+          ),
+        SizedBox(height: 24),
+        // ── Steam API Key ──
+        Text('Steam API Key',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
+        ),
+        SizedBox(height: 4),
+        Text('服务器共享密钥，管理员配置一次即可',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _steamKeyCtrl,
+                decoration: InputDecoration(
+                  hintText: '输入 Steam Web API Key',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                style: TextStyle(color: Colors.white, fontSize: 13),
+                obscureText: true,
+              ),
+            ),
+            SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: _setSteamKey,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _steamKeyVerified ? Colors.green[700] : Colors.blueGrey[700],
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(_steamKeyVerified ? '已配置' : '保存'),
+            ),
+          ],
+        ),
+        if (_steamKeyVerified)
+          Padding(
+            padding: EdgeInsets.only(top: 4, left: 4),
+            child: Text('✅ Key 有效 — Steam 数据可用',
+              style: TextStyle(fontSize: 12, color: Colors.green[400])),
           ),
         SizedBox(height: 40),
         SizedBox(

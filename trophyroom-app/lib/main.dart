@@ -1,18 +1,11 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'pages/web_view_page.dart';
-import 'pages/bookmark_list_page.dart';
+import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/steam_video.dart';
-import 'services/psn_api_client.dart';
-import 'services/psnine_client.dart';
-import 'psn_login_page.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -37,7 +30,7 @@ class TrophyRoomApp extends StatelessWidget {
   }
 }
 
-// v4.0: PSN API native + PS App-style trophy cards + NPSSO auth
+/// 启动动画：纯 Flutter 粒子碎裂 → TROPHYROOM → 奖杯屋大字 → 过渡到首页
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
@@ -292,7 +285,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   int _currentTab = 0;
   String _netStatus = '检测中...';
   bool _netChecked = false;
@@ -307,41 +300,11 @@ class _HomePageState extends State<HomePage>
   bool _psnWebLoading = true;
   String _psnId = '';
   String _steamId = '';
-  String _npsso = '';
-  String _oauthUid = '';
   bool _accountsLoaded = false;
   String _error = '';
-  Map<String, dynamic>? _cachedHomeData;  // 本地缓存
-  int _homeLastRefreshMs = 0;              // 上次刷新时间戳
-  // 用 ValueNotifier 避免展开关闭时重建整页
-  bool _vfxBlur = true;
-  bool _vfxGlass = true;
-  bool _videoBg = false;                  // Steam 动态背景
-  WebViewController? _videoWebCtrl;
-  String? _trailerUrl;
-  bool _videoLoading = false;
-  Map<String, dynamic> _vfx = {};        // {crystal/neon/sweep/breath: {en,intensity,color,speed}}
-  late AnimationController _vfxCtrl;
-  // Expanded game trophies state
-  final Set<String> _expandedGames = {};
-  final Map<String, List<dynamic>> _gameTrophiesCache = {};
-  final Set<String> _gameTrophiesLoading = {};
-
-  static const _vfxColors = {
-    '💜': 0xFF7C3AED, '💙': 0xFF3B82F6, '💚': 0xFF06B6D4,
-    '💛': 0xFFF59E0B, '🩷': 0xFFEC4899, '🤍': 0xFFE5E7EB,
-  };
-
-  Map<String, dynamic> _defaultVfx(String k) => switch (k) {
-    'crystal' => {'en': false, 'intensity': 0.15, 'color': 0xFF7C3AED},
-    'neon'    => {'en': false, 'intensity': 0.4,  'color': 0xFF7C3AED},
-    'sweep'   => {'en': false, 'intensity': 0.5,  'speed': 1.0},
-    'breath'  => {'en': false, 'intensity': 0.4,  'color': 0xFF7C3AED, 'speed': 1.0},
-    _ => {},
-  };
-
-  dynamic _v(String k, String field) => (_vfx[k] ?? _defaultVfx(k))[field];
-  bool _ve(String k) => (_vfx[k] ?? _defaultVfx(k))['en'] == true;
+  String? _expandedGameId;
+  Map<String, List<dynamic>> _gameTrophies = {};
+  Map<String, bool> _expandedLoading = {};
 
   @override
   void initState() {
@@ -366,103 +329,12 @@ class _HomePageState extends State<HomePage>
     _initPSNWebView();
     _checkNetwork();
     _loadAccounts();
-    _loadVfxPrefs();
-    _vfxCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat();
-  }
-
-  Future<void> _loadVfxPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('vfx_cfg');
-    Map<String, dynamic> cfg;
-    if (raw != null) {
-      cfg = Map<String, dynamic>.from(jsonDecode(raw));
-    } else {
-      cfg = {};
-    }
-    setState(() {
-      _vfxBlur = prefs.getBool('vfx_blur') ?? true;
-      _vfxGlass = prefs.getBool('vfx_glass') ?? true;
-      _videoBg = prefs.getBool('video_bg') ?? false;
-      _vfx = cfg;
-    });
-    if (_videoBg) {
-      _loadTrailer();
-    } else {
-      _trailerUrl = null;
-      _videoWebCtrl = null;
-      setState(() {});
-    }
-  }
-
-  Future<void> _saveVfx() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('vfx_cfg', jsonEncode(_vfx));
-  }
-
-  Future<void> _loadTrailer() async {
-    if (_videoLoading || _trailerUrl != null) return;
-    setState(() => _videoLoading = true);
-    // Get latest game name from cached data
-    final games = _cachedHomeData?['games'] as List<dynamic>?;
-    final gameName = games?.isNotEmpty == true
-        ? (games!.first as Map<String, dynamic>)['game_name']?.toString() ?? ''
-        : '';
-    final url = gameName.isNotEmpty
-        ? await SteamVideoService.findTrailer(gameName)
-        : null;
-    if (mounted && url != null) {
-      _trailerUrl = url;
-      _initVideoWebView();
-    }
-    if (mounted) setState(() => _videoLoading = false);
-  }
-
-  void _initVideoWebView() {
-    if (_trailerUrl == null) return;
-    _videoWebCtrl = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadHtmlString('''
-<!DOCTYPE html>
-<html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-*{margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:#000}
-video{width:100%;height:100%;object-fit:cover}
-</style></head>
-<body>
-<video autoplay muted loop playsinline webkit-playsinline>
-  <source src="$_trailerUrl" type="application/x-mpegURL">
-</video>
-<script>
-var v=document.querySelector("video");
-v.play().catch(function(){});
-</script>
-</body></html>
-''');
-    setState(() {});
-  }
-
-  Future<void> _toggleVideoBg(bool on) async {
-    _videoBg = on;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('video_bg', on);
-    if (on) {
-      _loadTrailer();
-    } else {
-      _videoWebCtrl = null;
-      _trailerUrl = null;
-    }
-    setState(() {});
   }
 
   @override
   void dispose() {
     _animCtrl.dispose();
     _scanCtrl.dispose();
-    _vfxCtrl.dispose();
     super.dispose();
   }
 
@@ -537,31 +409,11 @@ v.play().catch(function(){});
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
-    final npsso = prefs.getString('psn_npsso') ?? '';
-    final oauthUid = prefs.getString('oauth_uid') ?? '';
-
-    // 读取本地缓存：秒开关键
-    final cacheKey = 'home_cache_$psn';
-    _homeLastRefreshMs = prefs.getInt('${cacheKey}_ts') ?? 0;
-    final cacheJson = prefs.getString(cacheKey);
-    if (cacheJson != null && cacheJson.isNotEmpty) {
-      try {
-        _cachedHomeData = json.decode(cacheJson) as Map<String, dynamic>;
-      } catch (_) {}
-    }
-
     setState(() {
       _psnId = psn;
       _steamId = steam;
-      _npsso = npsso;
-      _oauthUid = oauthUid;
       _accountsLoaded = true;
     });
-
-    // 有缓存 → 后台静默刷新，App 秒开不倒等
-    if (_cachedHomeData != null && _psnId.isNotEmpty) {
-      _backgroundRefresh();
-    }
   }
 
   @override
@@ -685,28 +537,16 @@ v.play().catch(function(){});
             ),
         ],
       ),
-      body: IndexedStack(
-        index: _currentTab,
-        children: [
-          _buildHome(),
-          _buildDeals(),
-          _buildGuide(),
-          SettingsPage(
-            onVfxChanged: () => _loadVfxPrefs(),
-            onNpssoChanged: () {
-              _loadAccounts();
-              _backgroundRefresh();
-            },
-          ),
-        ],
-      ),
+      body: [
+        _buildHome(),
+        _buildDeals(),
+        _buildGuide(),
+        const SettingsPage(),
+      ][_currentTab],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentTab,
-        onTap: (i) {
-          setState(() => _currentTab = i);
-          if (i == 0) { _loadAccounts(); _checkNetwork(); }
-        },
+        onTap: (i) => setState(() => _currentTab = i),
         selectedItemColor: Colors.purple[300],
         unselectedItemColor: Colors.grey[600],
         items: const [
@@ -753,39 +593,25 @@ v.play().catch(function(){});
     }
 
     return FutureBuilder<Map<String, dynamic>>(
-      // 缓存优先：有缓存秒出，没缓存走 API
-      future: _cachedHomeData != null
-          ? Future.value(_cachedHomeData)
-          : _fetchFullPsnData(),
+      future: _fetchFullPsnData(),
       builder: (context, snapshot) {
-        // 有缓存时跳过转圈 —— Future.value() 会有短暂 waiting 态导致闪烁
         if (snapshot.connectionState == ConnectionState.waiting) {
-          if (_cachedHomeData == null) {
-            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-          }
-          // 缓存命中 — fall through 直接用缓存渲染
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
         }
-        // snapshot.data 有效用 snapshot，否则降级到缓存
-        final effectiveData = (snapshot.hasData && !snapshot.hasError)
-            ? snapshot.data
-            : (_cachedHomeData ?? snapshot.data);
         if (snapshot.hasError || !snapshot.hasData) {
-          if (effectiveData == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                  const SizedBox(height: 12),
-                  Text('加载失败: ${snapshot.error ?? "未知错误"}',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                ],
-              ),
-            );
-          }
-          // 有缓存 — 降级显示
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                const SizedBox(height: 12),
+                Text('加载失败: ${snapshot.error ?? "未知错误"}',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+              ],
+            ),
+          );
         }
-        final data = effectiveData!;
+        final data = snapshot.data!;
         final psnId = data['psn_id']?.toString() ?? '';
         final level = data['level']?.toString() ?? '?';
         final platinum = data['platinum'] ?? 0;
@@ -801,301 +627,120 @@ v.play().catch(function(){});
             (bronze as num).toInt();
         final games = data['games'] as List<dynamic>? ?? [];
         final hasData = psnId.isNotEmpty;
-        final recentCoverUrl = (games.isNotEmpty)
-            ? (games.first as Map<String, dynamic>)['cover_url']?.toString() ?? ''
-            : '';
 
         return RefreshIndicator(
           color: Colors.purple[300],
           onRefresh: () async {
-            // 下拉刷新：跳过缓存，走 API
-            _cachedHomeData = null;
+            _expandedGameId = null;
+            _gameTrophies.clear();
+            _expandedLoading.clear();
             setState(() {});
           },
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // ── Profile Summary Card (Spotify-style) ──
+              // ── Profile Summary Card ──
               if (hasData) ...[
-                AnimatedBuilder(
-                  animation: _vfxCtrl,
-                  builder: (context, child) {
-                    final breath = _ve('breath');
-                    final bi = _v('breath', 'intensity') as double;
-                    final bc = Color(_v('breath', 'color') as int);
-                    final bp = (math.sin(_vfxCtrl.value * 6.28 * (_v('breath', 'speed') as double)) + 1) / 2;
-                    return Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: breath ? [
-                          BoxShadow(color: bc.withOpacity(0.2 * bi * bp), blurRadius: 16, spreadRadius: 2),
-                          BoxShadow(color: bc.withOpacity(0.08 * bi * bp), blurRadius: 32, spreadRadius: 6),
-                        ] : null,
-                      ),
-                      child: child,
-                    );
-                  },
-                  child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: 240,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Layer 0: Steam video background
-                        if (_videoBg && _videoWebCtrl != null)
-                          Positioned.fill(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: WebViewWidget(controller: _videoWebCtrl!),
-                            ),
-                          ),
-                        // Layer 1: Blurred game cover background
-                        if (recentCoverUrl.isNotEmpty && _vfxBlur)
-                          Positioned.fill(
-                            child: ImageFiltered(
-                              imageFilter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                              child: Image.network(
-                                recentCoverUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Non-blurred cover (VFX off)
-                        if (recentCoverUrl.isNotEmpty && !_vfxBlur)
-                          Positioned.fill(
-                            child: Image.network(
-                              recentCoverUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Fallback gradient when no cover
-                        if (recentCoverUrl.isEmpty)
-                          Positioned.fill(
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Crystal glass tint overlay
-                        if (_ve('crystal'))
-                          Positioned.fill(
-                            child: AnimatedBuilder(
-                              animation: _vfxCtrl,
-                              builder: (context, child) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    gradient: RadialGradient(
-                                      center: Alignment(0.3 + math.sin(_vfxCtrl.value * 6.28) * 0.15,
-                                          -0.4 + math.cos(_vfxCtrl.value * 6.28) * 0.1),
-                                      radius: 0.7,
-                                      colors: [
-                                        Color(_v('crystal', 'color') as int)
-                                            .withOpacity((_v('crystal', 'intensity') as double) * 1.2),
-                                        Color(_v('crystal', 'color') as int)
-                                            .withOpacity((_v('crystal', 'intensity') as double) * 0.3),
-                                        Colors.transparent,
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        // Dark overlay — lighter, let the background show through
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.black.withOpacity(0.15),
-                                  Colors.black.withOpacity(0.35),
-                                  Colors.black.withOpacity(0.6),
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Layer 2: Content
-                        Positioned.fill(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // Row 1: PSN ID + Level badge
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        psnId,
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                            color: Colors.white.withOpacity(0.3),
-                                            width: 0.5),
-                                      ),
-                                      child: Text(
-                                        'Lv $level',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                // Row 2: Trophy stat columns
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _trophyStat('🏆', '$platinum', Colors.cyan[300]!),
-                                    _trophyStat('🥇', '$gold', Colors.amber[400]!),
-                                    _trophyStat('🥈', '$silver', Colors.grey[400]!),
-                                    _trophyStat('🥉', '$bronze', Colors.orange[400]!),
-                                  ],
-                                ),
-                                // Row 3: Stats strip (crystal glass)
-                                if (_vfxGlass)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: BackdropFilter(
-                                    filter: ui.ImageFilter.blur(
-                                        sigmaX: 16, sigmaY: 16),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.08),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                            color: Colors.white.withOpacity(0.25),
-                                            width: 0.8),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.white.withOpacity(0.05),
-                                            blurRadius: 2,
-                                            spreadRadius: 0,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-                                          _statItem('📊', '$totalGames', '游戏'),
-                                          _statItem('🏅', '$perfectGames', '完美'),
-                                          _statItem('🎯', '$completionRate%', '完成率'),
-                                          _statItem('🏆', '$totalTrophies', '总数'),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Sweep light effect
-                        if (_ve('sweep'))
-                          Positioned.fill(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: AnimatedBuilder(
-                                animation: _vfxCtrl,
-                                builder: (context, child) {
-                                  return CustomPaint(
-                                    painter: _SweepPainter(
-                                      time: _vfxCtrl.value * (_v('sweep', 'speed') as double),
-                                      intensity: _v('sweep', 'intensity') as double,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        // Neon border glow
-                        if (_ve('neon'))
-                          Positioned.fill(
-                            child: AnimatedBuilder(
-                              animation: _vfxCtrl,
-                              builder: (context, child) {
-                                return CustomPaint(
-                                  painter: _NeonBorderPainter(
-                                    color: Color(_v('neon', 'color') as int),
-                                    intensity: _v('neon', 'intensity') as double,
-                                    time: _vfxCtrl.value,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                      ],
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7C3AED).withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Row 1: PSN ID + Level badge
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              psnId,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Lv $level',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Purple level progress bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: 0.75,
+                          minHeight: 8,
+                          backgroundColor: Colors.white.withOpacity(0.15),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFA855F7),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Row 2: 4 trophy stat columns
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _trophyStat(
+                              '🏆', '$platinum', Colors.cyan[300]!),
+                          _trophyStat(
+                              '🥇', '$gold', Colors.amber[400]!),
+                          _trophyStat(
+                              '🥈', '$silver', Colors.grey[400]!),
+                          _trophyStat(
+                              '🥉', '$bronze', Colors.orange[400]!),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Row 3: Total Games | Perfect Games | Completion Rate | Total Trophies
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _statItem('📊', '$totalGames', '游戏'),
+                            _statItem('🏅', '$perfectGames', '完美'),
+                            _statItem('🎯', '$completionRate%', '完成率'),
+                            _statItem('🏆', '$totalTrophies', '总数'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                ),
-              ],
-
-              // ── Total Play Time Summary ──
-              if (hasData && games.isNotEmpty) ...[
-                () {
-                  int totalSeconds = 0;
-                  for (final g in games) {
-                    final dur = (g as Map<String, dynamic>)['play_duration_raw']?.toString() ?? '';
-                    final h = RegExp(r'PT(\d+)H').firstMatch(dur);
-                    final m = RegExp(r'(\d+)M').firstMatch(dur);
-                    final s = RegExp(r'(\d+)S').firstMatch(dur);
-                    if (h != null) totalSeconds += int.parse(h.group(1)!) * 3600;
-                    if (m != null) totalSeconds += int.parse(m.group(1)!) * 60;
-                    if (s != null) totalSeconds += int.parse(s.group(1)!);
-                  }
-                  final totalHours = totalSeconds ~/ 3600;
-                  final totalMins = (totalSeconds % 3600) ~/ 60;
-                  final totalTimeStr = totalHours > 0 ? '$totalHours小时${totalMins}分' : '${totalMins}分';
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text('🎮 总游戏时长：$totalTimeStr',
-                        style: TextStyle(fontSize: 13, color: Colors.grey[400])),
-                  );
-                }(),
+                const SizedBox(height: 20),
               ],
 
               // ── Game List Title ──
@@ -1131,35 +776,13 @@ v.play().catch(function(){});
                     ),
                   ),
                 )
-              else if (!hasData)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Column(
-                      children: [
-                        Icon(Icons.cloud_off, size: 48, color: Colors.grey[600]),
-                        const SizedBox(height: 12),
-                        Text(
-                            _error.isNotEmpty ? '加载失败: $_error\n下拉刷新重试' : '数据加载中...',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey[500])),
-                      ],
-                    ),
-                  ),
-                )
               else
                 ...games.map((g) {
-                  final gMap = g as Map<String, dynamic>;
-                  final gid = gMap['id']?.toString() ?? '';
-                  final npn = gMap['np_id']?.toString() ?? '';
-                  final expandKey = gid.isNotEmpty ? gid : npn;
-                  return Column(
-                    children: [
-                      _buildGameCard(gMap),
-                      if (_expandedGames.contains(expandKey))
-                        _buildExpandedTrophies(gMap),
-                    ],
-                  );
+                  final game = g as Map<String, dynamic>;
+                  final gameId = game['game_id']?.toString() ?? '';
+                  final isExpanded = _expandedGameId == gameId;
+                  return _buildExpandableGameCard(game,
+                      isExpanded: isExpanded);
                 }),
               const SizedBox(height: 20),
             ],
@@ -1198,379 +821,318 @@ v.play().catch(function(){});
     );
   }
 
-  Widget _buildGameCard(Map<String, dynamic> game) {
+  Widget _buildExpandableGameCard(Map<String, dynamic> game,
+      {required bool isExpanded}) {
+    final gameId = game['game_id']?.toString() ?? '';
     final name = game['name']?.toString() ?? '';
     final coverUrl = game['cover_url']?.toString() ?? '';
-    final npId = game['np_id']?.toString() ?? '';
-    final gameId = game['id']?.toString() ?? '';
-    // psnine 用 game_id（数字 ID），作为展开键
-    final psnineGameId = game['game_id']?.toString() ?? '';
-    final earned = (game['earned'] as num?)?.toInt() ?? 0;
-    final defined = (game['defined'] as num?)?.toInt() ?? 0;
-    final platinum = (game['platinum'] as num?)?.toInt() ?? 0;
-    final gold = (game['gold'] as num?)?.toInt() ?? 0;
-    final silver = (game['silver'] as num?)?.toInt() ?? 0;
-    final bronze = (game['bronze'] as num?)?.toInt() ?? 0;
-    final totalTrophies = platinum + gold + silver + bronze;
-    final progress = (game['progress'] as num?)?.toInt() ??
-        (totalTrophies > 0 && defined > 0 ? (earned * 100 ~/ totalTrophies) : 0);
-    final playDuration = game['play_duration']?.toString();
+    final platform = game['platform']?.toString() ?? '';
+    final cr = ((game['completion_rate'] ?? 0) as num).toDouble();
+    final platinum = game['platinum'] ?? 0;
+    final gold = game['gold'] ?? 0;
+    final silver = game['silver'] ?? 0;
+    final bronze = game['bronze'] ?? 0;
 
-    // Calculate game level from trophy counts
-    final gamePoints = platinum * 300 + gold * 90 + silver * 30 + bronze * 15;
-    final gameLevel = (gamePoints / 60).ceil().clamp(1, 999);
-
-    return GestureDetector(
-      onTap: () => _toggleGameExpand(gameId, npId, psnineGameId),
-      child: Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+    return Card(
+      color: const Color(0xFF1A1A2E),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+        side: BorderSide(
+          color: isExpanded
+              ? Colors.purple[400]!.withOpacity(0.5)
+              : Colors.grey[800]!,
+        ),
+      ),
+      margin: const EdgeInsets.only(bottom: 10),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header (always visible)
+          InkWell(
+            onTap: () => _toggleGame(gameId),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  // Cover image
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: coverUrl.isNotEmpty
+                          ? Image.network(coverUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  Container(
+                                    color: Colors.grey[850],
+                                    child: Icon(Icons.image,
+                                        color: Colors.grey[700],
+                                        size: 24),
+                                  ))
+                          : Container(
+                              color: Colors.grey[850],
+                              child: Icon(Icons.image,
+                                  color: Colors.grey[700],
+                                  size: 24),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Name + Platform
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        if (platform.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: platform == 'PS5'
+                                  ? Colors.blue[800]
+                                  : platform == 'PS4'
+                                      ? Colors.indigo[800]
+                                      : Colors.grey[700],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(platform,
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Trophy counts
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('🥇$gold 🥈$silver 🥉$bronze',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[400])),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 80,
+                        child: LinearProgressIndicator(
+                          value: cr / 100,
+                          minHeight: 4,
+                          backgroundColor: Colors.grey[800],
+                          color: cr >= 100
+                              ? Colors.amber
+                              : Colors.purple[300],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    isExpanded
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    color: Colors.grey[500],
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded content (trophy list)
+          if (isExpanded) ...[
+            const Divider(height: 1, color: Colors.grey),
+            if (_expandedLoading[gameId] == true)
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (_gameTrophies.containsKey(gameId))
+              ...(_gameTrophies[gameId] as List<dynamic>).map((t) {
+                final trophy = t as Map<String, dynamic>;
+                return _buildTrophyRow(trophy);
+              })
+            else
+              const SizedBox.shrink(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrophyRow(Map<String, dynamic> trophy) {
+    final type = trophy['type']?.toString().toLowerCase() ?? '';
+    final name = trophy['name']?.toString() ?? '';
+    final description = trophy['description']?.toString() ?? '';
+    final earned = trophy['earned'] == true;
+    final iconUrl = trophy['icon_url']?.toString() ?? '';
+    final isPlatinum = type == 'platinum';
+
+    IconData icon;
+    Color iconColor;
+    if (isPlatinum) {
+      icon = Icons.star;
+      iconColor = Colors.cyan[300]!;
+    } else if (type == 'gold') {
+      icon = Icons.emoji_events;
+      iconColor = Colors.amber[400]!;
+    } else if (type == 'silver') {
+      icon = Icons.workspace_premium;
+      iconColor = Colors.grey[400]!;
+    } else {
+      icon = Icons.circle;
+      iconColor = Colors.orange[400]!;
+    }
+
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+              color: Colors.grey[850]!, width: 0.5),
+        ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Game icon
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: coverUrl.isNotEmpty
-                ? Image.network(coverUrl, width: 48, height: 48, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 48, height: 48, color: Colors.grey[800],
-                      child: Icon(Icons.videogame_asset, color: Colors.grey[600], size: 24)))
-                : Container(
-                    width: 48, height: 48, color: Colors.grey[800],
-                    child: Icon(Icons.videogame_asset, color: Colors.grey[600], size: 24)),
-          ),
+          // Trophy icon
+          if (iconUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                iconUrl,
+                width: 28,
+                height: 28,
+                fit: BoxFit.cover,
+                color: earned ? null : Colors.grey,
+                colorBlendMode:
+                    earned ? null : BlendMode.saturation,
+                errorBuilder: (_, __, ___) => Icon(
+                  icon,
+                  size: 24,
+                  color: earned
+                      ? iconColor
+                      : iconColor.withOpacity(0.3),
+                ),
+              ),
+            )
+          else
+            Icon(
+              icon,
+              size: 24,
+              color: earned
+                  ? iconColor
+                  : iconColor.withOpacity(0.3),
+            ),
           const SizedBox(width: 12),
-          // Game info
+          // Trophy name
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Name + Level badge row
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(name,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text('Lv.$gameLevel', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                // Progress bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: LinearProgressIndicator(
-                    value: progress / 100,
-                    minHeight: 6,
-                    backgroundColor: Colors.grey[800],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      progress >= 100 ? Colors.cyan[300]! : Colors.purple[300]!),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: earned
+                        ? Colors.white
+                        : Colors.grey[600],
                   ),
                 ),
-                const SizedBox(height: 4),
-                // Trophy counts row
-                Row(
-                  children: [
-                    _trophyCountIcon('◈', platinum, Colors.cyan[300]!),
-                    const SizedBox(width: 8),
-                    _trophyCountIcon('●', gold, Colors.amber[400]!),
-                    const SizedBox(width: 8),
-                    _trophyCountIcon('◉', silver, Colors.grey[400]!),
-                    const SizedBox(width: 8),
-                    _trophyCountIcon('○', bronze, Colors.orange[400]!),
-                    const Spacer(),
-                    Text('$progress%', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                  ],
-                ),
-                // Play duration (if available)
-                if (playDuration != null && playDuration.isNotEmpty && playDuration != 'None')
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text('⏱️ $playDuration',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                if (description.isNotEmpty)
+                  Text(
+                    description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: earned
+                          ? Colors.grey[500]
+                          : Colors.grey[700],
+                    ),
                   ),
               ],
             ),
           ),
+          // Trophy type badge
+          if (isPlatinum)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.cyan[800]!.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text('P',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.cyan[300])),
+            )
+          else
+            Text(
+              type.isNotEmpty ? type[0].toUpperCase() : '?',
+              style: TextStyle(
+                  fontSize: 11,
+                  color: earned
+                      ? Colors.grey[500]
+                      : Colors.grey[700]),
+            ),
         ],
       ),
-      ),
     );
   }
 
-  Widget _trophyCountIcon(String icon, int count, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(icon, style: TextStyle(fontSize: 11, color: color)),
-        const SizedBox(width: 2),
-        Text('$count', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
-      ],
-    );
-  }
+  void _toggleGame(String gameId) async {
+    if (_expandedGameId == gameId) {
+      setState(() => _expandedGameId = null);
+      return;
+    }
 
-  // ═══ Expanded game trophies ═══
-
-  void _toggleGameExpand(String gameId, String npId, String psnineGameId) {
-    final key = psnineGameId.isNotEmpty ? psnineGameId : (gameId.isNotEmpty ? gameId : npId);
-    if (key.isEmpty) return;
     setState(() {
-      if (_expandedGames.contains(key)) {
-        _expandedGames.remove(key);
-      } else {
-        _expandedGames.add(key);
-        _fetchGameTrophies(psnineGameId, gameId, npId);
-      }
+      _expandedGameId = gameId;
     });
-  }
 
-  Future<void> _fetchGameTrophies(String psnineGameId, String gameId, String npId) async {
-    // 展开键 = psnineGameId（优先）
-    final key = psnineGameId.isNotEmpty ? psnineGameId : (gameId.isNotEmpty ? gameId : npId);
-    if (key.isEmpty || _gameTrophiesCache.containsKey(key)) return;
-
-    _gameTrophiesLoading.add(key);
-
-    // 1️⃣ 优先手机直连 psnine（快、带获得/未获得状态）
-    if (psnineGameId.isNotEmpty && _psnId.isNotEmpty) {
+    if (!_gameTrophies.containsKey(gameId)) {
+      setState(() => _expandedLoading[gameId] = true);
       try {
-        final psnine = PsnineClient(_psnId);
-        final trophies = await psnine.fetchGameTrophies(psnineGameId);
-        if (trophies.isNotEmpty) {
-          _gameTrophiesCache[key] = trophies;
-          _gameTrophiesLoading.remove(key);
-          if (mounted) setState(() {});
-          return;
+        final resp = await http
+            .get(Uri.parse(
+                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+            .timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          final trophies = data['trophies'] as List<dynamic>? ?? [];
+          setState(() {
+            _gameTrophies[gameId] = trophies;
+            _expandedLoading[gameId] = false;
+          });
+        } else {
+          setState(() => _expandedLoading[gameId] = false);
         }
       } catch (e) {
-        print('[Trophies] psnine direct failed: $e');
-      }
-    }
-
-    // 2️⃣ 降级：服务器中转 API
-    try {
-      final base = 'http://8.153.97.56';
-      var url = '$base/api/psn_game_detail?game_id=$key&uid=$_psnId';
-      if (npId.isNotEmpty) url += '&np_id=${Uri.encodeComponent(npId)}';
-      if (_npsso.isNotEmpty) url += '&npsso=${Uri.encodeComponent(_npsso)}';
-      if (_oauthUid.isNotEmpty) url += '&oauth_uid=$_oauthUid';
-      final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        if (data is Map<String, dynamic> && data['error'] == null) {
-          _gameTrophiesCache[key] = (data['trophies'] as List?) ?? [];
-        }
-      }
-    } catch (_) {}
-
-    _gameTrophiesLoading.remove(key);
-    if (mounted) setState(() {});
-  }
-
-  Widget _buildExpandedTrophies(Map<String, dynamic> game) {
-    final gid = game['game_id']?.toString() ?? game['id']?.toString() ?? game['np_id']?.toString() ?? '';
-    if (gid.isEmpty) return const SizedBox.shrink();
-    final loading = _gameTrophiesLoading.contains(gid);
-    final trophies = _gameTrophiesCache[gid];
-
-    if (loading) {
-      return Padding(
-        padding: const EdgeInsets.only(left: 60, bottom: 8),
-        child: Row(
-          children: [
-            SizedBox(width: 14, height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey[500])),
-            const SizedBox(width: 8),
-            Text('加载奖杯列表…', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-          ],
-        ),
-      );
-    }
-
-    if (trophies == null || trophies.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 4, bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 4),
-          ...trophies.map((t) => _buildTrophyRow(t)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrophyRow(dynamic trophy) {
-    final t = trophy as Map<String, dynamic>;
-    final name = t['name']?.toString() ?? '';
-    final type = t['type']?.toString() ?? 'bronze';
-    final earned = t['earned'] == true;
-    final earnedDate = t['earned_date']?.toString() ?? '';
-    final trophyId = t['id']?.toString() ?? '';
-    final iconUrl = t['icon_url']?.toString() ?? '';
-    final description = t['description']?.toString() ?? '';
-
-    final opacity = earned ? 1.0 : 0.35;
-    final typeColor = _trophyColor(type);
-    final typeLabel = _typeLabel(type);
-    final isPlatinum = type.toLowerCase() == 'platinum';
-
-    return GestureDetector(
-      onTap: () => _showTrophyDetailBottomSheet(context, trophy),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.grey[850],
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: earned ? typeColor.withOpacity(0.25) : Colors.grey[800]!,
-          ),
-        ),
-        child: Row(
-          children: [
-            // Trophy icon
-            Opacity(
-              opacity: opacity,
-              child: iconUrl.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.network(iconUrl, width: 24, height: 24,
-                      errorBuilder: (_, __, ___) => Icon(Icons.emoji_events, size: 20, color: typeColor)),
-                  )
-                : Icon(Icons.emoji_events, size: 20, color: typeColor),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: earned ? Colors.white : Colors.grey[600],
-                    ),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                  if (earnedDate.isNotEmpty)
-                    Text(earnedDate,
-                      style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                    ),
-                ],
-              ),
-            ),
-            // Type badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: earned ? typeColor.withOpacity(0.3) : Colors.grey[800],
-                gradient: isPlatinum && earned
-                  ? const LinearGradient(
-                      colors: [Color(0xFF8098A8), Color(0xFFD0D8E0), Color(0xFF8098A8)],
-                      stops: [0.0, 0.5, 1.0],
-                    )
-                  : null,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Text(typeLabel,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: earned ? Colors.white : Colors.grey[500],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _typeLabel(String type) {
-    switch (type.toLowerCase()) {
-      case 'platinum': return '白';
-      case 'gold': return '金';
-      case 'silver': return '银';
-      case 'bronze': return '铜';
-      default: return '?';
-    }
-  }
-
-  Color _trophyColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'platinum': return const Color(0xFFE5E4E2);
-      case 'gold': return const Color(0xFFFFD700);
-      case 'silver': return const Color(0xFFC0C0C0);
-      case 'bronze': return const Color(0xFFCD7F32);
-      default: return Colors.grey;
-    }
-  }
-
-  void _showTrophyDetailBottomSheet(BuildContext context, dynamic trophy) {
-    final t = trophy as Map<String, dynamic>;
-    final name = t['name']?.toString() ?? '';
-    final type = t['type']?.toString() ?? 'bronze';
-    final earned = t['earned'] == true;
-    final earnedDate = t['earned_date']?.toString() ?? '';
-    final trophyId = t['id']?.toString() ?? '';
-    final iconUrl = t['icon_url']?.toString() ?? '';
-    final description = t['description']?.toString() ?? '';
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF1A1A24),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => _TrophyDetailSheet(
-        name: name,
-        type: type,
-        earned: earned,
-        earnedDate: earnedDate,
-        trophyId: trophyId,
-        iconUrl: iconUrl,
-        description: description,
-      ),
-    );
-  }
-
-  Future<void> _saveHomeCache(Map<String, dynamic> data) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'home_cache_$_psnId';
-    await prefs.setString(key, json.encode(data));
-    await prefs.setInt('${key}_ts', DateTime.now().millisecondsSinceEpoch);
-  }
-
-  Future<void> _backgroundRefresh() async {
-    final data = await _fetchFullPsnData();
-    if (mounted && data['psn_id']?.toString().isNotEmpty == true) {
-      // 只在有游戏数据时才更新缓存（失败时不覆盖旧缓存）
-      final games = (data['games'] as List?) ?? [];
-      if (games.isNotEmpty || data['error'] == null) {
-        setState(() {
-          _cachedHomeData = data;
-          _error = data['error']?.toString() ?? '';
-        });
+        setState(() => _expandedLoading[gameId] = false);
       }
     }
   }
@@ -1578,123 +1140,22 @@ v.play().catch(function(){});
   Future<Map<String, dynamic>> _fetchFullPsnData() async {
     // 仅 PSN 数据可用时
     if (_psnId.isEmpty || _accountsLoaded == false) {
-      return {'psn_id': '', 'games': []};
+      return {'profile': null, 'games': []};
     }
-
-    // 1. 优先手机端直连 psnine（快、国内可用）
-    try {
-      final psnine = PsnineClient(_psnId);
-      final data = await psnine.fetchFullData();
-      if (data['games'] is List && (data['games'] as List).isNotEmpty) {
-        print('[PSN] psnine OK: ${(data['games'] as List).length} games');
-        _saveHomeCache(data);
-        _cachedHomeData = data;
-        return data;
-      }
-    } catch (e) {
-      print('[PSN] psnine failed: $e');
-      // fall through
-    }
-
-    // 2. 如果有 NPSSO，尝试手机端直连索尼 API（获取精确游玩时间）
-    if (_npsso.isNotEmpty) {
-      try {
-        final client = PsnApiClient(_npsso);
-        final games = await client.getGames();
-        final onlineId = await client.getOnlineId();
-
-        if (onlineId != null && games != null) {
-          final mapped = _mapSonyGames(games);
-          final data = {
-            'psn_id': onlineId,
-            'online_id': onlineId,
-            'games': mapped,
-            'source': 'sony_direct',
-          };
-          _saveHomeCache(data);
-          _cachedHomeData = data;
-          return data;
-        }
-      } catch (e) {
-        print('[PSN Direct] Failed: $e');
-      }
-    }
-
-    // 3. 最后走服务器中转（阿里云可能调不通索尼）
     try {
       final apiBase = 'http://8.153.97.56';
-      final url = '${apiBase}/api/psn?uid=$_psnId${_npsso.isNotEmpty ? (_oauthUid.isNotEmpty ? '&oauth_uid=$_oauthUid&npsso=$_npsso' : '&npsso=$_npsso') : (_oauthUid.isNotEmpty ? '&oauth_uid=$_oauthUid' : '')}';
-      final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 15));
+      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId'))
+          .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
-        if (data['psn_id'] != null && data['error'] == null) {
-          _saveHomeCache(data);
-          _cachedHomeData = data;
+        if (data['psn_id'] != null) {
           return data;
         }
       }
     } catch (e) {
       _error = '$e';
     }
-    return {'psn_id': _psnId, 'error': '加载失败', 'games': []};
-  }
-
-  /// 将索尼 API 的游戏列表映射为 App 所需格式
-  List<Map<String, dynamic>> _mapSonyGames(List<Map<String, dynamic>> raw) {
-    return raw.map((g) {
-      final titleId = g['titleId']?.toString() ?? '';
-      final name = g['name']?.toString() ?? '未知游戏';
-      final playDuration = _parseDuration(g['playDuration']?.toString() ?? '');
-      final imageUrl = g['imageUrl']?.toString() ?? g['localImageUrl']?.toString() ?? '';
-      final trophySummary = g['trophyTitleSummaries'] as List? ?? [];
-      int bronze = 0, silver = 0, gold = 0, platinum = 0;
-
-      if (trophySummary.isNotEmpty) {
-        final summary = trophySummary[0] as Map? ?? {};
-        final definedTrophies = summary?['definedTrophies'] as Map? ?? {};
-        bronze = definedTrophies?['bronze'] ?? 0;
-        silver = definedTrophies?['silver'] ?? 0;
-        gold = definedTrophies?['gold'] ?? 0;
-        platinum = definedTrophies?['platinum'] ?? 0;
-      }
-
-      // NP 通信 ID（用于获取奖杯明细）
-      String npCommId = '';
-      if (trophySummary.isNotEmpty) {
-        final summary = trophySummary[0] as Map? ?? {};
-        npCommId = summary?['npCommunicationId']?.toString() ?? '';
-      }
-
-      return {
-        'id': titleId,
-        'name': name,
-        'img': imageUrl,
-        'playDuration': playDuration,
-        'bronze': bronze,
-        'silver': silver,
-        'gold': gold,
-        'platinum': platinum,
-        'npCommId': npCommId,
-        'platform': 'PSN',
-        'source': 'sony_direct',
-      };
-    }).toList();
-  }
-
-  /// 解析 ISO 8601 时长 → 小时数
-  int _parseDuration(String iso) {
-    if (iso.isEmpty) return 0;
-    try {
-      // PT12H30M → 12小时30分
-      final match = RegExp(r'PT(?:(\d+)H)?(?:(\d+)M)?').firstMatch(iso);
-      if (match == null) return 0;
-      final hours = int.tryParse(match.group(1) ?? '0') ?? 0;
-      final mins = int.tryParse(match.group(2) ?? '0') ?? 0;
-      return hours * 60 + mins;
-    } catch (_) {
-      return 0;
-    }
+    return {'profile': null, 'games': []};
   }
 
   Widget _buildDeals() {
@@ -1916,18 +1377,6 @@ v.play().catch(function(){});
           color: const Color(0xFF1565C0),
         ),
         const SizedBox(height: 20),
-        // 📑 攻略收藏夹入口
-        _guideCard(
-          icon: '📑',
-          title: '攻略收藏夹',
-          subtitle: '已收藏的网页攻略 · 点击续读',
-          color: const Color(0xFFFF8F00),
-          onTapOverride: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const BookmarkListPage()));
-          },
-        ),
-        const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1949,16 +1398,14 @@ v.play().catch(function(){});
     required String title,
     required String subtitle,
     required Color color,
-    VoidCallback? onTapOverride,
   }) {
     return InkWell(
-      onTap: onTapOverride ??
-          () {
-            // TODO: 跳转到具体攻略页
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$title — 攻略制作中'), duration: const Duration(seconds: 2)),
-            );
-          },
+      onTap: () {
+        // TODO: 跳转到具体攻略页
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$title — 攻略制作中'), duration: const Duration(seconds: 2)),
+        );
+      },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -2028,301 +1475,8 @@ v.play().catch(function(){});
   }
 }
 
-// ═══ 奖杯详情弹窗（含心得） ═══
-
-class _TrophyDetailSheet extends StatefulWidget {
-  final String name;
-  final String type;
-  final bool earned;
-  final String earnedDate;
-  final String trophyId;
-  final String iconUrl;
-  final String description;
-
-  const _TrophyDetailSheet({
-    required this.name,
-    required this.type,
-    required this.earned,
-    required this.earnedDate,
-    required this.trophyId,
-    required this.iconUrl,
-    required this.description,
-  });
-
-  @override
-  State<_TrophyDetailSheet> createState() => _TrophyDetailSheetState();
-}
-
-class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
-  List<dynamic> _tips = [];
-  bool _tipsLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchTips();
-  }
-
-  Color _color(String type) {
-    switch (type.toLowerCase()) {
-      case 'platinum': return const Color(0xFFE5E4E2);
-      case 'gold': return const Color(0xFFFFD700);
-      case 'silver': return const Color(0xFFC0C0C0);
-      case 'bronze': return const Color(0xFFCD7F32);
-      default: return Colors.grey;
-    }
-  }
-
-  String _label(String type) {
-    switch (type.toLowerCase()) {
-      case 'platinum': return '白金';
-      case 'gold': return '金';
-      case 'silver': return '银';
-      case 'bronze': return '铜';
-      default: return '?';
-    }
-  }
-
-  Future<void> _fetchTips() async {
-    if (widget.trophyId.isEmpty) {
-      setState(() => _tipsLoading = false);
-      return;
-    }
-    try {
-      final resp = await http.get(
-        Uri.parse('http://8.153.97.56/api/psn_trophy_tips?trophy_id=${widget.trophyId}'),
-      ).timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        setState(() {
-          _tips = data['tips'] as List? ?? [];
-          _tipsLoading = false;
-        });
-        return;
-      }
-    } catch (_) {}
-    setState(() => _tipsLoading = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _color(widget.type);
-    final label = _label(widget.type);
-    final isPlatinum = widget.type.toLowerCase() == 'platinum';
-
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.65,
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(width: 40, height: 4,
-            decoration: BoxDecoration(color: Colors.grey[700], borderRadius: BorderRadius.circular(2)),
-          ),
-          const SizedBox(height: 20),
-
-          // Trophy icon + name
-          Row(
-            children: [
-              // Icon
-              Container(
-                width: 48, height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.grey[900],
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: color.withOpacity(0.3)),
-                ),
-                child: widget.iconUrl.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(9),
-                      child: Image.network(widget.iconUrl,
-                        color: widget.earned ? null : Colors.grey,
-                        colorBlendMode: widget.earned ? BlendMode.srcIn : BlendMode.saturation,
-                      ),
-                    )
-                  : Icon(Icons.emoji_events, size: 28, color: color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.name,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                      maxLines: 2, overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(5),
-                            gradient: isPlatinum
-                              ? const LinearGradient(colors: [Color(0xFF8098A8), Color(0xFFD0D8E0), Color(0xFF8098A8)])
-                              : null,
-                          ),
-                          child: Text(label,
-                            style: TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.w700,
-                              color: widget.earned ? Colors.white : Colors.grey[400],
-                            ),
-                          ),
-                        ),
-                        if (widget.earnedDate.isNotEmpty) ...[
-                          const SizedBox(width: 10),
-                          Text(widget.earnedDate,
-                            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Description
-          if (widget.description.isNotEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[850],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(widget.description,
-                style: TextStyle(fontSize: 13, color: Colors.grey[300], height: 1.5),
-              ),
-            ),
-
-          const SizedBox(height: 16),
-
-          // Tips header
-          Row(
-            children: [
-              Icon(Icons.chat_bubble_outline, size: 16, color: Colors.grey[500]),
-              const SizedBox(width: 6),
-              Text('心得',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[300]),
-              ),
-              const SizedBox(width: 8),
-              Text('${_tips.length}',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Tips content
-          Expanded(
-            child: _tipsLoading
-              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-              : _tips.isEmpty
-                ? Center(
-                    child: Text('暂无心得', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                  )
-                : ListView.builder(
-                    itemCount: _tips.length,
-                    itemBuilder: (_, i) {
-                      final tip = _tips[i] as Map<String, dynamic>;
-                      final user = tip['user']?.toString() ?? '';
-                      final avatar = tip['avatar']?.toString() ?? '';
-                      final content = tip['content']?.toString() ?? '';
-                      final date = tip['date']?.toString() ?? '';
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[850],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: avatar.isNotEmpty
-                                    ? Image.network(avatar, width: 28, height: 28,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          width: 28, height: 28,
-                                          decoration: BoxDecoration(
-                                            color: color.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(14),
-                                          ),
-                                          child: Center(
-                                            child: Text(user.isNotEmpty ? user[0].toUpperCase() : '?',
-                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : Container(
-                                        width: 28, height: 28,
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[800],
-                                          borderRadius: BorderRadius.circular(14),
-                                        ),
-                                        child: Center(
-                                          child: Text(user.isNotEmpty ? user[0].toUpperCase() : '?',
-                                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey[400]),
-                                          ),
-                                        ),
-                                      ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(user,
-                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[200]),
-                                      ),
-                                      if (date.isNotEmpty)
-                                        Text(date,
-                                          style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (content.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(content,
-                                style: TextStyle(fontSize: 13, color: Colors.grey[300], height: 1.5),
-                              ),
-                            ],
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class SettingsPage extends StatefulWidget {
-  final VoidCallback? onVfxChanged;
-  final VoidCallback? onNpssoChanged;
-  const SettingsPage({super.key, this.onVfxChanged, this.onNpssoChanged});
-
-  static const _vfxColors = {
-    '💜': 0xFF7C3AED, '💙': 0xFF3B82F6, '💚': 0xFF06B6D4,
-    '💛': 0xFFF59E0B, '🩷': 0xFFEC4899, '🤍': 0xFFE5E7EB,
-  };
+  const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -2331,16 +1485,9 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
-  final TextEditingController _npssoCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
-  String _savedNpsso = '';
   bool _loaded = false;
-  bool _npssoLoading = false;
-  String _npssoStatus = '';
-
-  Map<String, dynamic> _vfxCfg = {};
-  bool _videoBg = false;
 
   @override
   void initState() {
@@ -2350,160 +1497,26 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('vfx_cfg');
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
-      _savedNpsso = prefs.getString('psn_npsso') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
-      _npssoCtrl.text = _savedNpsso;
-      _vfxCfg = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
-      _videoBg = prefs.getBool('video_bg') ?? false;
       _loaded = true;
     });
   }
 
-  // NPSSO 登录（唯一登录方式，自动获取 PSN ID）
-  Future<void> _loginNpsso() async {
-    final npsso = _npssoCtrl.text.trim();
-    if (npsso.isEmpty) {
+  Future<void> _bindPsn() async {
+    final id = _psnCtrl.text.trim();
+    if (id.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('psn_id', id);
+    setState(() => _savedPsnId = id);
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请粘贴 NPSSO 令牌')),
+        const SnackBar(content: Text('PSN 账号已绑定')),
       );
-      return;
     }
-    setState(() => _npssoLoading = true);
-
-    // 1. 先试手机端直连索尼 API 验证 NPSSO
-    String? onlineId;
-    try {
-      final client = PsnApiClient(npsso);
-      onlineId = await client.getOnlineId();
-      debugPrint('[NPSSO] Direct Sony API: onlineId=$onlineId');
-    } catch (e) {
-      debugPrint('[NPSSO] Direct Sony API failed: $e');
-    }
-
-    // 2. 直连成功 → 保存 NPSSO + onlineId
-    if (onlineId != null && onlineId.isNotEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('psn_npsso', npsso);
-      await prefs.setString('psn_id', onlineId!);
-      setState(() {
-        _savedNpsso = npsso;
-        _savedPsnId = onlineId!;
-        _psnCtrl.text = onlineId!;
-        _npssoLoading = false;
-      });
-      widget.onNpssoChanged?.call();
-      // 异步存到服务器（不阻塞）
-      _saveNpssoToServer(npsso);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ 登录成功！PSN 账号：$onlineId')),
-        );
-      }
-      return;
-    }
-
-    // 3. 直连失败 → 走服务器验证（兜底）
-    try {
-      final uri = Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso');
-      final resp = await http.get(uri).timeout(const Duration(seconds: 10));
-      final data = jsonDecode(resp.body);
-      if (data['ok'] == true) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('psn_npsso', npsso);
-        final serverOnlineId = data['online_id']?.toString() ?? '';
-        final realId = serverOnlineId.isNotEmpty ? serverOnlineId : '未识别';
-        await prefs.setString('psn_id', realId);
-        setState(() {
-          _savedNpsso = npsso;
-          _savedPsnId = realId;
-          _psnCtrl.text = realId;
-          _npssoLoading = false;
-        });
-        widget.onNpssoChanged?.call();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('✅ 登录成功！PSN 账号：$realId')),
-          );
-        }
-      } else {
-        setState(() => _npssoLoading = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('登录失败：${data['error'] ?? '未知错误'}')),
-          );
-        }
-      }
-    } catch (e) {
-      setState(() => _npssoLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('网络错误：$e')),
-        );
-      }
-    }
-  }
-
-  /// 异步保存 NPSSO 到服务器（后台，不阻塞 UI）
-  Future<void> _saveNpssoToServer(String npsso) async {
-    try {
-      await http.get(
-        Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso'),
-      ).timeout(const Duration(seconds: 5));
-    } catch (_) {}
-  }
-
-  void _showNpssoGuide() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('如何获取 NPSSO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _guideStep('1', '浏览器打开 playstation.com'),
-            _guideStep('2', '登录你的 PSN 账号'),
-            _guideStep('3', 'F12 → Application → Cookies'),
-            _guideStep('4', '找到 npsso，复制值'),
-            _guideStep('5', '粘贴到输入框，点登录'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('知道了', style: TextStyle(color: Colors.amber)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _guideStep(String num, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 24, height: 24,
-            decoration: BoxDecoration(
-              color: Colors.amber[700],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(child: Text(num, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold))),
-          ),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 14))),
-        ],
-      ),
-    );
   }
 
   Future<void> _bindSteam() async {
@@ -2519,147 +1532,15 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Future<void> _toggleVfx(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
-    widget.onVfxChanged?.call();
-  }
-
-  Widget _buildEffectCard(String key, String title, String subtitle) {
-    final data = Map<String, dynamic>.from(_vfxCfg[key] ?? {});
-    final enabled = data['en'] == true;
-    final intensity = (data['intensity'] ?? 0.4).toDouble();
-    final color = data['color'] ?? 0xFF7C3AED;
-    final speed = (data['speed'] ?? 1.0).toDouble();
-    final hasSpeed = key == 'sweep' || key == 'breath';
-    final hasColor = key != 'sweep';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[850],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SwitchListTile(
-            title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey[200])),
-            subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-            value: enabled,
-            activeColor: Colors.purple[300],
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            onChanged: (v) => _updateEffect(key, 'en', v),
-          ),
-          if (enabled) ...[
-            const Divider(height: 1, color: Colors.white10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSlider('强度', intensity, (v) => _updateEffect(key, 'intensity', v)),
-                  if (hasSpeed)
-                    _buildSlider('速度', speed, (v) => _updateEffect(key, 'speed', v), min: 0.2, max: 3.0),
-                  if (hasColor)
-                    _buildColorRow(color, (c) => _updateEffect(key, 'color', c)),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSlider(String label, double value, ValueChanged<double> onChanged, {double min = 0.0, double max = 1.0}) {
-    return Row(
-      children: [
-        SizedBox(width: 40, child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[400]))),
-        Expanded(
-          child: Slider(
-            value: value,
-            min: min,
-            max: max,
-            divisions: 20,
-            activeColor: Colors.purple[300],
-            onChanged: onChanged,
-          ),
-        ),
-        SizedBox(
-          width: 36,
-          child: Text('${(value * 100).round()}%',
-              style: TextStyle(fontSize: 13, color: Colors.grey[400])),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildColorRow(int current, ValueChanged<int> onChanged) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        children: [
-          Text('颜色 ', style: TextStyle(fontSize: 13, color: Colors.grey[400])),
-          ...SettingsPage._vfxColors.entries.map((e) => GestureDetector(
-            onTap: () => onChanged(e.value),
-            child: Container(
-              width: 28, height: 28,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(e.value),
-                border: Border.all(
-                  color: current == e.value ? Colors.white : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              child: Center(child: Text(e.key, style: const TextStyle(fontSize: 12))),
-            ),
-          )),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _updateEffect(String key, String field, dynamic value) async {
-    final prefs = await SharedPreferences.getInstance();
-    _vfxCfg[key] ??= <String, dynamic>{};
-    (_vfxCfg[key] as Map<String, dynamic>)[field] = value;
-    await prefs.setString('vfx_cfg', jsonEncode(_vfxCfg));
-    widget.onVfxChanged?.call();
-    setState(() {});
-  }
-
-  Widget _vfxSwitch(String title, String subtitle, String key, bool defaultVal) {
-    return FutureBuilder<bool>(
-      future: SharedPreferences.getInstance().then((p) => p.getBool(key) ?? defaultVal),
-      builder: (context, snap) {
-        final value = snap.data ?? defaultVal;
-        return SwitchListTile(
-          title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey[200])),
-          subtitle: Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
-          value: value,
-          activeColor: Colors.purple[300],
-          onChanged: (v) => _toggleVfx(key, v),
-          contentPadding: EdgeInsets.zero,
-        );
-      },
-    );
-  }
-
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('psn_id');
     await prefs.remove('steam_id');
-    await prefs.remove('psn_npsso');
     setState(() {
       _savedPsnId = '';
       _savedSteamId = '';
-      _savedNpsso = '';
       _psnCtrl.clear();
       _steamCtrl.clear();
-      _npssoCtrl.clear();
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2672,7 +1553,6 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
-    _npssoCtrl.dispose();
     super.dispose();
   }
 
@@ -2695,167 +1575,60 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         const SizedBox(height: 32),
-        // PSN 登录
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.vpn_key, size: 20, color: Colors.amber),
-                  const SizedBox(width: 8),
-                  Text('🔐 PSN 登录',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.amber[300])),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Already logged in info
-              if (_savedPsnId.isNotEmpty && _savedNpsso.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, size: 18, color: Colors.green[400]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '已登录 PSN: $_savedPsnId',
-                          style: TextStyle(fontSize: 14, color: Colors.green[400], fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // 步骤说明
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[850],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _guideStep('①', '在系统浏览器打开 playstation.com 并登录'),
-                    const SizedBox(height: 6),
-                    _guideStep('②', '返回本 App，粘贴下方的 NPSSO'),
-                    const SizedBox(height: 6),
-                    _guideStep('③', '点击「登录」自动验证'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // 在浏览器登录按钮 + 获取 NPSSO 按钮
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await launchUrl(
-                              Uri.parse('https://www.playstation.com/'),
-                              mode: LaunchMode.externalApplication,
-                            );
-                          } catch (_) {}
-                        },
-                        icon: const Icon(Icons.open_in_browser, size: 16),
-                        label: const Text('打开 PSN 网页', style: TextStyle(fontSize: 12)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.blue[300],
-                          side: BorderSide(color: Colors.blue[300]!),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await launchUrl(
-                              Uri.parse('http://8.153.97.56/api/npsso'),
-                              mode: LaunchMode.externalApplication,
-                            );
-                          } catch (_) {}
-                        },
-                        icon: const Icon(Icons.vpn_key, size: 16),
-                        label: const Text('获取 NPSSO', style: TextStyle(fontSize: 12)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.amber[300],
-                          side: BorderSide(color: Colors.amber[300]!),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // NPSSO 输入框 + 登录按钮
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _npssoCtrl,
-                      obscureText: !_savedNpsso.isNotEmpty,
-                      decoration: InputDecoration(
-                        hintText: '粘贴 NPSSO 令牌',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
-                        filled: true,
-                        fillColor: Colors.grey[850],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        suffixIcon: _savedNpsso.isNotEmpty
-                            ? Icon(Icons.check_circle, color: Colors.green[400], size: 20)
-                            : null,
-                      ),
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _npssoLoading ? null : _loginNpsso,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _savedNpsso.isNotEmpty ? Colors.green[700] : Colors.amber[700],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _npssoLoading
-                        ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(_savedNpsso.isNotEmpty ? '已登录' : '登录'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: _showNpssoGuide,
-                child: Text('NPSSO 怎么获取？（详细指引）',
-                  style: TextStyle(fontSize: 12, color: Colors.blue[400], decoration: TextDecoration.underline)),
-              ),
-            ],
-          ),
+        // PSN account
+        Text(
+          'PSN 账号',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
         ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _psnCtrl,
+                decoration: InputDecoration(
+                  hintText: '输入 PSN ID',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: _bindPsn,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[700],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('绑定'),
+            ),
+          ],
+        ),
+        if (_savedPsnId.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, size: 16, color: Colors.green[400]),
+                const SizedBox(width: 6),
+                Text(
+                  '已绑定 PSN: $_savedPsnId',
+                  style: TextStyle(fontSize: 13, color: Colors.green[400]),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 24),
         // Steam account
         Text(
@@ -2912,32 +1685,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         const SizedBox(height: 40),
-        // ── VFX Settings ──
-        Text('✨ 特效设置',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300])),
-        const SizedBox(height: 10),
-        _vfxSwitch('封面模糊', '游戏封面毛玻璃效果', 'vfx_blur', true),
-        _vfxSwitch('水晶玻璃统计条', '统计栏毛玻璃+边框发光', 'vfx_glass', true),
-        SwitchListTile(
-          title: const Text('🎬 Steam 动态背景'),
-          subtitle: const Text('当前游戏 Steam 预告片作为背景'),
-          value: _videoBg,
-          activeColor: Colors.purple[300],
-          onChanged: (v) async {
-            await SharedPreferences.getInstance().then((p) => p.setBool('video_bg', v));
-            setState(() => _videoBg = v);
-            widget.onVfxChanged?.call();
-          },
-        ),
-        const SizedBox(height: 6),
-        Text('🎨 封面特效自定义',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[400])),
-        const SizedBox(height: 8),
-        _buildEffectCard('crystal', '🔮 水晶光晕', '径向渐变彩色光晕'),
-        _buildEffectCard('neon', '💜 霓虹边框', '多层发光边框环绕卡片'),
-        _buildEffectCard('sweep', '✨ 光扫', '一道白光来回扫过'),
-        _buildEffectCard('breath', '🫁 呼吸光晕', '卡片外围光晕明暗呼吸'),
-        const SizedBox(height: 30),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
@@ -3069,68 +1816,5 @@ class _GameDetailCard extends StatelessWidget {
     );
   }
 }
-
 // Trigger build Sun May  3 20:14:20 CST 2026
 // trigger 1777813344
-
-// ── VFX Painters ──
-class _SweepPainter extends CustomPainter {
-  final double time;
-  final double intensity;
-  _SweepPainter({required this.time, required this.intensity});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final x = (time % 2.0) < 1.0
-        ? (time % 2.0) * size.width * 1.4
-        : (2.0 - (time % 2.0)) * size.width * 1.4;
-    final sweepW = size.width * 0.3;
-    final rect = Rect.fromLTWH(x - sweepW / 2, 0, sweepW, size.height);
-    final gradient = LinearGradient(
-      colors: [
-        Colors.white.withOpacity(0),
-        Colors.white.withOpacity(0.1 * intensity),
-        Colors.white.withOpacity(0.35 * intensity),
-        Colors.white.withOpacity(0.1 * intensity),
-        Colors.white.withOpacity(0),
-      ],
-      stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
-    );
-    canvas.drawRect(rect, Paint()..shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height)));
-  }
-
-  @override
-  bool shouldRepaint(covariant _SweepPainter old) =>
-      old.time != time || old.intensity != intensity;
-}
-
-class _NeonBorderPainter extends CustomPainter {
-  final Color color;
-  final double intensity;
-  final double time;
-  _NeonBorderPainter({required this.color, required this.intensity, required this.time});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rrect = RRect.fromRectAndRadius(
-      Offset.zero & size, const Radius.circular(16),
-    );
-    for (int i = 3; i >= 0; i--) {
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = (2.0 + i * 2.5) * intensity
-        ..color = color.withOpacity((0.06 + i * 0.08) * intensity)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-      canvas.drawRRect(rrect, paint);
-    }
-    canvas.drawRRect(rrect, Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8 * intensity
-      ..color = color.withOpacity(0.7 * intensity));
-  }
-
-  @override
-  bool shouldRepaint(covariant _NeonBorderPainter old) =>
-      old.color != color || old.intensity != intensity || old.time != time;
-}
-// last mod: Wed May  6 20:20:25 CST 2026

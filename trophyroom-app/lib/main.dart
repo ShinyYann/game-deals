@@ -7,6 +7,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/psn_api_client.dart';
+import 'services/psnine_client.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -304,6 +305,7 @@ class _HomePageState extends State<HomePage>
   String _steamId = '';
   bool _accountsLoaded = false;
   String _error = '';
+  Map<String, dynamic>? _cachedHomeData;
   String? _expandedGameId;
   Map<String, List<dynamic>> _gameTrophies = {};
   Map<String, bool> _expandedLoading = {};
@@ -601,25 +603,37 @@ class _HomePageState extends State<HomePage>
     }
 
     return FutureBuilder<Map<String, dynamic>>(
-      future: _fetchFullPsnData(),
+      future: _cachedHomeData != null
+          ? Future.value(_cachedHomeData)
+          : _fetchFullPsnData(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        // 首次加载且无缓存时显示加载中
+        if (snapshot.connectionState == ConnectionState.waiting && _cachedHomeData == null) {
           return const Center(child: CircularProgressIndicator(strokeWidth: 2));
         }
+
+        // 有效数据：优先用 snapshot，降级到缓存
+        final effectiveData = (snapshot.hasData && !snapshot.hasError)
+            ? snapshot.data
+            : (_cachedHomeData ?? snapshot.data);
+
         if (snapshot.hasError || !snapshot.hasData) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                const SizedBox(height: 12),
-                Text('加载失败: ${snapshot.error ?? "未知错误"}',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-              ],
-            ),
-          );
+          if (effectiveData == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                  const SizedBox(height: 12),
+                  Text('加载失败: ${snapshot.error ?? "未知错误"}',
+                      style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                ],
+              ),
+            );
+          }
+          // 有缓存时继续渲染
         }
-        final data = snapshot.data!;
+        final data = effectiveData!;
         final psnId = data['psn_id']?.toString() ?? '';
         final level = data['level']?.toString() ?? '?';
         final platinum = data['platinum'] ?? 0;
@@ -1180,25 +1194,111 @@ class _HomePageState extends State<HomePage>
   Future<Map<String, dynamic>> _fetchFullPsnData() async {
     // 仅 PSN 数据可用时
     if (_psnId.isEmpty || _accountsLoaded == false) {
-      return {'profile': null, 'games': []};
+      return {'psn_id': '', 'games': []};
     }
+
+    // 1. 优先手机端直连 psnine（快、国内可用，带获得/未获得状态）
+    try {
+      final psnine = PsnineClient(_psnId);
+      final data = await psnine.fetchFullData();
+      if (data['games'] is List && (data['games'] as List).isNotEmpty) {
+        print('[PSN] psnine OK: ${(data['games'] as List).length} games');
+        _cachedHomeData = data;
+        // 异步发送到服务器做缓存
+        _cacheToServer(data);
+        return data;
+      }
+    } catch (e) {
+      print('[PSN] psnine failed: $e');
+    }
+
+    // 2. 如果有 NPSSO，尝试手机端索尼 API（获取精确游玩时间）
+    if (_npsso.isNotEmpty) {
+      try {
+        final client = PsnApiClient(_npsso);
+        final onlineId = await client.getOnlineId();
+        final games = await client.getGames();
+        if (onlineId != null && games != null) {
+          final mapped = _mapSonyGames(games);
+          final data = {
+            'psn_id': onlineId,
+            'online_id': onlineId,
+            'games': mapped,
+            'source': 'sony_direct',
+          };
+          _cachedHomeData = data;
+          return data;
+        }
+      } catch (e) {
+        print('[PSN Direct] Failed: $e');
+      }
+    }
+
+    // 3. 最后走服务器中转
     try {
       final apiBase = 'http://8.153.97.56';
-      final prefs = await SharedPreferences.getInstance();
-      final npsso = prefs.getString('psn_npsso') ?? '';
-      final npssoParam = npsso.isNotEmpty ? '&npsso=${Uri.encodeComponent(npsso)}' : '';
-      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId$npssoParam'))
+      final url = '${apiBase}/api/psn?uid=$_psnId${_npsso.isNotEmpty ? '&npsso=$_npsso' : ''}';
+      final resp = await http.get(Uri.parse(url))
           .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
-        if (data['psn_id'] != null) {
+        if (data['psn_id'] != null && data['error'] == null) {
+          _cachedHomeData = data;
           return data;
         }
       }
     } catch (e) {
       _error = '$e';
     }
-    return {'profile': null, 'games': []};
+    return {'psn_id': _psnId, 'error': '加载失败', 'games': []};
+  }
+
+  /// 缓存数据到服务器
+  Future<void> _cacheToServer(Map<String, dynamic> data) async {
+    try {
+      final games = data['games'] as List? ?? [];
+      await http.post(
+        Uri.parse('http://8.153.97.56/api/psn_cache'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'uid': _psnId, 'games': games}),
+      ).timeout(const Duration(seconds: 5));
+    } catch (_) {}
+  }
+
+  /// 索尼 API 游戏列表 → App 格式
+  List<Map<String, dynamic>> _mapSonyGames(List<Map<String, dynamic>> raw) {
+    return raw.map((g) {
+      final titleId = g['titleId']?.toString() ?? '';
+      final name = g['name']?.toString() ?? '未知游戏';
+      final duration = _parseDuration(g['playDuration']?.toString() ?? '');
+      final imageUrl = g['imageUrl']?.toString() ?? g['localImageUrl']?.toString() ?? '';
+      final summaries = g['trophyTitleSummaries'] as List? ?? [];
+      int bronze = 0, silver = 0, gold = 0, platinum = 0;
+      String npCommId = '';
+      if (summaries.isNotEmpty) {
+        final s = summaries[0] as Map? ?? {};
+        final def = (s?['definedTrophies'] as Map?) ?? {};
+        bronze = def?['bronze'] ?? 0;
+        silver = def?['silver'] ?? 0;
+        gold = def?['gold'] ?? 0;
+        platinum = def?['platinum'] ?? 0;
+        npCommId = s?['npCommunicationId']?.toString() ?? '';
+      }
+      return {
+        'id': titleId, 'name': name, 'img': imageUrl,
+        'playDuration': duration, 'bronze': bronze, 'silver': silver,
+        'gold': gold, 'platinum': platinum, 'npCommId': npCommId,
+        'platform': 'PSN', 'source': 'sony_direct',
+      };
+    }).toList();
+  }
+
+  int _parseDuration(String iso) {
+    if (iso.isEmpty) return 0;
+    final m = RegExp(r'PT(?:(\d+)H)?(?:(\d+)M)?').firstMatch(iso);
+    if (m == null) return 0;
+    return (int.tryParse(m.group(1) ?? '0') ?? 0) * 60 +
+           (int.tryParse(m.group(2) ?? '0') ?? 0);
   }
 
   Widget _buildDeals() {

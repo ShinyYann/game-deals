@@ -1120,9 +1120,10 @@ class _HomePageState extends State<HomePage>
     if (!_gameTrophies.containsKey(gameId)) {
       setState(() => _expandedLoading[gameId] = true);
       try {
-        final npssoParam = _npsso.isNotEmpty
-            ? '&npsso=${Uri.encodeComponent(_npsso)}'
-            : '';
+        final prefs = await SharedPreferences.getInstance();
+        final npsso = prefs.getString('psn_npsso') ?? '';
+        final npssoParam =
+            npsso.isNotEmpty ? '&npsso=${Uri.encodeComponent(npsso)}' : '';
         final resp = await http
             .get(Uri.parse(
                 'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId$npssoParam'))
@@ -1150,7 +1151,9 @@ class _HomePageState extends State<HomePage>
     }
     try {
       final apiBase = 'http://8.153.97.56';
-      final npssoParam = _npsso.isNotEmpty ? '&npsso=${Uri.encodeComponent(_npsso)}' : '';
+      final prefs = await SharedPreferences.getInstance();
+      final npsso = prefs.getString('psn_npsso') ?? '';
+      final npssoParam = npsso.isNotEmpty ? '&npsso=${Uri.encodeComponent(npsso)}' : '';
       final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId$npssoParam'))
           .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {

@@ -5,15 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-/// App 内 PSN 一键登录
+/// App 内 PSN 一键登录（WebView + NPSSO 提取）
 ///
 /// 流程：
 /// 1. 打开 Sony OAuth 授权页（自带登录表单）
 /// 2. 用户输入 PSN 邮箱密码登录
-/// 3. Sony 重定向到 com.scee.psxandroid.scecompcall://redirect?code=xxx
-/// 4. WebView 拦截该重定向，提取 code
-/// 5. 发到服务器 /api/psn_oauth_exchange 换 token
-/// 6. 服务器验证成功，保存
+/// 3. Sony 尝试重定向到 com.scee.psxandroid.scecompcall://redirect?code=xxx
+///    WebView 无法处理自定义 scheme → 报错
+/// 4. 但 NPSSO cookie 已设置！自动跳转到 ssocookie 读取
+/// 5. 提取 NPSSO → 发到服务器验证 → 返回 online_id
 class PSNLoginPage extends StatefulWidget {
   const PSNLoginPage({super.key});
 
@@ -28,6 +28,7 @@ class _PSNLoginPageState extends State<PSNLoginPage> {
   String _status = '初始化…';
   String? _result;
   bool _done = false;
+  bool _triedSsoCookie = false;
 
   // Sony OAuth
   static const String _clientId = '09515159-7237-4370-9b40-3806e67c0891';
@@ -50,35 +51,41 @@ class _PSNLoginPageState extends State<PSNLoginPage> {
         onPageStarted: (url) {
           if (!mounted || _done) return;
           setState(() => _loading = true);
+          
+          // 检测 Sony 自定义 scheme 重定向
+          if (url.startsWith(_redirectUri) || url.contains('scecompcall:')) {
+            _handleRedirect(url);
+          }
         },
         onPageFinished: (url) {
           if (!mounted || _done) return;
-          setState(() {
-            _loading = false;
-            _status = '';
-          });
+          setState(() => _loading = false);
+          // 页面加载完成后尝试提取 NPSSO
+          _tryExtractNpssoFromPage();
         },
         onNavigationRequest: (request) {
           final url = request.url;
-          // 拦截 Sony 的 OAuth 回调（自定义 scheme 重定向）
-          if (url.startsWith(_redirectUri) || url.contains('scecompcall')) {
-            _handleOAuthRedirect(url);
-            return NavigationDecision.prevent;
-          }
-          // 也拦截任何包含 code= 的回调
-          if (url.contains('code=') && url.contains('scecompcall')) {
-            _handleOAuthRedirect(url);
+          // 拦截 Sony OAuth 自定义 scheme 回调
+          if (url.startsWith(_redirectUri) || url.contains('scecompcall:')) {
+            _handleRedirect(url);
             return NavigationDecision.prevent;
           }
           return NavigationDecision.navigate;
         },
         onWebResourceError: (error) {
-          // 如果是因为自定义 scheme 导致的错误，忽略（我们已拦截）
           if (!mounted || _done) return;
+          // Sony 自定义 scheme 会导致错误 → 走 ssocookie 提取 NPSSO
+          if (!_triedSsoCookie) {
+            _triedSsoCookie = true;
+            // 给 Sony 一点时间设置 cookie
+            Future.delayed(const Duration(milliseconds: 500), () {
+              _navigateToSsoCookie();
+            });
+          }
         },
       ));
 
-    // 设置真实 Chrome UA
+    // 设置真实 Chrome UA 绕过 Akamai
     _setUserAgent().then((_) {
       _loadAuthorizeUrl();
     });
@@ -109,33 +116,79 @@ class _PSNLoginPageState extends State<PSNLoginPage> {
         .map((e) => '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
         .join('&');
     final url = 'https://ca.account.sony.com/api/authz/v3/oauth/authorize?$qs';
+    debugPrint('[PSNLogin] Loading: $url');
     _controller.loadRequest(Uri.parse(url));
   }
 
-  /// 处理 Sony OAuth 回调
-  void _handleOAuthRedirect(String url) {
+  /// 检测到 Sony 自定义 scheme 重定向
+  void _handleRedirect(String url) {
     if (_done) return;
-    _done = true;
-
-    setState(() {
-      _loading = true;
-      _status = '正在验证登录…';
-    });
-
-    // 从 URL 中提取 code
+    debugPrint('[PSNLogin] Redirect intercepted: $url');
+    
     final uri = Uri.tryParse(url);
     final code = uri?.queryParameters['code'] ?? '';
-    final verifier = uri?.queryParameters['code_verifier'] ?? '';
-
-    if (code.isEmpty) {
+    if (code.isNotEmpty) {
+      // 有授权码，走 OAuth 交换
+      _done = true;
       setState(() {
-        _loading = false;
-        _status = '❌ 获取授权码失败';
+        _loading = true;
+        _status = '正在验证登录…';
       });
+      _exchangeCode(code, '');
       return;
     }
+    
+    // 没有 code，可能是其他类型回调 → 走 ssocookie
+    _triedSsoCookie = true;
+    Future.delayed(const Duration(milliseconds: 800), () {
+      _navigateToSsoCookie();
+    });
+  }
 
-    _exchangeCode(code, verifier);
+  /// 跳转到 ssocookie 提取 NPSSO
+  Future<void> _navigateToSsoCookie() async {
+    if (_done || !mounted) return;
+    debugPrint('[PSNLogin] Navigating to ssocookie...');
+    setState(() => _status = '正在提取登录凭证…');
+    await _controller.loadRequest(
+      Uri.parse('https://ca.account.sony.com/api/v1/ssocookie'),
+    );
+  }
+
+  /// 尝试通过 JS 提取 NPSSO
+  Future<void> _tryExtractNpssoFromPage() async {
+    if (_done || !mounted) return;
+    try {
+      final js = """
+(function() {
+  try {
+    var text = document.body ? document.body.innerText || '' : '';
+    var match = text.match(/"npsso"\\s*:\\s*"([^"]+)"/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    // 尝试 JSON parse
+    var data = JSON.parse(text);
+    if (data && data.npsso) {
+      return data.npsso;
+    }
+  } catch(e) {}
+  return '';
+})();
+""";
+      final npsso = await _controller.runJavaScriptReturningResult(js);
+      final npssoStr = npsso.toString().replaceAll('"', '').trim();
+      if (npssoStr.isNotEmpty && npssoStr.length > 10 && !_done && mounted) {
+        _done = true;
+        setState(() {
+          _loading = true;
+          _status = '正在验证 NPSSO…';
+        });
+        await _verifyNpsso(npssoStr);
+      }
+    } catch (e) {
+      debugPrint('[PSNLogin] JS extraction error: $e');
+    }
   }
 
   /// 用授权码换 token
@@ -158,14 +211,42 @@ class _PSNLoginPageState extends State<PSNLoginPage> {
           _result = onlineId;
           _status = '✅ 登录成功！PSN 账号：$onlineId';
         });
-
-        // 自动返回
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) Navigator.pop(context, onlineId);
       } else {
         setState(() {
           _loading = false;
           _status = '❌ 验证失败：${data['error'] ?? '未知错误'}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _status = '❌ 网络错误：$e';
+      });
+    }
+  }
+
+  /// 用 NPSSO 验证登录
+  Future<void> _verifyNpsso(String npsso) async {
+    try {
+      final uri = Uri.parse(
+          'http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso');
+      final resp = await http.get(uri).timeout(const Duration(seconds: 15));
+      final data = jsonDecode(resp.body);
+
+      if (data['ok'] == true) {
+        final onlineId = data['online_id']?.toString() ?? '';
+        setState(() {
+          _result = onlineId;
+          _status = '✅ 登录成功！PSN 账号：$onlineId';
+        });
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) Navigator.pop(context, onlineId);
+      } else {
+        setState(() {
+          _loading = false;
+          _status = '❌ 验证失败：${data['error'] ?? 'NPSSO 无效'}';
         });
       }
     } catch (e) {
@@ -230,24 +311,12 @@ class _PSNLoginPageState extends State<PSNLoginPage> {
               valueColor: AlwaysStoppedAnimation(Colors.amber[700]),
             ),
 
-          // Hint
-          if (_result == null && !_loading)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.blue.withValues(alpha: 0.1),
-              child: Text(
-                '请在下方用你的 PSN 邮箱和密码登录',
-                style: TextStyle(color: Colors.blue[200], fontSize: 12),
-              ),
-            ),
-
           if (_result != null)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               color: Colors.green.withValues(alpha: 0.08),
-              child: Text('PSN: $_result  已登录',
+              child: Text('PSN: $_result',
                   style: TextStyle(color: Colors.green[300], fontSize: 14)),
             ),
 
@@ -268,7 +337,16 @@ class _PSNLoginPageState extends State<PSNLoginPage> {
                   icon: const Icon(Icons.refresh, size: 18),
                   label: const Text('刷新'),
                   style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
-                  onPressed: _loadAuthorizeUrl,
+                  onPressed: () {
+                    _triedSsoCookie = false;
+                    _loadAuthorizeUrl();
+                  },
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.vpn_key, size: 18),
+                  label: const Text('提取 NPSSO'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+                  onPressed: _navigateToSsoCookie,
                 ),
                 TextButton.icon(
                   icon: const Icon(Icons.open_in_browser, size: 18),

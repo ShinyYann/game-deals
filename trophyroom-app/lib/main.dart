@@ -2617,61 +2617,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _npssoCtrl,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: '粘贴 NPSSO 令牌',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
-                        filled: true,
-                        fillColor: Colors.grey[850],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        suffixIcon: _savedNpsso.isNotEmpty
-                            ? Icon(Icons.check_circle, color: Colors.green[400], size: 20)
-                            : null,
-                      ),
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _npssoLoading ? null : _loginNpsso,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[700],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _npssoLoading
-                        ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('登录'),
-                  ),
-                ],
-              ),
-              if (_savedNpsso.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 4),
-                  child: Text(
-                    '✅ 已登录，游戏数据通过 PSN API 直连',
-                    style: TextStyle(fontSize: 12, color: Colors.green[400]),
-                  ),
-                ),
-              const SizedBox(height: 8),
-              TextButton.icon(
-                onPressed: _showNpssoGuide,
-                icon: Icon(Icons.help_outline, size: 16, color: Colors.grey[500]),
-                label: Text('如何获取 NPSSO？', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-              ),
-            ],
-          ),
-        ),
         const SizedBox(height: 24),
         // Steam account
         Text(

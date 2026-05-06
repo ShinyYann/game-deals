@@ -1850,7 +1850,7 @@ class _HomePageState extends State<HomePage>
 /// 解析心得内容中的 HTML 链接为 RichText 可点击 span
 InlineSpan _parseHtmlLinks(String text, BuildContext context) {
   final spans = <InlineSpan>[];
-  final linkPattern = RegExp(r'<a\s+href="([^"]+)"[^>]*>([^<]+)</a>');
+  final linkPattern = RegExp(r'<a\s+href="(https?://[^"]+)"[^>]*>([^<]+)</a>');
   int lastEnd = 0;
 
   for (final match in linkPattern.allMatches(text)) {

@@ -764,6 +764,34 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
 
+
+              // ── 数据加载失败提示 ──
+              if (!hasData)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      children: [
+                        Icon(Icons.cloud_off, size: 48, color: Colors.grey[600]),
+                        const SizedBox(height: 12),
+                        Text("数据加载失败", style: TextStyle(fontSize: 18, color: Colors.grey[400], fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text(
+                          "请检查 NPSSO 令牌是否有效",
+                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton.icon(
+                          onPressed: () => setState(() => _currentTab = 3),
+                          icon: Icon(Icons.settings, size: 18, color: Colors.purple[300]),
+                          label: Text("前往设置", style: TextStyle(color: Colors.purple[300])),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 8),
+
               // ── Game List ──
               if (games.isEmpty && hasData)
                 Center(

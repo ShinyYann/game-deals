@@ -648,9 +648,6 @@ class _HomePageState extends State<HomePage>
             (silver as num).toInt() +
             (bronze as num).toInt();
         final games = data['games'] as List<dynamic>? ?? [];
-        final coverList = games.take(4).map((g) =>
-            (g['cover_url']?.toString() ?? '')
-        ).where((s) => s.isNotEmpty).toList();
         final hasData = psnId.isNotEmpty;
 
         return RefreshIndicator(
@@ -667,7 +664,7 @@ class _HomePageState extends State<HomePage>
               // ── Profile Summary Card ──
               if (hasData) ...[
                 Container(
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     gradient: const LinearGradient(
@@ -683,57 +680,9 @@ class _HomePageState extends State<HomePage>
                       ),
                     ],
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── 背景：游戏封面拼贴（模糊） ──
-                      if (coverList.isNotEmpty)
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Row(
-                              children: coverList.map((url) => Expanded(
-                                child: Image.network(
-                                  url,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                                ),
-                              )).toList(),
-                            ),
-                          ),
-                        ),
-                      // 模糊遮罩
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              colors: [
-                                coverList.isNotEmpty
-                                    ? Colors.black.withOpacity(0.65)
-                                    : Colors.black.withOpacity(0.20),
-                                coverList.isNotEmpty
-                                    ? Colors.black.withOpacity(0.55)
-                                    : Colors.black.withOpacity(0.35),
-                                coverList.isNotEmpty
-                                    ? Colors.black.withOpacity(0.60)
-                                    : Colors.black.withOpacity(0.45),
-                                coverList.isNotEmpty
-                                    ? Colors.black.withOpacity(0.70)
-                                    : Colors.black.withOpacity(0.55),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // ── 前景内容 ──
-                      Positioned.fill(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            children: [
                       // Row 1: PSN ID + Level badge
                       Row(
                         children: [
@@ -809,10 +758,6 @@ class _HomePageState extends State<HomePage>
                             _statItem('🎯', '$completionRate%', '完成率'),
                             _statItem('🏆', '$totalTrophies', '总数'),
                           ],
-                        ),
-                      ),
-                            ],
-                          ),
                         ),
                       ),
                     ],

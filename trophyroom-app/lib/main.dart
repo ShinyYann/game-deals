@@ -1455,6 +1455,35 @@ class _HomePageState extends State<HomePage>
     'Factorio': '异星工厂',
     'RimWorld': '边缘世界',
     'Dyson Sphere Program': '戴森球计划',
+    'Warhammer: Vermintide 2': '战锤：末日鼠疫2',
+    'Oxygen Not Included': '缺氧',
+    'Wallpaper Engine': '壁纸引擎',
+    'Sid Meier Civilization VI': '文明6',
+    'Sid Meier\'s Civilization VI': '文明6',
+    'Sid Meiers Civilization VI': '文明6',
+    'Among Us': '太空狼人杀',
+    'Phasmophobia': '恐鬼症',
+    'Risk of Rain 2': '雨中冒险2',
+    'Dead Cells': '死亡细胞',
+    'Slay the Spire': '杀戮尖塔',
+    'Vampire Survivors': '吸血鬼幸存者',
+    'Brotato': '土豆兄弟',
+    'Cuphead': '茶杯头',
+    'Deep Rock Galactic': '深岩银河',
+    'Battlefield 1': '战地1',
+    'Battlefield V': '战地5',
+    'Battlefield 4': '战地4',
+    'The Binding of Isaac Rebirth': '以撒的结合 重生',
+    'The Binding of Isaac': '以撒的结合',
+    'Don\'t Starve Together': '饥荒 联机版',
+    'Don\'t Starve': '饥荒',
+    'This War of Mine': '这是我的战争',
+    'Frostpunk': '冰汽时代',
+    'Divinity Original Sin 2': '神界 原罪2',
+    'Metro Exodus': '地铁 离去',
+    'Subnautica': '深海迷航',
+    'Sid Meier\'s Civilization V': '文明5',
+    'Cities: Skylines': '城市 天际线',
   };
 
   /// 游戏名称中文化（映射英文→中文）
@@ -1594,8 +1623,23 @@ class _HomePageState extends State<HomePage>
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))]),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              if (avatar.isNotEmpty) ClipRRect(borderRadius: BorderRadius.circular(24),
-                child: Image.network(avatar, width: 48, height: 48, errorBuilder: (_,__,___) => const SizedBox(width: 48, height: 48))),
+              if (avatar.isNotEmpty)
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(colors: [Color(0xFF66C0F4), Color(0xFF3A7BD5)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    boxShadow: [BoxShadow(color: const Color(0xFF66C0F4).withOpacity(0.3), blurRadius: 12)],
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.network(avatar, width: 48, height: 48,
+                      errorBuilder: (_,__,___) => Container(
+                        width: 48, height: 48, color: Colors.grey[850],
+                        child: const Icon(Icons.person, size: 28, color: Colors.grey)),
+                    ),
+                  ),
+                ),
               const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -1626,7 +1670,8 @@ class _HomePageState extends State<HomePage>
     final appId = game['app_id'] ?? '';
     final name = (game['name'] ?? '???').toString();
     final playtime = (game['playtime_forever'] ?? 0) as int;
-    final imgUrl = game['img_icon_url'] ?? '';
+    final imgUrl = game['header_image'] ?? game['img_icon_url'] ?? '';
+    final smallIcon = game['img_icon_url'] ?? '';
     final achTotal = game['achievements_total'] ?? 0;
     final achUnlocked = game['achievements_unlocked'] ?? 0;
     final isExpanded = _expandedSteamAppId == appId;
@@ -1638,18 +1683,32 @@ class _HomePageState extends State<HomePage>
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.blueGrey.withOpacity(0.2))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // 游戏封面图
+        if (imgUrl.isNotEmpty)
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Container(
+              width: double.infinity,
+              height: 87,
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+              ),
+              child: Image.network(imgUrl, fit: BoxFit.cover,
+                errorBuilder: (_,__,___) => Container(
+                  color: Colors.grey[850],
+                  child: Center(child: Icon(Icons.sports_esports, size: 32, color: Colors.grey[700])))),
+            ),
+          ),
         InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: imgUrl.isNotEmpty 
+              ? const BorderRadius.vertical(bottom: Radius.circular(12))
+              : BorderRadius.circular(12),
           onTap: () => _toggleSteamAchievements(appId),
           child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [
-            if (imgUrl.isNotEmpty)
-              ClipRRect(borderRadius: BorderRadius.circular(6),
-                child: Image.network(imgUrl, width: 40, height: 40, errorBuilder: (_,__,___) =>
-                  Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.grey[850], borderRadius: BorderRadius.circular(6)),
-                    child: const Icon(Icons.sports_esports, size: 20, color: Colors.grey)))),
+            // 小图标 (imgUrl 已被大图用了，这里留空)
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(SteamClient.translateAchievement(_translateSteamGameName(name)),
+              Text(_translateSteamGameName(name),
                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
               const SizedBox(height: 4),
               Row(children: [
@@ -1698,19 +1757,41 @@ class _HomePageState extends State<HomePage>
         final achieved = ach['achieved'] == true;
         final displayName = SteamClient.translateAchievement(ach['display_name'] ?? ach['api_name'] ?? '');
         final desc = ach['description'] ?? '';
-        return Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), child: Row(children: [
-          Icon(achieved ? Icons.check_circle : Icons.lock_outline, size: 16,
-            color: achieved ? const Color(0xFF66C0F4) : Colors.grey[700]),
-          const SizedBox(width: 8),
+        final achIcon = achieved ? (ach['icon'] ?? '') : (ach['icon_gray'] ?? '');
+        return Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), child: Row(children: [
+          // 成就图标
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: achIcon.isNotEmpty
+              ? Image.network(achIcon, width: 36, height: 36, fit: BoxFit.cover,
+                  errorBuilder: (_,__,___) => _achPlaceholder(achieved))
+              : _achPlaceholder(achieved),
+          ),
+          const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(displayName, style: TextStyle(fontSize: 12, color: achieved ? Colors.grey[300] : Colors.grey[600], fontWeight: FontWeight.w500)),
-            if (desc.isNotEmpty) Text(desc, style: TextStyle(fontSize: 10, color: Colors.grey[700]), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(displayName, style: TextStyle(fontSize: 13, color: achieved ? Colors.grey[200] : Colors.grey[500], fontWeight: FontWeight.w600)),
+            if (desc.isNotEmpty) Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(desc, style: TextStyle(fontSize: 11, color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis)),
           ])),
         ]));
       }),
       if (achievements.length > 20)
         Padding(padding: const EdgeInsets.only(top: 8), child: Text('... 还有 ${achievements.length - 20} 个成就', style: TextStyle(fontSize: 11, color: Colors.grey[600]))),
     ]));
+  }
+
+  /// 成就图标占位
+  Widget _achPlaceholder(bool achieved) {
+    return Container(
+      width: 36, height: 36,
+      decoration: BoxDecoration(
+        color: achieved ? const Color(0xFF1A3A5C) : Colors.grey[850],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(achieved ? Icons.emoji_events : Icons.lock_outline,
+        size: 16, color: achieved ? const Color(0xFF66C0F4) : Colors.grey[700]),
+    );
   }
 
   void _toggleSteamAchievements(String appId) async {

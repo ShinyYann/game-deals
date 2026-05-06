@@ -1672,73 +1672,115 @@ class _HomePageState extends State<HomePage>
           future: BookmarkService.load(),
           builder: (context, snapshot) {
             final bookmarks = snapshot.data ?? [];
-            if (bookmarks.isEmpty) return const SizedBox.shrink();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 18),
-                    const SizedBox(width: 6),
-                    Text('收藏夹',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[200])),
-                    const Spacer(),
-                    Text('${bookmarks.length} 个收藏',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ...bookmarks.map((bm) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => BrowserPage(
-                            initialUrl: bm.url,
-                            initialTitle: bm.title,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[850],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[800]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.bookmark, color: Colors.amber[700], size: 16),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(bm.title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 2),
-                                Text(bm.url,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                      const SizedBox(width: 6),
+                      Text('⭐ 收藏夹',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[200])),
+                      const Spacer(),
+                      Text('${bookmarks.length} 个收藏',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                    ],
+                  ),
+                  if (bookmarks.isEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      '在奖杯心得点链接 → 浏览器右上角 ⭐ 收藏',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 10),
+                    ...bookmarks.map((bm) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => BrowserPage(
+                                initialUrl: bm.url,
+                                initialTitle: bm.title,
+                              ),
+                            ),
+                          );
+                        },
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              backgroundColor: const Color(0xFF1A1A2E),
+                              title: const Text('删除收藏？',
+                                  style: TextStyle(color: Colors.white)),
+                              content: Text(bm.title,
+                                  style: TextStyle(color: Colors.grey[400])),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('取消'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    BookmarkService.remove(bm.url);
+                                    Navigator.pop(ctx);
+                                    setState(() {});
+                                  },
+                                  child: const Text('删除',
+                                      style: TextStyle(color: Colors.red)),
+                                ),
                               ],
                             ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[850],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[800]!),
                           ),
-                          Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 12),
-                        ],
+                          child: Row(
+                            children: [
+                              Icon(Icons.bookmark, color: Colors.amber[700], size: 16),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(bm.title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                                    const SizedBox(height: 2),
+                                    Text(bm.url,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 12),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                )),
-                const SizedBox(height: 8),
-              ],
+                    )),
+                  ],
+                ],
+              ),
             );
           },
         ),

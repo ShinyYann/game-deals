@@ -2596,10 +2596,12 @@ class _SettingsPageState extends State<SettingsPage> {
                       height: 40,
                       child: OutlinedButton.icon(
                         onPressed: () async {
-                          final uri = Uri.parse('https://www.playstation.com/');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                          try {
+                            await launchUrl(
+                              Uri.parse('https://www.playstation.com/'),
+                              mode: LaunchMode.externalApplication,
+                            );
+                          } catch (_) {}
                         },
                         icon: const Icon(Icons.open_in_browser, size: 16),
                         label: const Text('打开 PSN 网页', style: TextStyle(fontSize: 12)),
@@ -2617,10 +2619,12 @@ class _SettingsPageState extends State<SettingsPage> {
                       height: 40,
                       child: OutlinedButton.icon(
                         onPressed: () async {
-                          final uri = Uri.parse('http://8.153.97.56/api/npsso');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                          try {
+                            await launchUrl(
+                              Uri.parse('http://8.153.97.56/api/npsso'),
+                              mode: LaunchMode.externalApplication,
+                            );
+                          } catch (_) {}
                         },
                         icon: const Icon(Icons.vpn_key, size: 16),
                         label: const Text('获取 NPSSO', style: TextStyle(fontSize: 12)),

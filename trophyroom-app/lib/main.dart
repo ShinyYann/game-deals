@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'pages/game_detail_page.dart';
 import 'pages/web_view_page.dart';
 import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -320,6 +319,10 @@ class _HomePageState extends State<HomePage>
   bool _videoLoading = false;
   Map<String, dynamic> _vfx = {};        // {crystal/neon/sweep/breath: {en,intensity,color,speed}}
   late AnimationController _vfxCtrl;
+  // Expanded game trophies state
+  final Set<String> _expandedGames = {};
+  final Map<String, List<dynamic>> _gameTrophiesCache = {};
+  final Set<String> _gameTrophiesLoading = {};
 
   static const _vfxColors = {
     '💜': 0xFF7C3AED, '💙': 0xFF3B82F6, '💚': 0xFF06B6D4,
@@ -1136,7 +1139,19 @@ v.play().catch(function(){});
                   ),
                 )
               else
-                ...games.map((g) => _buildGameCard(g as Map<String, dynamic>)),
+                ...games.map((g) {
+                  final gMap = g as Map<String, dynamic>;
+                  final gid = gMap['id']?.toString() ?? '';
+                  final npn = gMap['np_id']?.toString() ?? '';
+                  final expandKey = gid.isNotEmpty ? gid : npn;
+                  return Column(
+                    children: [
+                      _buildGameCard(gMap),
+                      if (_expandedGames.contains(expandKey))
+                        _buildExpandedTrophies(gMap),
+                    ],
+                  );
+                }),
               const SizedBox(height: 20),
             ],
           ),
@@ -1194,18 +1209,7 @@ v.play().catch(function(){});
     final gameLevel = (gamePoints / 60).ceil().clamp(1, 999);
 
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => GameDetailPage(
-              gameId: gameId.isNotEmpty ? gameId : npId,
-              npId: npId,
-              npsso: _npsso,
-              oauthUid: _oauthUid,
-            ),
-          ),
-        );
-      },
+      onTap: () => _toggleGameExpand(gameId, npId),
       child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -1305,6 +1309,215 @@ v.play().catch(function(){});
         const SizedBox(width: 2),
         Text('$count', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
       ],
+    );
+  }
+
+  // ═══ Expanded game trophies ═══
+
+  void _toggleGameExpand(String gameId, String npId) {
+    final key = gameId.isNotEmpty ? gameId : npId;
+    if (key.isEmpty) return;
+    setState(() {
+      if (_expandedGames.contains(key)) {
+        _expandedGames.remove(key);
+      } else {
+        _expandedGames.add(key);
+        _fetchGameTrophies(gameId, npId);
+      }
+    });
+  }
+
+  Future<void> _fetchGameTrophies(String gameId, String npId) async {
+    final gid = gameId.isNotEmpty ? gameId : npId;
+    if (_gameTrophiesCache.containsKey(gid)) return;
+    _gameTrophiesLoading.add(gid);
+    try {
+      final base = 'http://8.153.97.56';
+      var url = '$base/api/psn_game_detail?game_id=$gid&uid=$_psnId';
+      if (npId.isNotEmpty && npId != gid) url += '&np_id=${Uri.encodeComponent(npId)}';
+      if (_npsso.isNotEmpty) url += '&npsso=${Uri.encodeComponent(_npsso)}';
+      if (_oauthUid.isNotEmpty) url += '&oauth_uid=$_oauthUid';
+      final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        if (data is Map<String, dynamic> && data['error'] == null) {
+          _gameTrophiesCache[gid] = (data['trophies'] as List?) ?? [];
+        }
+      }
+    } catch (_) {}
+    _gameTrophiesLoading.remove(gid);
+    if (mounted) setState(() {});
+  }
+
+  Widget _buildExpandedTrophies(Map<String, dynamic> game) {
+    final gid = game['id']?.toString() ?? game['np_id']?.toString() ?? '';
+    if (gid.isEmpty) return const SizedBox.shrink();
+    final loading = _gameTrophiesLoading.contains(gid);
+    final trophies = _gameTrophiesCache[gid];
+
+    if (loading) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 60, bottom: 8),
+        child: Row(
+          children: [
+            SizedBox(width: 14, height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey[500])),
+            const SizedBox(width: 8),
+            Text('加载奖杯列表…', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+          ],
+        ),
+      );
+    }
+
+    if (trophies == null || trophies.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 4, bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          ...trophies.map((t) => _buildTrophyRow(t)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrophyRow(dynamic trophy) {
+    final t = trophy as Map<String, dynamic>;
+    final name = t['name']?.toString() ?? '';
+    final type = t['type']?.toString() ?? 'bronze';
+    final earned = t['earned'] == true;
+    final earnedDate = t['earned_date']?.toString() ?? '';
+    final trophyId = t['id']?.toString() ?? '';
+    final iconUrl = t['icon_url']?.toString() ?? '';
+    final description = t['description']?.toString() ?? '';
+
+    final opacity = earned ? 1.0 : 0.35;
+    final typeColor = _trophyColor(type);
+    final typeLabel = _typeLabel(type);
+    final isPlatinum = type.toLowerCase() == 'platinum';
+
+    return GestureDetector(
+      onTap: () => _showTrophyDetailBottomSheet(context, trophy),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[850],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: earned ? typeColor.withOpacity(0.25) : Colors.grey[800]!,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Trophy icon
+            Opacity(
+              opacity: opacity,
+              child: iconUrl.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.network(iconUrl, width: 24, height: 24,
+                      errorBuilder: (_, __, ___) => Icon(Icons.emoji_events, size: 20, color: typeColor)),
+                  )
+                : Icon(Icons.emoji_events, size: 20, color: typeColor),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: earned ? Colors.white : Colors.grey[600],
+                    ),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                  if (earnedDate.isNotEmpty)
+                    Text(earnedDate,
+                      style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                    ),
+                ],
+              ),
+            ),
+            // Type badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              decoration: BoxDecoration(
+                color: earned ? typeColor.withOpacity(0.3) : Colors.grey[800],
+                gradient: isPlatinum && earned
+                  ? const LinearGradient(
+                      colors: [Color(0xFF8098A8), Color(0xFFD0D8E0), Color(0xFF8098A8)],
+                      stops: [0.0, 0.5, 1.0],
+                    )
+                  : null,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Text(typeLabel,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: earned ? Colors.white : Colors.grey[500],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _typeLabel(String type) {
+    switch (type.toLowerCase()) {
+      case 'platinum': return '白';
+      case 'gold': return '金';
+      case 'silver': return '银';
+      case 'bronze': return '铜';
+      default: return '?';
+    }
+  }
+
+  Color _trophyColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'platinum': return const Color(0xFFE5E4E2);
+      case 'gold': return const Color(0xFFFFD700);
+      case 'silver': return const Color(0xFFC0C0C0);
+      case 'bronze': return const Color(0xFFCD7F32);
+      default: return Colors.grey;
+    }
+  }
+
+  void _showTrophyDetailBottomSheet(BuildContext context, dynamic trophy) {
+    final t = trophy as Map<String, dynamic>;
+    final name = t['name']?.toString() ?? '';
+    final type = t['type']?.toString() ?? 'bronze';
+    final earned = t['earned'] == true;
+    final earnedDate = t['earned_date']?.toString() ?? '';
+    final trophyId = t['id']?.toString() ?? '';
+    final iconUrl = t['icon_url']?.toString() ?? '';
+    final description = t['description']?.toString() ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1A1A24),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _TrophyDetailSheet(
+        name: name,
+        type: type,
+        earned: earned,
+        earnedDate: earnedDate,
+        trophyId: trophyId,
+        iconUrl: iconUrl,
+        description: description,
+      ),
     );
   }
 
@@ -1679,6 +1892,292 @@ v.play().catch(function(){});
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: _GameDetailCard(game: game),
+      ),
+    );
+  }
+}
+
+// ═══ 奖杯详情弹窗（含心得） ═══
+
+class _TrophyDetailSheet extends StatefulWidget {
+  final String name;
+  final String type;
+  final bool earned;
+  final String earnedDate;
+  final String trophyId;
+  final String iconUrl;
+  final String description;
+
+  const _TrophyDetailSheet({
+    required this.name,
+    required this.type,
+    required this.earned,
+    required this.earnedDate,
+    required this.trophyId,
+    required this.iconUrl,
+    required this.description,
+  });
+
+  @override
+  State<_TrophyDetailSheet> createState() => _TrophyDetailSheetState();
+}
+
+class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
+  List<dynamic> _tips = [];
+  bool _tipsLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTips();
+  }
+
+  Color _color(String type) {
+    switch (type.toLowerCase()) {
+      case 'platinum': return const Color(0xFFE5E4E2);
+      case 'gold': return const Color(0xFFFFD700);
+      case 'silver': return const Color(0xFFC0C0C0);
+      case 'bronze': return const Color(0xFFCD7F32);
+      default: return Colors.grey;
+    }
+  }
+
+  String _label(String type) {
+    switch (type.toLowerCase()) {
+      case 'platinum': return '白金';
+      case 'gold': return '金';
+      case 'silver': return '银';
+      case 'bronze': return '铜';
+      default: return '?';
+    }
+  }
+
+  Future<void> _fetchTips() async {
+    if (widget.trophyId.isEmpty) {
+      setState(() => _tipsLoading = false);
+      return;
+    }
+    try {
+      final resp = await http.get(
+        Uri.parse('http://8.153.97.56/api/psn_trophy_tips?trophy_id=${widget.trophyId}'),
+      ).timeout(const Duration(seconds: 8));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        setState(() {
+          _tips = data['tips'] as List? ?? [];
+          _tipsLoading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+    setState(() => _tipsLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _color(widget.type);
+    final label = _label(widget.type);
+    final isPlatinum = widget.type.toLowerCase() == 'platinum';
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.65,
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(width: 40, height: 4,
+            decoration: BoxDecoration(color: Colors.grey[700], borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 20),
+
+          // Trophy icon + name
+          Row(
+            children: [
+              // Icon
+              Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: color.withOpacity(0.3)),
+                ),
+                child: widget.iconUrl.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(9),
+                      child: Image.network(widget.iconUrl,
+                        color: widget.earned ? null : Colors.grey,
+                        colorBlendMode: widget.earned ? BlendMode.srcIn : BlendMode.saturation,
+                      ),
+                    )
+                  : Icon(Icons.emoji_events, size: 28, color: color),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.name,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      maxLines: 2, overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(5),
+                            gradient: isPlatinum
+                              ? const LinearGradient(colors: [Color(0xFF8098A8), Color(0xFFD0D8E0), Color(0xFF8098A8)])
+                              : null,
+                          ),
+                          child: Text(label,
+                            style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w700,
+                              color: widget.earned ? Colors.white : Colors.grey[400],
+                            ),
+                          ),
+                        ),
+                        if (widget.earnedDate.isNotEmpty) ...[
+                          const SizedBox(width: 10),
+                          Text(widget.earnedDate,
+                            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Description
+          if (widget.description.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[850],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(widget.description,
+                style: TextStyle(fontSize: 13, color: Colors.grey[300], height: 1.5),
+              ),
+            ),
+
+          const SizedBox(height: 16),
+
+          // Tips header
+          Row(
+            children: [
+              Icon(Icons.chat_bubble_outline, size: 16, color: Colors.grey[500]),
+              const SizedBox(width: 6),
+              Text('心得',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[300]),
+              ),
+              const SizedBox(width: 8),
+              Text('${_tips.length}',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Tips content
+          Expanded(
+            child: _tipsLoading
+              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : _tips.isEmpty
+                ? Center(
+                    child: Text('暂无心得', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                  )
+                : ListView.builder(
+                    itemCount: _tips.length,
+                    itemBuilder: (_, i) {
+                      final tip = _tips[i] as Map<String, dynamic>;
+                      final user = tip['user']?.toString() ?? '';
+                      final avatar = tip['avatar']?.toString() ?? '';
+                      final content = tip['content']?.toString() ?? '';
+                      final date = tip['date']?.toString() ?? '';
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: avatar.isNotEmpty
+                                    ? Image.network(avatar, width: 28, height: 28,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          width: 28, height: 28,
+                                          decoration: BoxDecoration(
+                                            color: color.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(14),
+                                          ),
+                                          child: Center(
+                                            child: Text(user.isNotEmpty ? user[0].toUpperCase() : '?',
+                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 28, height: 28,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[800],
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                        child: Center(
+                                          child: Text(user.isNotEmpty ? user[0].toUpperCase() : '?',
+                                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey[400]),
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(user,
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[200]),
+                                      ),
+                                      if (date.isNotEmpty)
+                                        Text(date,
+                                          style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (content.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(content,
+                                style: TextStyle(fontSize: 13, color: Colors.grey[300], height: 1.5),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

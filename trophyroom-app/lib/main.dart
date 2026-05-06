@@ -3094,3 +3094,4 @@ class _NeonBorderPainter extends CustomPainter {
   bool shouldRepaint(covariant _NeonBorderPainter old) =>
       old.color != color || old.intensity != intensity || old.time != time;
 }
+// last mod: Wed May  6 20:20:25 CST 2026

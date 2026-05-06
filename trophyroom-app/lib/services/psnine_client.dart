@@ -84,18 +84,35 @@ class PsnineClient {
       });
     }
 
-    // 从同一页提取档案统计数据
+    // 从游戏列表统计数据（游戏页没有档案汇总，需要自己算）
+    int totalPlatinum = 0, totalGold = 0, totalSilver = 0, totalBronze = 0;
+    int perfectCount = 0, totalCompletionRate = 0;
+    for (final g in games) {
+      totalPlatinum += (g['platinum'] as num?)?.toInt() ?? 0;
+      totalGold += (g['gold'] as num?)?.toInt() ?? 0;
+      totalSilver += (g['silver'] as num?)?.toInt() ?? 0;
+      totalBronze += (g['bronze'] as num?)?.toInt() ?? 0;
+      final rate = (g['completion_rate'] as num?)?.toInt() ?? 0;
+      totalCompletionRate += rate;
+      if (rate >= 100) perfectCount++;
+    }
+    final avgCompletionRate = games.isNotEmpty
+        ? (totalCompletionRate / games.length).toStringAsFixed(1)
+        : '0';
+    final totalTrophyCount =
+        totalPlatinum + totalGold + totalSilver + totalBronze;
+
     final profile = {
       'psn_id': psnId,
-      'platinum': _findInt(html, r'<span class="text-platinum">白(\d+)'),
-      'gold': _findInt(html, r'<span class="text-gold">金(\d+)'),
-      'silver': _findInt(html, r'<span class="text-silver">银(\d+)'),
-      'bronze': _findInt(html, r'<span class="text-bronze">铜(\d+)'),
+      'platinum': totalPlatinum,
+      'gold': totalGold,
+      'silver': totalSilver,
+      'bronze': totalBronze,
       'level': _findInt(html, r'Lv\s*(\d+)'),
-      'total_games': _findInt(html, r'(\d+)<em>总游戏'),
-      'perfect_games': _findInt(html, r'(\d+)<em>完美数'),
-      'total_trophies': _findInt(html, r'(\d+)<em>总奖杯'),
-      'completion_rate': _find(html, r'([\d.]+)<em>完成率'),
+      'total_games': games.length,
+      'perfect_games': perfectCount,
+      'total_trophies': totalTrophyCount,
+      'completion_rate': avgCompletionRate,
       'total_points': _findInt(html, r'总点数[：:]\s*(\d+)'),
       'platform': 'psn',
       'games': games,

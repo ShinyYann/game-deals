@@ -971,7 +971,7 @@ class _HomePageState extends State<HomePage>
                         // Trophy counts + Platform (new row below name)
                         Row(
                           children: [
-                            Text(platinum > 0 ? '🏆铂$platinum  ' : '',
+                            Text(platinum > 0 ? '🏆白金$platinum  ' : '',
                                 style: const TextStyle(fontSize: 12, color: Colors.cyan)),
                             Text('🥇金$gold  ',
                                 style: TextStyle(fontSize: 12, color: Colors.amber[400])),
@@ -1094,7 +1094,7 @@ class _HomePageState extends State<HomePage>
     }
 
     return GestureDetector(
-      onTap: () => _showTrophyDetailBottomSheet(context, trophy),
+      onTap: () => _showTrophyDetailPage(context, trophy),
       child: Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1202,7 +1202,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  void _showTrophyDetailBottomSheet(BuildContext context, Map<String, dynamic> trophy) {
+  void _showTrophyDetailPage(BuildContext context, Map<String, dynamic> trophy) {
     final name = trophy['name']?.toString() ?? '';
     final type = trophy['type']?.toString() ?? 'bronze';
     final earned = trophy['earned'] == true;
@@ -1211,20 +1211,28 @@ class _HomePageState extends State<HomePage>
     final description = trophy['description']?.toString() ?? '';
     final trophyId = trophy['id']?.toString() ?? '';
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1A1A24),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => _TrophyDetailSheet(
-        name: name,
-        type: type,
-        earned: earned,
-        earnedDate: earnedDate,
-        iconUrl: iconUrl,
-        description: description,
-        trophyId: trophyId,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: const Color(0xFF0F0F23),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white70),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          body: _TrophyDetailPage(
+            name: name,
+            type: type,
+            earned: earned,
+            earnedDate: earnedDate,
+            iconUrl: iconUrl,
+            description: description,
+            trophyId: trophyId,
+          ),
+        ),
       ),
     );
   }
@@ -1734,7 +1742,7 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-class _TrophyDetailSheet extends StatefulWidget {
+class _TrophyDetailPage extends StatefulWidget {
   final String name;
   final String type;
   final bool earned;
@@ -1743,7 +1751,7 @@ class _TrophyDetailSheet extends StatefulWidget {
   final String description;
   final String trophyId;
 
-  const _TrophyDetailSheet({
+  const _TrophyDetailPage({
     required this.name,
     required this.type,
     required this.earned,
@@ -1754,10 +1762,10 @@ class _TrophyDetailSheet extends StatefulWidget {
   });
 
   @override
-  State<_TrophyDetailSheet> createState() => _TrophyDetailSheetState();
+  State<_TrophyDetailPage> createState() => _TrophyDetailPageState();
 }
 
-class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
+class _TrophyDetailPageState extends State<_TrophyDetailPage> {
   List<Map<String, dynamic>> _tips = [];
   bool _tipsLoading = false;
 
@@ -1795,24 +1803,10 @@ class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
                       widget.type == 'gold' ? Colors.amber[400] :
                       widget.type == 'silver' ? Colors.grey[400] : Colors.orange[400];
 
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom,
-      ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[700],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
           // Icon
           if (widget.iconUrl.isNotEmpty)
             ClipRRect(
@@ -1868,7 +1862,7 @@ class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
           // Description
           if (widget.description.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 0),
               child: Text(
                 widget.description,
                 textAlign: TextAlign.center,

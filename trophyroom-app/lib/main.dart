@@ -2328,46 +2328,34 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
+    // PSNLoginPage 返回 online_id（OAuth 流程已自动保存凭证到服务器）
     if (result != null && result.isNotEmpty && mounted) {
-      // 验证并保存 NPSSO
-      setState(() => _npssoLoading = true);
+      setState(() {
+        _npssoLoading = true;
+      });
+
       try {
-        final uri = Uri.parse(
-            'http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$result');
-        final resp = await http.get(uri).timeout(const Duration(seconds: 10));
-        final data = jsonDecode(resp.body);
-        if (data['ok'] == true) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('psn_npsso', result);
-          final onlineId = data['online_id']?.toString() ?? '';
-          final realId = onlineId.isNotEmpty ? onlineId : '未识别';
-          await prefs.setString('psn_id', realId);
-          setState(() {
-            _savedNpsso = result;
-            _savedPsnId = realId;
-            _npssoCtrl.text = result;
-            _psnCtrl.text = realId;
-            _npssoLoading = false;
-          });
-          widget.onNpssoChanged?.call();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('✅ 登录成功！PSN 账号：$realId')),
-            );
-          }
-        } else {
-          setState(() => _npssoLoading = false);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('登录失败：${data['error'] ?? '未知错误'}')),
-            );
-          }
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('oauth_uid', result);
+        await prefs.setString('psn_id', result);
+        setState(() {
+          _savedPsnId = result;
+          _savedNpsso = '';
+          _npssoCtrl.clear();
+          _psnCtrl.text = result;
+          _npssoLoading = false;
+        });
+        widget.onNpssoChanged?.call();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('✅ 登录成功！PSN：$result')),
+          );
         }
       } catch (e) {
         setState(() => _npssoLoading = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('网络错误：$e')),
+            SnackBar(content: Text('保存失败：$e')),
           );
         }
       }

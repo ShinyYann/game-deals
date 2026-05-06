@@ -547,10 +547,14 @@ class _HomePageState extends State<HomePage>
         _buildHome(),
         _buildDeals(),
         _buildGuide(),
-        SettingsPage(onNpssoChanged: () {
-          // NPSSO 登录成功后刷新数据
-          _loadAccounts();
-          setState(() {});
+        SettingsPage(onNpssoChanged: () async {
+          // 先加载账号再清缓存，确保 FutureBuilder 拿到最新 _psnId
+          await _loadAccounts();
+          if (mounted) {
+            setState(() {
+              _cachedHomeData = null;
+            });
+          }
         }),
       ][_currentTab],
       bottomNavigationBar: BottomNavigationBar(
@@ -1251,14 +1255,37 @@ class _HomePageState extends State<HomePage>
       return {'psn_id': '', 'games': []};
     }
 
-    // 1. 优先手机端直连 psnine（快、国内可用，带获得/未获得状态）
+    // 1. 先走服务器缓存（最快，~22ms 返回已缓存数据）
+    Map<String, dynamic>? serverData;
+    try {
+      final apiBase = 'http://8.153.97.56';
+      final url = '$apiBase/api/psn?uid=$_psnId${_npsso.isNotEmpty ? '&npsso=$_npsso' : ''}';
+      final resp = await http.get(Uri.parse(url))
+          .timeout(const Duration(seconds: 8));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        if (data['psn_id'] != null && data['games'] is List && (data['games'] as List).isNotEmpty) {
+          serverData = data;
+          _cachedHomeData = data;
+          print('[Fetch] server cache OK: ${(data['games'] as List).length} games');
+          // 服务器有数据 → 立即返回，后台刷新 psnine
+          _backgroundRefreshPsnine();
+          return data;
+        }
+      }
+    } catch (e) {
+      print('[Fetch] server failed: $e');
+      _error = '$e';
+    }
+
+    // 2. 服务器没数据 → 手机直连 psnine
     try {
       final psnine = PsnineClient(_psnId);
       final data = await psnine.fetchFullData();
       if (data['games'] is List && (data['games'] as List).isNotEmpty) {
-        print('[PSN] psnine OK: ${(data['games'] as List).length} games');
+        print('[Fetch] psnine OK: ${(data['games'] as List).length} games');
         _cachedHomeData = data;
-        // 异步获取 NPSSO 游玩时间并合并（不覆盖奖杯数据）
+        // 异步获取 NPSSO 游玩时间并合并
         if (_npsso.isNotEmpty) {
           _mergePlayDurations(data).then((_) {
             if (mounted) setState(() {});
@@ -1269,10 +1296,10 @@ class _HomePageState extends State<HomePage>
         return data;
       }
     } catch (e) {
-      print('[PSN] psnine failed: $e');
+      print('[Fetch] psnine failed: $e');
     }
 
-    // 2. 如果有 NPSSO 且 psnine 失败，兜底用手机端索尼 API
+    // 3. 最后走 NPSSO 索尼 API
     if (_npsso.isNotEmpty) {
       try {
         final client = PsnApiClient(_npsso);
@@ -1290,27 +1317,31 @@ class _HomePageState extends State<HomePage>
           return data;
         }
       } catch (e) {
-        print('[PSN Direct] Failed: $e');
+        print('[Fetch] PSN Direct failed: $e');
       }
     }
 
-    // 3. 最后走服务器中转
+    return {'psn_id': _psnId, 'error': '加载失败', 'games': []};
+  }
+
+  /// 后台刷新 psnine 数据
+  Future<void> _backgroundRefreshPsnine() async {
     try {
-      final apiBase = 'http://8.153.97.56';
-      final url = '${apiBase}/api/psn?uid=$_psnId${_npsso.isNotEmpty ? '&npsso=$_npsso' : ''}';
-      final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        if (data['psn_id'] != null && data['error'] == null) {
-          _cachedHomeData = data;
-          return data;
+      final psnine = PsnineClient(_psnId);
+      final data = await psnine.fetchFullData();
+      if (data['games'] is List && (data['games'] as List).isNotEmpty) {
+        print('[BgRefresh] psnine OK: ${(data['games'] as List).length} games');
+        if (_npsso.isNotEmpty) {
+          await _mergePlayDurations(data);
+        }
+        _cacheToServer(data);
+        if (mounted) {
+          setState(() => _cachedHomeData = data);
         }
       }
     } catch (e) {
-      _error = '$e';
+      print('[BgRefresh] failed: $e');
     }
-    return {'psn_id': _psnId, 'error': '加载失败', 'games': []};
   }
 
   /// 缓存数据到服务器

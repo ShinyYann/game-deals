@@ -329,6 +329,7 @@ class _HomePageState extends State<HomePage>
   Map<String, bool> _steamAchLoading = {};
   bool _filterPlaytime = false;  // Steam 只看有游玩时间的
   bool _filter100pct = false;    // Steam 只看全成就的
+  bool _summaryExpanded = false; // 汇总卡详情展开
   // ── PageView 切换 ──
   int _platformTab = 0; // 0=PSN, 1=Steam
   late final PageController _platformPageCtrl;
@@ -583,7 +584,8 @@ class _HomePageState extends State<HomePage>
               setState(() { _cachedHomeData = null; });
             }
           },
-          onSteamChanged: () {
+          onSteamChanged: () async {
+            await _loadAccounts();  // 重读 _steamId
             if (mounted) {
               setState(() {
                 _steamData = null;
@@ -711,7 +713,11 @@ class _HomePageState extends State<HomePage>
             Row(children: [
               const Text('📊 成就总览', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
               const Spacer(),
-              // Steam 游戏过滤开关
+              // Steam 游戏过滤
+              _filterChip('全部', !_filter100pct && !_filterPlaytime, () {
+                setState(() { _filter100pct = false; _filterPlaytime = false; });
+              }),
+              const SizedBox(width: 6),
               _filterChip('全成就', _filter100pct, () {
                 setState(() { _filter100pct = !_filter100pct; _filterPlaytime = false; });
               }),
@@ -729,22 +735,100 @@ class _HomePageState extends State<HomePage>
                 _statTile('🏅', 'Steam 成就', '$steamAchUnlocked / $steamAchTotal', const Color(0xFFFFD700)),
               ],
             ),
-            const SizedBox(height: 6),
-            Row(children: [
-              Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
-              const SizedBox(width: 4),
-              Text('Steam 总时长 ${(steamPlaytime ~/ 60)}h', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-              if (steam100pct > 0) ...[
-                const SizedBox(width: 12),
-                Icon(Icons.star, size: 12, color: const Color(0xFFFFD700)),
-                const SizedBox(width: 4),
-                Text('$steam100pct 款全成就', style: TextStyle(fontSize: 11, color: const Color(0xFFFFD700))),
-              ],
-            ]),
+            const SizedBox(height: 4),
+            // 展开/收起按钮
+            GestureDetector(
+              onTap: () => setState(() => _summaryExpanded = !_summaryExpanded),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(_summaryExpanded ? Icons.expand_less : Icons.expand_more, size: 18, color: Colors.grey[500]),
+                Text(_summaryExpanded ? '收起' : '展开详情', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+              ]),
+            ),
+            // 展开详情
+            if (_summaryExpanded) ...[
+              const SizedBox(height: 10),
+              const Divider(color: Colors.white10, height: 1),
+              const SizedBox(height: 8),
+              _buildSummaryDetail(psnData, _steamData),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSummaryDetail(Map<String, dynamic>? psnData, Map<String, dynamic>? steamData) {
+    final psnGames = (psnData?['games'] as List?) ?? [];
+    final steamGames = (_steamData != null && !_steamData!.containsKey('error'))
+        ? (_steamData!['games'] as List? ?? []).cast<Map<String, dynamic>>()
+        : <Map<String, dynamic>>[];
+
+    // PSN 白金游戏
+    final platinumGames = psnGames.where((g) => (g['platinum'] ?? 0) > 0).toList();
+    // Steam 全成就游戏
+    final perfectGames = steamGames.where((g) {
+      int t = (g['achievements_total'] ?? 0) as int;
+      int u = (g['achievements_unlocked'] ?? 0) as int;
+      return t > 0 && u >= t;
+    }).toList();
+
+    // PSN 金银铜统计
+    int totalGold = 0, totalSilver = 0, totalBronze = 0;
+    for (final g in psnGames) {
+      totalGold += (g['gold'] ?? 0) as int;
+      totalSilver += (g['silver'] ?? 0) as int;
+      totalBronze += (g['bronze'] ?? 0) as int;
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // ── PSN 奖杯分布 ──
+      if (psnGames.isNotEmpty) ...[
+        Text('🏆 PSN 奖杯分布', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[300])),
+        SizedBox(height: 6),
+        Row(children: [
+          _miniStat('👑', '白金', totalGold, const Color(0xFFB8D8D8)),
+          _miniStat('🥇', '金', totalGold, const Color(0xFFFFD700)),
+          _miniStat('🥈', '银', totalSilver, const Color(0xFFC0C0C0)),
+          _miniStat('🥉', '铜', totalBronze, const Color(0xFFCD7F32)),
+        ]),
+        if (platinumGames.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text('白金游戏 (${platinumGames.length})', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+          const SizedBox(height: 4),
+          Wrap(spacing: 6, runSpacing: 4, children: platinumGames.take(6).map((g) {
+            final name = g['title'] ?? g['name'] ?? '?';
+            return Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.06), borderRadius: BorderRadius.circular(4)),
+              child: Text(name.toString(), style: TextStyle(fontSize: 10, color: Colors.grey[300])));
+          }).toList()),
+          if (platinumGames.length > 6)
+            Text('...还有 ${platinumGames.length - 6} 款', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+        ],
+      ],
+
+      // ── Steam 全成就 ──
+      if (steamGames.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Text('🎮 Steam 全成就', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[300])),
+        SizedBox(height: 6),
+        if (perfectGames.isEmpty)
+          Text('暂无全成就游戏', style: TextStyle(fontSize: 11, color: Colors.grey[600]))
+        else ...[
+          Wrap(spacing: 6, runSpacing: 4, children: perfectGames.take(6).map((g) {
+            final name = _translateSteamGameName(g['name'] ?? '???');
+            return Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: const Color(0xFFFFD700).withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Text('⭐', style: TextStyle(fontSize: 10)),
+                const SizedBox(width: 2),
+                Text(name, style: TextStyle(fontSize: 10, color: const Color(0xFFFFD700))),
+              ]));
+          }).toList()),
+          if (perfectGames.length > 6)
+            Text('...还有 ${perfectGames.length - 6} 款', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+        ],
+      ],
+    ]);
   }
 
   Widget _statTile(String icon, String label, String count, Color color) {
@@ -754,6 +838,15 @@ class _HomePageState extends State<HomePage>
         const SizedBox(height: 2),
         Text(count, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
         Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[500])),
+      ]),
+    );
+  }
+
+  Widget _miniStat(String icon, String label, int count, Color color) {
+    return Expanded(
+      child: Column(children: [
+        Text('$icon $count', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+        Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[600])),
       ]),
     );
   }
@@ -3204,68 +3297,16 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         SizedBox(height: 24),
-        // ── Steam API Key ──
-        if (_steamKeyVerified)
-          // Key 已配置，显示简洁状态
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Icon(Icons.vpn_key, size: 18, color: Colors.green[400]),
-                const SizedBox(width: 8),
-                Text('Steam API 已连接',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
-                    color: Colors.green[400])),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => setState(() => _steamKeyVerified = false),
-                  child: Text('修改', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                ),
-              ],
-            ),
-          )
-        else ...[
-          Text('Steam API Key',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
-          ),
-          SizedBox(height: 4),
-          Text('服务器共享密钥，管理员配置一次即可',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-          SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _steamKeyCtrl,
-                  decoration: InputDecoration(
-                    hintText: '输入 Steam Web API Key',
-                    hintStyle: TextStyle(color: Colors.grey[600]),
-                    filled: true,
-                    fillColor: Colors.grey[850],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                  obscureText: true,
-                ),
-              ),
-              SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: _setSteamKey,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey[700],
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text('保存'),
-              ),
-            ],
-          ),
-        ],
+        // ── Steam API Key (服务器配置，无需用户填写) ──
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(children: [
+            Icon(Icons.cloud_done, size: 16, color: Colors.green[400]),
+            const SizedBox(width: 6),
+            Text('Steam API 已由服务器配置',
+              style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+          ]),
+        ),
         SizedBox(height: 40),
         SizedBox(
           width: double.infinity,

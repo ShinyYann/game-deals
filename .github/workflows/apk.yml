@@ -9,6 +9,8 @@ on:
       - '.github/workflows/apk.yml'
   workflow_dispatch:
 
+concurrency: apk-build-${{ github.ref }}
+
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -65,6 +65,18 @@ class PsnineClient {
       final sv = RegExp(r'text-silver[^>]*>银(\d+)').firstMatch(tr);
       final bz = RegExp(r'text-bronze[^>]*>铜(\d+)').firstMatch(tr);
 
+      // 平台标识：pf_ps5 / pf_ps4 / pf_psv / pf_ps3 / pf_psp
+      String platform = '';
+      final pfM = RegExp(r'class="pf_(ps\d+|psv|psp)"', caseSensitive: false).firstMatch(tr);
+      if (pfM != null) {
+        final p = pfM.group(1)!.toLowerCase();
+        if (p == 'ps5') platform = 'PS5';
+        else if (p == 'ps4') platform = 'PS4';
+        else if (p == 'ps3') platform = 'PS3';
+        else if (p == 'psv') platform = 'PS Vita';
+        else if (p == 'psp') platform = 'PSP';
+      }
+
       // 游玩时间（从同一页面提取：<td class="twoge h-p">）
       String playTime = '';
       final ptM = RegExp(r'<td[^>]*class="twoge h-p"[^>]*>([^<]+)<em>总耗时')
@@ -81,6 +93,7 @@ class PsnineClient {
         'silver': sv != null ? int.tryParse(sv.group(1)!) ?? 0 : 0,
         'bronze': bz != null ? int.tryParse(bz.group(1)!) ?? 0 : 0,
         'play_time': playTime,
+        'platform': platform,
       });
     }
 

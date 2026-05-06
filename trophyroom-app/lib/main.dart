@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/psnine_client.dart';
+import 'widgets/trophy_icon.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -1000,30 +1001,23 @@ class _HomePageState extends State<HomePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Name (full width, no truncation from side elements)
-                        Text(
-                          name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        // Trophy counts + Platform (new row below name)
+                        // Name + Platform badge on same row
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(platinum > 0 ? '🏆白金$platinum  ' : '',
-                                style: const TextStyle(fontSize: 12, color: Colors.cyan)),
-                            Text('🥇金$gold  ',
-                                style: TextStyle(fontSize: 12, color: Colors.amber[400])),
-                            Text('🥈银$silver  ',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-                            Text('🥉铜$bronze',
-                                style: TextStyle(fontSize: 12, color: Colors.orange[400])),
-                            const Spacer(),
-                            if (platform.isNotEmpty)
+                            Flexible(
+                              child: Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (platform.isNotEmpty) ...[
+                              const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
@@ -1032,7 +1026,9 @@ class _HomePageState extends State<HomePage>
                                       ? Colors.blue[800]
                                       : platform == 'PS4'
                                           ? Colors.indigo[800]
-                                          : Colors.grey[700],
+                                          : platform == 'PS Vita'
+                                              ? Colors.teal[800]
+                                              : Colors.grey[700],
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(platform,
@@ -1040,6 +1036,37 @@ class _HomePageState extends State<HomePage>
                                         fontSize: 10,
                                         color: Colors.white)),
                               ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        // Trophy counts (PSN style icons)
+                        Row(
+                          children: [
+                            if (platinum > 0) ...[
+                              const TrophyIcon(type: 'platinum', size: 18),
+                              const SizedBox(width: 2),
+                              Text('$platinum  ',
+                                  style: TextStyle(fontSize: 12, color: Colors.cyan[300])),
+                            ],
+                            if (gold > 0) ...[
+                              const TrophyIcon(type: 'gold', size: 18),
+                              const SizedBox(width: 2),
+                              Text('$gold  ',
+                                  style: TextStyle(fontSize: 12, color: Colors.amber[400])),
+                            ],
+                            if (silver > 0) ...[
+                              const TrophyIcon(type: 'silver', size: 18),
+                              const SizedBox(width: 2),
+                              Text('$silver  ',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                            ],
+                            if (bronze > 0) ...[
+                              const TrophyIcon(type: 'bronze', size: 18),
+                              const SizedBox(width: 2),
+                              Text('$bronze',
+                                  style: TextStyle(fontSize: 12, color: Colors.orange[400])),
+                            ],
                           ],
                         ),
                         const SizedBox(height: 4),

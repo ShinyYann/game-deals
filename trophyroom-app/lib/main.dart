@@ -1850,56 +1850,66 @@ class _HomePageState extends State<HomePage>
 /// 解析心得内容中的 HTML 链接和纯文本 URL 为 RichText 可点击 span
 InlineSpan _parseHtmlLinks(String text, BuildContext context) {
   final spans = <InlineSpan>[];
-  final linkPattern = RegExp(r'<a\s+href="(https?://[^"]+)"[^>]*>([^<]+)</a>');
-  
-  // 第一步：替换所有 <a> 标签为占位符，同时保存链接信息
-  final links = <_ParsedLink>[];
-  String cleanText = text.replaceAllMapped(linkPattern, (m) {
-    links.add(_ParsedLink(url: m.group(1)!, label: m.group(2)!));
-    return '%%LINK${links.length - 1}%%';
-  });
-  
-  // 第二步：检测纯文本 URL（http/https）
-  final urlPattern = RegExp(r'(https?://[^\s<>"]+)');
-  cleanText = cleanText.replaceAllMapped(urlPattern, (m) {
-    links.add(_ParsedLink(url: m.group(1)!, label: m.group(1)!));
-    return '%%LINK${links.length - 1}%%';
-  });
+  // 一次性匹配：HTML <a> 链接 或 纯文本 URL
+  final combinedPattern = RegExp(
+    r'<a\s+href="(https?://[^"]+)"[^>]*>([^<]+)</a>'
+    r'|'
+    r'(https?://[^\s<>"]+)',
+  );
 
-  // 第三步：分割占位符，构建 RichText
-  final segments = cleanText.split(RegExp(r'(%%LINK\d+%%)'));
-  for (final seg in segments) {
-    if (seg.startsWith('%%LINK') && seg.endsWith('%%')) {
-      final idx = int.tryParse(seg.replaceAll(RegExp(r'[^\d]'), ''));
-      if (idx != null && idx < links.length) {
-        final link = links[idx];
-        spans.add(TextSpan(
-          text: link.label,
-          style: const TextStyle(color: Colors.lightBlue, decoration: TextDecoration.underline),
-          recognizer: TapGestureRecognizer()
-            ..onTap = () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BrowserPage(initialUrl: link.url, initialTitle: link.label),
-                ),
-              );
-            },
-        ));
-        continue;
-      }
+  int lastEnd = 0;
+  for (final match in combinedPattern.allMatches(text)) {
+    // 链接前的普通文本
+    if (match.start > lastEnd) {
+      spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
     }
-    if (seg.isNotEmpty) {
-      spans.add(TextSpan(text: seg));
+
+    final htmlUrl = match.group(1);
+    if (htmlUrl != null) {
+      // HTML <a> 标签链接
+      final url = htmlUrl;
+      final label = match.group(2)!;
+      spans.add(TextSpan(
+        text: label,
+        style: const TextStyle(
+            color: Colors.lightBlue, decoration: TextDecoration.underline),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    BrowserPage(initialUrl: url, initialTitle: label),
+              ),
+            );
+          },
+      ));
+    } else {
+      // 纯文本 URL
+      final url = match.group(3)!;
+      spans.add(TextSpan(
+        text: url,
+        style: const TextStyle(
+            color: Colors.lightBlue, decoration: TextDecoration.underline),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    BrowserPage(initialUrl: url, initialTitle: url),
+              ),
+            );
+          },
+      ));
     }
+    lastEnd = match.end;
+  }
+
+  // 剩余文本
+  if (lastEnd < text.length) {
+    spans.add(TextSpan(text: text.substring(lastEnd)));
   }
 
   return TextSpan(children: spans);
-}
-
-class _ParsedLink {
-  final String url;
-  final String label;
-  _ParsedLink({required this.url, required this.label});
 }
 
 class _TrophyDetailDialog extends StatefulWidget {

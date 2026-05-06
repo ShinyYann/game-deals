@@ -688,7 +688,13 @@ v.play().catch(function(){});
           _buildHome(),
           _buildDeals(),
           _buildGuide(),
-          SettingsPage(onVfxChanged: () => _loadVfxPrefs()),
+          SettingsPage(
+            onVfxChanged: () => _loadVfxPrefs(),
+            onNpssoChanged: () {
+              _loadAccounts();
+              _backgroundRefresh();
+            },
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -2185,7 +2191,8 @@ class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback? onVfxChanged;
-  const SettingsPage({super.key, this.onVfxChanged});
+  final VoidCallback? onNpssoChanged;
+  const SettingsPage({super.key, this.onVfxChanged, this.onNpssoChanged});
 
   static const _vfxColors = {
     '💜': 0xFF7C3AED, '💙': 0xFF3B82F6, '💚': 0xFF06B6D4,

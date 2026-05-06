@@ -1178,6 +1178,8 @@ v.play().catch(function(){});
   Widget _buildGameCard(Map<String, dynamic> game) {
     final name = game['name']?.toString() ?? '';
     final coverUrl = game['cover_url']?.toString() ?? '';
+    final npId = game['np_id']?.toString() ?? '';
+    final gameId = game['id']?.toString() ?? '';
     final earned = (game['earned'] as num?)?.toInt() ?? 0;
     final defined = (game['defined'] as num?)?.toInt() ?? 1;
     final platinum = (game['platinum'] as num?)?.toInt() ?? 0;
@@ -1192,7 +1194,20 @@ v.play().catch(function(){});
     final gamePoints = platinum * 300 + gold * 90 + silver * 30 + bronze * 15;
     final gameLevel = (gamePoints / 60).ceil().clamp(1, 999);
 
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GameDetailPage(
+              gameId: gameId.isNotEmpty ? gameId : npId,
+              npId: npId,
+              npsso: _npsso,
+              oauthUid: _oauthUid,
+            ),
+          ),
+        );
+      },
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1278,6 +1293,7 @@ v.play().catch(function(){});
             ),
           ),
         ],
+      ),
       ),
     );
   }

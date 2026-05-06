@@ -5,8 +5,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class GameDetailPage extends StatefulWidget {
   final String gameId;
+  final String npId;
+  final String npsso;
+  final String oauthUid;
 
-  const GameDetailPage({super.key, required this.gameId});
+  const GameDetailPage({
+    super.key,
+    required this.gameId,
+    this.npId = '',
+    this.npsso = '',
+    this.oauthUid = '',
+  });
 
   @override
   State<GameDetailPage> createState() => _GameDetailPageState();
@@ -30,8 +39,9 @@ class _GameDetailPageState extends State<GameDetailPage> {
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final psnId = prefs.getString('psn_id') ?? '';
+      final psnId = widget.npsso.isNotEmpty
+          ? widget.gameId
+          : (await SharedPreferences.getInstance()).getString('psn_id') ?? '';
 
       if (psnId.isEmpty) {
         setState(() {
@@ -41,10 +51,15 @@ class _GameDetailPageState extends State<GameDetailPage> {
         return;
       }
 
+      // Build URL with auth params
+      var url = 'http://8.153.97.56/api/psn_game_detail?game_id=${widget.gameId}&uid=$psnId';
+      if (widget.npId.isNotEmpty) url += '&np_id=${Uri.encodeComponent(widget.npId)}';
+      if (widget.npsso.isNotEmpty) url += '&npsso=${Uri.encodeComponent(widget.npsso)}';
+      if (widget.oauthUid.isNotEmpty) url += '&oauth_uid=${Uri.encodeComponent(widget.oauthUid)}';
+
       final resp = await http
-          .get(Uri.parse(
-              'http://8.153.97.56/api/psn_game_detail?game_id=${widget.gameId}&uid=$psnId'))
-          .timeout(const Duration(seconds: 10));
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 15));
 
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);

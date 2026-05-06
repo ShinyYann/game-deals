@@ -10,6 +10,7 @@ import 'pages/web_view_page.dart';
 import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/steam_video.dart';
+import 'psn_login_page.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -2213,6 +2214,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _loaded = false;
   bool _npssoLoading = false;
   String _npssoStatus = '';
+  bool _showManualNpsso = false;
   Map<String, dynamic> _vfxCfg = {};
   bool _videoBg = false;
 
@@ -2314,6 +2316,62 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+  }
+
+  /// 打开 App 内 PSN 一键登录 WebView
+  Future<void> _openPsnLoginWebView() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PSNLoginPage(),
+        fullscreenDialog: true,
+      ),
+    );
+
+    if (result != null && result.isNotEmpty && mounted) {
+      // 验证并保存 NPSSO
+      setState(() => _npssoLoading = true);
+      try {
+        final uri = Uri.parse(
+            'http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$result');
+        final resp = await http.get(uri).timeout(const Duration(seconds: 10));
+        final data = jsonDecode(resp.body);
+        if (data['ok'] == true) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('psn_npsso', result);
+          final onlineId = data['online_id']?.toString() ?? '';
+          final realId = onlineId.isNotEmpty ? onlineId : '未识别';
+          await prefs.setString('psn_id', realId);
+          setState(() {
+            _savedNpsso = result;
+            _savedPsnId = realId;
+            _npssoCtrl.text = result;
+            _psnCtrl.text = realId;
+            _npssoLoading = false;
+          });
+          widget.onNpssoChanged?.call();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('✅ 登录成功！PSN 账号：$realId')),
+            );
+          }
+        } else {
+          setState(() => _npssoLoading = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('登录失败：${data['error'] ?? '未知错误'}')),
+            );
+          }
+        }
+      } catch (e) {
+        setState(() => _npssoLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('网络错误：$e')),
+          );
+        }
+      }
+    }
   }
 
   Widget _guideStep(String num, String text) {
@@ -2526,7 +2584,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         const SizedBox(height: 32),
-        // NPSSO 登录（设置完自动识别 PSN 账号）
+        // PSN 一键登录（App 内 WebView 登录）
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
@@ -2546,11 +2604,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.amber[300])),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                '用手机 Chrome 打开 playstation.com → 登录 → 然后打开 http://8.153.97.56/api/npsso → 按步骤操作 → 复制 NPSSO 粘贴到下面',
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              ),
               const SizedBox(height: 12),
               // Already logged in info
               if (_savedPsnId.isNotEmpty && _savedNpsso.isNotEmpty)
@@ -2569,51 +2622,93 @@ class _SettingsPageState extends State<SettingsPage> {
                     ],
                   ),
                 ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _npssoCtrl,
-                      obscureText: !_savedNpsso.isNotEmpty,
-                      decoration: InputDecoration(
-                        hintText: '粘贴 NPSSO 令牌',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
-                        filled: true,
-                        fillColor: Colors.grey[850],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        suffixIcon: _savedNpsso.isNotEmpty
-                            ? Icon(Icons.check_circle, color: Colors.green[400], size: 20)
-                            : null,
-                      ),
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                    ),
+
+              // 一键登录按钮
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _npssoLoading ? null : _openPsnLoginWebView,
+                  icon: _npssoLoading
+                      ? const SizedBox(width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : Icon(_savedNpsso.isNotEmpty ? Icons.check_circle : Icons.login_rounded,
+                          size: 20),
+                  label: Text(
+                    _savedNpsso.isNotEmpty
+                        ? '已登录（点击重新登录）'
+                        : '📱 在 App 内登录 PSN',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _npssoLoading ? null : _loginNpsso,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _savedNpsso.isNotEmpty ? Colors.green[700] : Colors.amber[700],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _npssoLoading
-                        ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(_savedNpsso.isNotEmpty ? '已登录' : '登录'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _savedNpsso.isNotEmpty ? Colors.green[700] : Colors.amber[700],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
+
+              // 高级/手动模式（折叠）
               GestureDetector(
-                onTap: _showNpssoGuide,
-                child: Text('如何获取 NPSSO？',
-                  style: TextStyle(fontSize: 12, color: Colors.blue[400], decoration: TextDecoration.underline)),
+                onTap: () => setState(() => _showManualNpsso = !_showManualNpsso),
+                child: Row(
+                  children: [
+                    Icon(Icons.expand_more, size: 16,
+                        color: Colors.grey[500]),
+                    Text('手动输入 NPSSO（高级）',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  ],
+                ),
               ),
+              if (_showManualNpsso) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _npssoCtrl,
+                        obscureText: !_savedNpsso.isNotEmpty,
+                        decoration: InputDecoration(
+                          hintText: '粘贴 NPSSO 令牌',
+                          hintStyle: TextStyle(color: Colors.grey[600]),
+                          filled: true,
+                          fillColor: Colors.grey[850],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          suffixIcon: _savedNpsso.isNotEmpty
+                              ? Icon(Icons.check_circle, color: Colors.green[400], size: 20)
+                              : null,
+                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _npssoLoading ? null : _loginNpsso,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _savedNpsso.isNotEmpty ? Colors.green[700] : Colors.amber[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _npssoLoading
+                          ? const SizedBox(width: 18, height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Text(_savedNpsso.isNotEmpty ? '已登录' : '登录'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _showNpssoGuide,
+                  child: Text('如何获取 NPSSO？',
+                    style: TextStyle(fontSize: 12, color: Colors.blue[400], decoration: TextDecoration.underline)),
+                ),
+              ],
             ],
           ),
         ),

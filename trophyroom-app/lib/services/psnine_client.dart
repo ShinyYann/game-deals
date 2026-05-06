@@ -246,7 +246,7 @@ class PsnineClient {
         String content = '';
         if (contentM != null) {
           content = contentM.group(1)!
-              .replaceAll(RegExp(r'<[^>]*>'), '')
+              .replaceAll(RegExp(r'</?(?!a\b)[a-z]\d*[^>]*>', caseSensitive: false), '')
               .replaceAll(RegExp(r'\s+'), ' ')
               .trim();
         }

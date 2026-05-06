@@ -876,7 +876,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildExpandableGameCard(Map<String, dynamic> game,
       {required bool isExpanded}) {
-    final gameId = game['game_id']?.toString() ?? '';
+    final gameId = (game['game_id']?.toString() ?? game['id']?.toString() ?? '');
     final rawName = game['name']?.toString() ?? '';
     final name = _translateGameName(rawName);
     final coverUrl = game['cover_url']?.toString() ?? '';

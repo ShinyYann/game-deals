@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'services/psn_api_client.dart';
 
 void main() {
   runApp(const TrophyRoomApp());
@@ -544,7 +545,11 @@ class _HomePageState extends State<HomePage>
         _buildHome(),
         _buildDeals(),
         _buildGuide(),
-        const SettingsPage(),
+        SettingsPage(onNpssoChanged: () {
+          // NPSSO 登录成功后刷新数据
+          _loadAccounts();
+          setState(() {});
+        }),
       ][_currentTab],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -1486,7 +1491,9 @@ class _HomePageState extends State<HomePage>
 }
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final VoidCallback? onNpssoChanged;
+
+  const SettingsPage({super.key, this.onNpssoChanged});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -1500,11 +1507,91 @@ class _SettingsPageState extends State<SettingsPage> {
   String _savedSteamId = '';
   String _savedNpsso = '';
   bool _loaded = false;
+  bool _npssoLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+  }
+
+  /// 用 NPSSO 验证登录，自动获取 PSN ID
+  Future<void> _loginNpsso() async {
+    final npsso = _npssoCtrl.text.trim();
+    if (npsso.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先粘贴 NPSSO 令牌')),
+      );
+      return;
+    }
+    setState(() => _npssoLoading = true);
+
+    String? onlineId;
+    // 1. 手机端直连索尼 API
+    try {
+      final client = PsnApiClient(npsso);
+      onlineId = await client.getOnlineId();
+    } catch (_) {}
+
+    // 2. 直连成功 → NPSSO + PSN ID 都保存
+    if (onlineId != null && onlineId.isNotEmpty) {
+      final id = onlineId;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('psn_npsso', npsso);
+      await prefs.setString('psn_id', id);
+      setState(() {
+        _savedNpsso = npsso;
+        _savedPsnId = id;
+        _psnCtrl.text = id;
+        _npssoLoading = false;
+      });
+      widget.onNpssoChanged?.call();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ 登录成功！PSN：$id')),
+        );
+      }
+      return;
+    }
+
+    // 3. 走服务器兜底验证
+    try {
+      final uri = Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso');
+      final resp = await http.get(uri).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(resp.body);
+      if (data['ok'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('psn_npsso', npsso);
+        final serverId = data['online_id']?.toString() ?? '';
+        if (serverId.isNotEmpty) {
+          await prefs.setString('psn_id', serverId);
+        }
+        setState(() {
+          _savedNpsso = npsso;
+          if (serverId.isNotEmpty) {
+            _savedPsnId = serverId;
+            _psnCtrl.text = serverId;
+          }
+          _npssoLoading = false;
+        });
+        widget.onNpssoChanged?.call();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(serverId.isNotEmpty
+                ? '✅ 登录成功！PSN：$serverId'
+                : '✅ NPSSO 已保存，请手动输入 PSN ID')),
+          );
+        }
+        return;
+      }
+    } catch (_) {}
+
+    setState(() => _npssoLoading = false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ NPSSO 验证失败，请确认令牌有效')),
+      );
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -1681,18 +1768,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(width: 12),
             ElevatedButton(
-              onPressed: () async {
-                final npsso = _npssoCtrl.text.trim();
-                if (npsso.isEmpty) return;
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setString('psn_npsso', npsso);
-                setState(() => _savedNpsso = npsso);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('NPSSO 已保存')),
-                  );
-                }
-              },
+              onPressed: _npssoLoading ? null : _loginNpsso,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple[700],
                 foregroundColor: Colors.white,
@@ -1701,7 +1777,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('保存'),
+              child: _npssoLoading
+                  ? const SizedBox(
+                      width: 18, height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('验证并登录'),
             ),
           ],
         ),

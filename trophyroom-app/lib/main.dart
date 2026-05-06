@@ -951,11 +951,13 @@ class _HomePageState extends State<HomePage>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Name + Platform
+                  // Name + Trophy counts (vertical layout)
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Name (full width, no truncation from side elements)
                         Text(
                           name,
                           maxLines: 2,
@@ -965,49 +967,66 @@ class _HomePageState extends State<HomePage>
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        const SizedBox(height: 6),
+                        // Trophy counts + Platform (new row below name)
+                        Row(
+                          children: [
+                            Text(platinum > 0 ? '🏆铂$platinum  ' : '',
+                                style: const TextStyle(fontSize: 12, color: Colors.cyan)),
+                            Text('🥇金$gold  ',
+                                style: TextStyle(fontSize: 12, color: Colors.amber[400])),
+                            Text('🥈银$silver  ',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                            Text('🥉铜$bronze',
+                                style: TextStyle(fontSize: 12, color: Colors.orange[400])),
+                            const Spacer(),
+                            if (platform.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: platform == 'PS5'
+                                      ? Colors.blue[800]
+                                      : platform == 'PS4'
+                                          ? Colors.indigo[800]
+                                          : Colors.grey[700],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(platform,
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white)),
+                              ),
+                          ],
+                        ),
                         const SizedBox(height: 4),
-                        if (platform.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: platform == 'PS5'
-                                  ? Colors.blue[800]
-                                  : platform == 'PS4'
-                                      ? Colors.indigo[800]
-                                      : Colors.grey[700],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(platform,
-                                style: const TextStyle(
+                        // Progress bar
+                        SizedBox(
+                          width: double.infinity,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: LinearProgressIndicator(
+                                  value: cr / 100,
+                                  minHeight: 4,
+                                  backgroundColor: Colors.grey[800],
+                                  color: cr >= 100
+                                      ? Colors.amber
+                                      : Colors.purple[300],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${cr.toStringAsFixed(0)}%',
+                                style: TextStyle(
                                     fontSize: 10,
-                                    color: Colors.white)),
+                                    color: Colors.grey[500]),
+                              ),
+                            ],
                           ),
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Trophy counts
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('🥇金 $gold   🥈银 $silver   🥉铜 $bronze',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[400])),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 80,
-                        child: LinearProgressIndicator(
-                          value: cr / 100,
-                          minHeight: 4,
-                          backgroundColor: Colors.grey[800],
-                          color: cr >= 100
-                              ? Colors.amber
-                              : Colors.purple[300],
-                        ),
-                      ),
-                    ],
                   ),
                   const SizedBox(width: 8),
                   Icon(

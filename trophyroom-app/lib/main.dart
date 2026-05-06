@@ -671,7 +671,7 @@ class _HomePageState extends State<HomePage>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF2D1B69), Color(0xFF1A1A2E)],
+                      colors: [Color(0xFF7C3AED), Color(0xFF2D1B69)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -709,10 +709,18 @@ class _HomePageState extends State<HomePage>
                             borderRadius: BorderRadius.circular(16),
                             gradient: LinearGradient(
                               colors: [
-                                Colors.black.withOpacity(0.65),
-                                Colors.black.withOpacity(0.55),
-                                Colors.black.withOpacity(0.60),
-                                Colors.black.withOpacity(0.70),
+                                coverList.isNotEmpty
+                                    ? Colors.black.withOpacity(0.65)
+                                    : Colors.black.withOpacity(0.20),
+                                coverList.isNotEmpty
+                                    ? Colors.black.withOpacity(0.55)
+                                    : Colors.black.withOpacity(0.35),
+                                coverList.isNotEmpty
+                                    ? Colors.black.withOpacity(0.60)
+                                    : Colors.black.withOpacity(0.45),
+                                coverList.isNotEmpty
+                                    ? Colors.black.withOpacity(0.70)
+                                    : Colors.black.withOpacity(0.55),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,

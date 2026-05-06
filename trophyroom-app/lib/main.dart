@@ -289,6 +289,7 @@ class _HomePageState extends State<HomePage>
   int _currentTab = 0;
   String _netStatus = '检测中...';
   bool _netChecked = false;
+  String _npsso = '';
   late AnimationController _animCtrl;
   late Animation<double> _titleSlide;
   late AnimationController _scanCtrl;
@@ -409,9 +410,11 @@ class _HomePageState extends State<HomePage>
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
+    final npsso = prefs.getString('psn_npsso') ?? '';
     setState(() {
       _psnId = psn;
       _steamId = steam;
+      _npsso = npsso;
       _accountsLoaded = true;
     });
   }
@@ -1117,9 +1120,12 @@ class _HomePageState extends State<HomePage>
     if (!_gameTrophies.containsKey(gameId)) {
       setState(() => _expandedLoading[gameId] = true);
       try {
+        final npssoParam = _npsso.isNotEmpty
+            ? '&npsso=${Uri.encodeComponent(_npsso)}'
+            : '';
         final resp = await http
             .get(Uri.parse(
-                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
+                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId$npssoParam'))
             .timeout(const Duration(seconds: 10));
         if (resp.statusCode == 200) {
           final data = json.decode(resp.body);
@@ -1144,7 +1150,8 @@ class _HomePageState extends State<HomePage>
     }
     try {
       final apiBase = 'http://8.153.97.56';
-      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId'))
+      final npssoParam = _npsso.isNotEmpty ? '&npsso=${Uri.encodeComponent(_npsso)}' : '';
+      final resp = await http.get(Uri.parse('$apiBase/api/psn?uid=$_psnId$npssoParam'))
           .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
@@ -1485,8 +1492,10 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
+  final TextEditingController _npssoCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
+  String _savedNpsso = '';
   bool _loaded = false;
 
   @override
@@ -1500,8 +1509,10 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
+      _savedNpsso = prefs.getString('psn_npsso') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
+      _npssoCtrl.text = _savedNpsso;
       _loaded = true;
     });
   }
@@ -1536,11 +1547,14 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('psn_id');
     await prefs.remove('steam_id');
+    await prefs.remove('psn_npsso');
     setState(() {
       _savedPsnId = '';
       _savedSteamId = '';
+      _savedNpsso = '';
       _psnCtrl.clear();
       _steamCtrl.clear();
+      _npssoCtrl.clear();
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1553,6 +1567,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
+    _npssoCtrl.dispose();
     super.dispose();
   }
 
@@ -1624,6 +1639,78 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(width: 6),
                 Text(
                   '已绑定 PSN: $_savedPsnId',
+                  style: TextStyle(fontSize: 13, color: Colors.green[400]),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 16),
+        // NPSSO 令牌
+        Text(
+          'NPSSO 令牌',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '如果不填，部分数据可能无法拉取。可在 playstation.com 登录后从浏览器 Cookie 获取。',
+          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _npssoCtrl,
+                decoration: InputDecoration(
+                  hintText: '粘贴 NPSSO 令牌',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                obscureText: true,
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: () async {
+                final npsso = _npssoCtrl.text.trim();
+                if (npsso.isEmpty) return;
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('psn_npsso', npsso);
+                setState(() => _savedNpsso = npsso);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('NPSSO 已保存')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple[700],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+        if (_savedNpsso.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, size: 16, color: Colors.green[400]),
+                const SizedBox(width: 6),
+                Text(
+                  '✓ NPSSO 已配置',
                   style: TextStyle(fontSize: 13, color: Colors.green[400]),
                 ),
               ],

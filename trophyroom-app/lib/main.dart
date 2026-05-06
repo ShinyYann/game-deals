@@ -317,10 +317,18 @@ class _HomePageState extends State<HomePage>
   String? _expandedGameId;
   Map<String, List<dynamic>> _gameTrophies = {};
   Map<String, bool> _expandedLoading = {};
-  // ── Steam 成就展开状态 ──
+  static const _apiBase = 'http://8.153.97.56';
+
+  /// Steam 图片走服务器代理（绕过 GFW）
+  static String _proxyImage(String originalUrl) {
+    if (originalUrl.isEmpty) return '';
+    return '$_apiBase/api/proxy/image?url=${Uri.encodeComponent(originalUrl)}';
+  }
   String? _expandedSteamAppId;
   Map<String, List<dynamic>> _steamAchievements = {};
   Map<String, bool> _steamAchLoading = {};
+  bool _filterPlaytime = false;  // Steam 只看有游玩时间的
+  bool _filter100pct = false;    // Steam 只看全成就的
   // ── PageView 切换 ──
   int _platformTab = 0; // 0=PSN, 1=Steam
   late final PageController _platformPageCtrl;
@@ -567,16 +575,24 @@ class _HomePageState extends State<HomePage>
         _buildDeals(),
         _buildGuide(),
         _buildSwitchTab(),
-        SettingsPage(onNpssoChanged: () async {
-          // 先加载账号再清缓存，确保 FutureBuilder 拿到最新 _psnId
-          await _loadAccounts();
-          _loadSwitchGames();
-          if (mounted) {
-            setState(() {
-              _cachedHomeData = null;
-            });
-          }
-        }),
+        SettingsPage(
+          onNpssoChanged: () async {
+            await _loadAccounts();
+            _loadSwitchGames();
+            if (mounted) {
+              setState(() { _cachedHomeData = null; });
+            }
+          },
+          onSteamChanged: () {
+            if (mounted) {
+              setState(() {
+                _steamData = null;
+                _steamAchievements.clear();
+                _expandedSteamAppId = null;
+              });
+            }
+          },
+        ),
       ][_currentTab],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -628,6 +644,9 @@ class _HomePageState extends State<HomePage>
 
     return Column(
       children: [
+        // ── 跨平台成就汇总卡 ──
+        if (_psnId.isNotEmpty && _steamId.isNotEmpty)
+          _buildSummaryCard(),
         // ── 平台切换标签 ──
         if (_psnId.isNotEmpty && _steamId.isNotEmpty)
           _buildPlatformTabs(),
@@ -643,6 +662,114 @@ class _HomePageState extends State<HomePage>
           ),
         ),
       ],
+    );
+  }
+
+  /// 主页汇总卡（PSN + Steam 合体）
+  Widget _buildSummaryCard() {
+    // PSN 统计
+    final psnData = _cachedHomeData;
+    int psnTrophies = 0, psnPlatinum = 0, psnGold = 0;
+    if (psnData != null) {
+      psnTrophies = (psnData['total_trophies'] ?? 0) as int;
+      psnPlatinum = (psnData['platinum'] ?? 0) as int;
+      psnGold = (psnData['gold'] ?? 0) as int;
+    }
+
+    // Steam 统计
+    int steamGames = 0, steamAchUnlocked = 0, steamAchTotal = 0, steamPlaytime = 0;
+    int steam100pct = 0; // 全成就游戏数
+    if (_steamData != null && !_steamData!.containsKey('error')) {
+      final games = _steamData!['games'] as List? ?? [];
+      steamGames = games.length;
+      for (final g in games) {
+        int t = (g['playtime_forever'] ?? 0) as int;
+        steamPlaytime += t;
+        int aTotal = (g['achievements_total'] ?? 0) as int;
+        int aUnlocked = (g['achievements_unlocked'] ?? 0) as int;
+        if (t > 0) steamAchUnlocked += aUnlocked;
+        steamAchTotal += aTotal;
+        if (aTotal > 0 && aUnlocked >= aTotal) steam100pct++;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: Colors.purple.withOpacity(0.25)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Text('📊 成就总览', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+              const Spacer(),
+              // Steam 游戏过滤开关
+              _filterChip('全成就', _filter100pct, () {
+                setState(() { _filter100pct = !_filter100pct; _filterPlaytime = false; });
+              }),
+              const SizedBox(width: 6),
+              _filterChip('有数据', _filterPlaytime, () {
+                setState(() { _filterPlaytime = !_filterPlaytime; _filter100pct = false; });
+              }),
+            ]),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _statTile('🏆', 'PSN 奖杯', '$psnTrophies', const Color(0xFF4ECDC4)),
+                _statTile('👑', '白金', '$psnPlatinum', const Color(0xFFB8D8D8)),
+                _statTile('🎮', 'Steam 游戏', '$steamGames', const Color(0xFF66C0F4)),
+                _statTile('🏅', 'Steam 成就', '$steamAchUnlocked / $steamAchTotal', const Color(0xFFFFD700)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(children: [
+              Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
+              const SizedBox(width: 4),
+              Text('Steam 总时长 ${(steamPlaytime ~/ 60)}h', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+              if (steam100pct > 0) ...[
+                const SizedBox(width: 12),
+                Icon(Icons.star, size: 12, color: const Color(0xFFFFD700)),
+                const SizedBox(width: 4),
+                Text('$steam100pct 款全成就', style: TextStyle(fontSize: 11, color: const Color(0xFFFFD700))),
+              ],
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statTile(String icon, String label, String count, Color color) {
+    return Expanded(
+      child: Column(children: [
+        Text(icon, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 2),
+        Text(count, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
+        Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[500])),
+      ]),
+    );
+  }
+
+  Widget _filterChip(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: active ? Colors.purple[700] : Colors.grey[850],
+          border: Border.all(color: active ? Colors.purple[400]! : Colors.grey[700]!, width: 0.5),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 10, color: active ? Colors.white : Colors.grey[500])),
+      ),
     );
   }
 
@@ -1633,7 +1760,7 @@ class _HomePageState extends State<HomePage>
                   padding: const EdgeInsets.all(2),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: Image.network(avatar, width: 48, height: 48,
+                    child: Image.network(_proxyImage(avatar), width: 48, height: 48,
                       errorBuilder: (_,__,___) => Container(
                         width: 48, height: 48, color: Colors.grey[850],
                         child: const Icon(Icons.person, size: 28, color: Colors.grey)),
@@ -1659,11 +1786,26 @@ class _HomePageState extends State<HomePage>
         const SizedBox(height: 16),
         if (games.isNotEmpty)
           Padding(padding: const EdgeInsets.only(bottom: 8),
-            child: Text('📋 Steam 游戏 (${games.length})',
+            child: Text('📋 Steam 游戏 (${_filteredGames(games).length}${_filterPlaytime ? " | 有数据" : _filter100pct ? " | 全成就" : ""})',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white))),
-        ...games.map((g) => _buildSteamGameCard(Map<String, dynamic>.from(g as Map))),
+        ..._filteredGames(games).map((g) => _buildSteamGameCard(Map<String, dynamic>.from(g as Map))),
       ]),
     );
+  }
+
+  /// Steam 游戏过滤
+  List<dynamic> _filteredGames(List<dynamic> games) {
+    if (_filterPlaytime) {
+      return games.where((g) => ((g['playtime_forever'] ?? 0) as int) > 0).toList();
+    }
+    if (_filter100pct) {
+      return games.where((g) {
+        int total = (g['achievements_total'] ?? 0) as int;
+        int unlocked = (g['achievements_unlocked'] ?? 0) as int;
+        return total > 0 && unlocked >= total;
+      }).toList();
+    }
+    return games;
   }
 
   Widget _buildSteamGameCard(Map<String, dynamic> game) {
@@ -1693,7 +1835,7 @@ class _HomePageState extends State<HomePage>
               decoration: BoxDecoration(
                 color: Colors.grey[900],
               ),
-              child: Image.network(imgUrl, fit: BoxFit.cover,
+              child: Image.network(_proxyImage(imgUrl), fit: BoxFit.cover,
                 errorBuilder: (_,__,___) => Container(
                   color: Colors.grey[850],
                   child: Center(child: Icon(Icons.sports_esports, size: 32, color: Colors.grey[700])))),
@@ -1756,14 +1898,14 @@ class _HomePageState extends State<HomePage>
       ...achievements.take(20).map((ach) {
         final achieved = ach['achieved'] == true;
         final displayName = SteamClient.translateAchievement(ach['display_name'] ?? ach['api_name'] ?? '');
-        final desc = ach['description'] ?? '';
+        final desc = SteamClient.translateDescription(ach['description'] ?? '');
         final achIcon = achieved ? (ach['icon'] ?? '') : (ach['icon_gray'] ?? '');
         return Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), child: Row(children: [
           // 成就图标
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: achIcon.isNotEmpty
-              ? Image.network(achIcon, width: 36, height: 36, fit: BoxFit.cover,
+              ? Image.network(_proxyImage(achIcon), width: 36, height: 36, fit: BoxFit.cover,
                   errorBuilder: (_,__,___) => _achPlaceholder(achieved))
               : _achPlaceholder(achieved),
           ),
@@ -2837,8 +2979,9 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback? onNpssoChanged;
+  final VoidCallback? onSteamChanged;
 
-  const SettingsPage({super.key, this.onNpssoChanged});
+  const SettingsPage({super.key, this.onNpssoChanged, this.onSteamChanged});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -2895,6 +3038,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SnackBar(content: Text('Steam 账号已绑定')),
       );
     }
+    widget.onSteamChanged?.call();
   }
 
   Future<void> _setSteamKey() async {

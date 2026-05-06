@@ -4,6 +4,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+/// 翻译词对（内部使用）
+class _WordPair {
+  final String en;
+  final String cn;
+  const _WordPair(this.en, this.cn);
+}
+
 class SteamClient {
   static const String _server = 'http://8.153.97.56';
 
@@ -74,9 +81,207 @@ class SteamClient {
     throw Exception('Failed to set Steam API key: ${resp.statusCode}');
   }
 
-  /// Steam 成就名 → 中文翻译
+  /// Steam 成就名 → 中文翻译（字典 + 规则引擎兜底）
   static String translateAchievement(String name) {
-    return _achTrans[name] ?? name;
+    if (_achTrans.containsKey(name)) return _achTrans[name]!;
+    return _autoTranslate(name);
+  }
+
+  /// 规则引擎翻译兜底
+  static String _autoTranslate(String en) {
+    String result = en;
+    for (final entry in _wordMap) {
+      result = result.replaceAll(entry.en, entry.cn);
+    }
+    return result == en ? en : result;
+  }
+
+  /// 单词/短语替换表（按需排列）
+  static final List<_WordPair> _wordMap = [
+    _WordPair('Achievement Unlocked', '成就解锁'),
+    _WordPair('Gotta Catch', '捕获全部'),
+    _WordPair('Em All', ''),
+    _WordPair('Game Complete', '游戏通关'),
+    _WordPair('All Achievements', '全成就'),
+    _WordPair('New Game Plus', '新游戏+'),
+    _WordPair('Collect All', '收集全部'),
+    _WordPair('Find All', '找到全部'),
+    _WordPair('No Damage', '无伤'),
+    _WordPair('No Death', '零死亡'),
+    _WordPair('Speed Run', '速通'),
+    _WordPair('Hard Mode', '困难模式'),
+    _WordPair('Easy Mode', '简单模式'),
+    _WordPair('Normal Mode', '普通模式'),
+    _WordPair('True Ending', '真结局'),
+    _WordPair('Bad Ending', '坏结局'),
+    _WordPair('Good Ending', '好结局'),
+    _WordPair('Secret Ending', '隐藏结局'),
+    _WordPair('Hidden Ending', '隐藏结局'),
+    _WordPair('First Kill', '首次击杀'),
+    _WordPair('First Blood', '初见血'),
+    _WordPair('First Step', '第一步'),
+    _WordPair('Level Up', '升级'),
+    _WordPair('Max Level', '满级'),
+    
+    _WordPair('Complete', '完成'),
+    _WordPair('Defeat', '击败'),
+    _WordPair('Defeated', '已击败'),
+    _WordPair('Collect', '收集'),
+    _WordPair('Collected', '已收集'),
+    _WordPair('Find', '找到'),
+    _WordPair('Found', '已找到'),
+    _WordPair('Unlock', '解锁'),
+    _WordPair('Unlocked', '已解锁'),
+    _WordPair('Discover', '发现'),
+    _WordPair('Discovered', '已发现'),
+    _WordPair('Reach', '到达'),
+    _WordPair('Reached', '已到达'),
+    _WordPair('Obtain', '获得'),
+    _WordPair('Obtained', '已获得'),
+    _WordPair('Craft', '制作'),
+    _WordPair('Crafted', '已制作'),
+    _WordPair('Build', '建造'),
+    _WordPair('Built', '已建造'),
+    _WordPair('Upgrade', '升级'),
+    _WordPair('Upgraded', '已升级'),
+    _WordPair('Save', '拯救'),
+    _WordPair('Saved', '已拯救'),
+    _WordPair('Rescue', '营救'),
+    _WordPair('Rescued', '已营救'),
+    _WordPair('Escape', '逃脱'),
+    _WordPair('Escaped', '已逃脱'),
+    _WordPair('Survive', '生存'),
+    _WordPair('Survived', '已生存'),
+    _WordPair('Destroy', '摧毁'),
+    _WordPair('Destroyed', '已摧毁'),
+    _WordPair('Clear', '通关'),
+    _WordPair('Cleared', '已通关'),
+    _WordPair('Master', '精通'),
+    _WordPair('Mastered', '已精通'),
+    
+    _WordPair('Kill', '击杀'),
+    _WordPair('kills', '击杀'),
+    _WordPair('Kills', '击杀'),
+    _WordPair('kill', '击杀'),
+    _WordPair('Death', '死亡'),
+    _WordPair('deaths', '死亡'),
+    _WordPair('Win', '胜利'),
+    _WordPair('Wins', '胜利'),
+    _WordPair('Lose', '失败'),
+    _WordPair('Boss', 'Boss'),
+    _WordPair('Chapter', '章'),
+    _WordPair('Level', '级'),
+    _WordPair('Stage', '阶段'),
+    _WordPair('Area', '区域'),
+    _WordPair('Zone', '地带'),
+    _WordPair('World', '世界'),
+    _WordPair('Map', '地图'),
+    _WordPair('Dungeon', '地牢'),
+    _WordPair('Quest', '任务'),
+    _WordPair('Mission', '任务'),
+    _WordPair('Challenge', '挑战'),
+    _WordPair('Trial', '试炼'),
+    _WordPair('Event', '事件'),
+    
+    _WordPair('Gold', '金币'),
+    _WordPair('Silver', '银币'),
+    _WordPair('Bronze', '铜'),
+    _WordPair('Coin', '硬币'),
+    _WordPair('Money', '金钱'),
+    _WordPair('Treasure', '宝藏'),
+    _WordPair('Loot', '战利品'),
+    _WordPair('Item', '道具'),
+    _WordPair('Weapon', '武器'),
+    _WordPair('Armor', '防具'),
+    _WordPair('Shield', '盾牌'),
+    _WordPair('Sword', '剑'),
+    _WordPair('Bow', '弓'),
+    _WordPair('Staff', '法杖'),
+    _WordPair('Ring', '戒指'),
+    _WordPair('Potion', '药水'),
+    _WordPair('Spell', '法术'),
+    _WordPair('Magic', '魔法'),
+    _WordPair('Skill', '技能'),
+    _WordPair('Ability', '能力'),
+    _WordPair('Power', '力量'),
+    _WordPair('Speed', '速度'),
+    _WordPair('Health', '生命'),
+    _WordPair('Mana', '法力'),
+    _WordPair('Stamina', '体力'),
+    
+    _WordPair('Player', '玩家'),
+    _WordPair('Hero', '英雄'),
+    _WordPair('Warrior', '战士'),
+    _WordPair('Mage', '法师'),
+    _WordPair('Rogue', '盗贼'),
+    _WordPair('Archer', '弓箭手'),
+    _WordPair('Knight', '骑士'),
+    _WordPair('Paladin', '圣骑士'),
+    _WordPair('Hunter', '猎人'),
+    _WordPair('Monster', '怪物'),
+    _WordPair('Dragon', '龙'),
+    _WordPair('Demon', '恶魔'),
+    _WordPair('Undead', '亡灵'),
+    _WordPair('Zombie', '僵尸'),
+    _WordPair('Skeleton', '骷髅'),
+    _WordPair('Ghost', '幽灵'),
+    _WordPair('Spirit', '灵魂'),
+    _WordPair('Goblin', '哥布林'),
+    _WordPair('Orc', '兽人'),
+    _WordPair('Elf', '精灵'),
+    _WordPair('Dwarf', '矮人'),
+    _WordPair('Human', '人类'),
+    
+    _WordPair('Fire', '火'),
+    _WordPair('Water', '水'),
+    _WordPair('Earth', '土'),
+    _WordPair('Wind', '风'),
+    _WordPair('Ice', '冰'),
+    _WordPair('Lightning', '闪电'),
+    _WordPair('Poison', '毒'),
+    _WordPair('Dark', '暗'),
+    _WordPair('Light', '光'),
+    _WordPair('Holy', '神圣'),
+    _WordPair('Shadow', '暗影'),
+    _WordPair('Blood', '血'),
+    _WordPair('Chaos', '混沌'),
+    _WordPair('Order', '秩序'),
+    
+    _WordPair('Forest', '森林'),
+    _WordPair('Desert', '沙漠'),
+    _WordPair('Mountain', '山脉'),
+    _WordPair('Ocean', '海洋'),
+    _WordPair('River', '河流'),
+    _WordPair('Cave', '洞穴'),
+    _WordPair('Castle', '城堡'),
+    _WordPair('Tower', '塔'),
+    _WordPair('Temple', '神殿'),
+    _WordPair('Village', '村庄'),
+    _WordPair('Town', '城镇'),
+    _WordPair('City', '城市'),
+    _WordPair('Kingdom', '王国'),
+    _WordPair('Empire', '帝国'),
+    
+    _WordPair('of the', '之'),
+    _WordPair('the ', ''),
+    _WordPair('The ', ''),
+    _WordPair('All ', '全部'),
+    _WordPair('All', '全部'),
+    _WordPair('First', '第一'),
+    _WordPair('Last', '最后'),
+    _WordPair('Final', '最终'),
+    _WordPair('Ultimate', '终极'),
+    _WordPair('Supreme', '至高'),
+    _WordPair('Legendary', '传说'),
+    _WordPair('Mythic', '神话'),
+    _WordPair('Rare', '稀有'),
+    _WordPair('Epic', '史诗'),
+    _WordPair('Common', '普通'),
+  ];
+
+  /// Steam 成就描述 → 中文翻译
+  static String translateDescription(String desc) {
+    return _autoTranslate(desc);
   }
 
   static const Map<String, String> _achTrans = {

@@ -647,6 +647,9 @@ class _HomePageState extends State<HomePage>
             (silver as num).toInt() +
             (bronze as num).toInt();
         final games = data['games'] as List<dynamic>? ?? [];
+        final coverList = games.take(4).map((g) =>
+            (g['cover_url']?.toString() ?? '')
+        ).where((s) => s.isNotEmpty).toList();
         final hasData = psnId.isNotEmpty;
 
         return RefreshIndicator(
@@ -663,24 +666,60 @@ class _HomePageState extends State<HomePage>
               // ── Profile Summary Card ──
               if (hasData) ...[
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.zero,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED).withOpacity(0.3),
+                        color: Colors.black.withOpacity(0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  child: Column(
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
                     children: [
+                      // ── 背景：游戏封面拼贴（模糊） ──
+                      if (coverList.isNotEmpty)
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Row(
+                              children: coverList.map((url) => Expanded(
+                                child: Image.network(
+                                  url,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                                ),
+                              )).toList(),
+                            ),
+                          ),
+                        ),
+                      // 模糊遮罩
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withOpacity(0.65),
+                                Colors.black.withOpacity(0.55),
+                                Colors.black.withOpacity(0.60),
+                                Colors.black.withOpacity(0.70),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // ── 前景内容 ──
+                      Positioned.fill(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            children: [
                       // Row 1: PSN ID + Level badge
                       Row(
                         children: [
@@ -756,6 +795,10 @@ class _HomePageState extends State<HomePage>
                             _statItem('🎯', '$completionRate%', '完成率'),
                             _statItem('🏆', '$totalTrophies', '总数'),
                           ],
+                        ),
+                      ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -1094,7 +1137,7 @@ class _HomePageState extends State<HomePage>
     }
 
     return GestureDetector(
-      onTap: () => _showTrophyDetailPage(context, trophy),
+      onTap: () => _showTrophyDetailDialog(context, trophy),
       child: Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1202,7 +1245,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  void _showTrophyDetailPage(BuildContext context, Map<String, dynamic> trophy) {
+  void _showTrophyDetailDialog(BuildContext context, Map<String, dynamic> trophy) {
     final name = trophy['name']?.toString() ?? '';
     final type = trophy['type']?.toString() ?? 'bronze';
     final earned = trophy['earned'] == true;
@@ -1211,27 +1254,25 @@ class _HomePageState extends State<HomePage>
     final description = trophy['description']?.toString() ?? '';
     final trophyId = trophy['id']?.toString() ?? '';
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
-          backgroundColor: const Color(0xFF0F0F23),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white70),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-          body: _TrophyDetailPage(
-            name: name,
-            type: type,
-            earned: earned,
-            earnedDate: earnedDate,
-            iconUrl: iconUrl,
-            description: description,
-            trophyId: trophyId,
-          ),
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black87,
+      builder: (ctx) => Dialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.grey[800]!, width: 1),
+        ),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+        child: _TrophyDetailDialog(
+          name: name,
+          type: type,
+          earned: earned,
+          earnedDate: earnedDate,
+          iconUrl: iconUrl,
+          description: description,
+          trophyId: trophyId,
         ),
       ),
     );
@@ -1742,7 +1783,7 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-class _TrophyDetailPage extends StatefulWidget {
+class _TrophyDetailDialog extends StatefulWidget {
   final String name;
   final String type;
   final bool earned;
@@ -1751,7 +1792,7 @@ class _TrophyDetailPage extends StatefulWidget {
   final String description;
   final String trophyId;
 
-  const _TrophyDetailPage({
+  const _TrophyDetailDialog({
     required this.name,
     required this.type,
     required this.earned,
@@ -1762,10 +1803,10 @@ class _TrophyDetailPage extends StatefulWidget {
   });
 
   @override
-  State<_TrophyDetailPage> createState() => _TrophyDetailPageState();
+  State<_TrophyDetailDialog> createState() => _TrophyDetailDialogState();
 }
 
-class _TrophyDetailPageState extends State<_TrophyDetailPage> {
+class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
   List<Map<String, dynamic>> _tips = [];
   bool _tipsLoading = false;
 
@@ -1803,159 +1844,201 @@ class _TrophyDetailPageState extends State<_TrophyDetailPage> {
                       widget.type == 'gold' ? Colors.amber[400] :
                       widget.type == 'silver' ? Colors.grey[400] : Colors.orange[400];
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        children: [
-          // Icon
-          if (widget.iconUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                widget.iconUrl,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-                color: widget.earned ? null : Colors.grey,
-                colorBlendMode: widget.earned ? null : BlendMode.saturation,
-              ),
-            )
-          else
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.grey[850],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.emoji_events, size: 32, color: typeColor),
-            ),
-          const SizedBox(height: 16),
-          // Name
-          Text(
-            widget.name,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Type badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.grey[850],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              typeLabel,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: typeColor,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ── 关闭按钮 ──
+        Padding(
+          padding: const EdgeInsets.only(right: 8, top: 8),
+          child: Align(
+            alignment: Alignment.topRight,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.grey[800]!.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.close, size: 18, color: Colors.grey[400]),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          // Description
-          if (widget.description.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0),
-              child: Text(
-                widget.description,
+        ),
+        // ── 奖杯信息 ──
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              // Icon
+              if (widget.iconUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    widget.iconUrl,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    color: widget.earned ? null : Colors.grey,
+                    colorBlendMode: widget.earned ? null : BlendMode.saturation,
+                  ),
+                )
+              else
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.emoji_events, size: 32, color: typeColor),
+                ),
+              const SizedBox(height: 12),
+              // Name
+              Text(
+                widget.name,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[400],
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ),
-          const SizedBox(height: 12),
-          // Earned status
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: widget.earned
-                  ? Colors.green[900]!.withOpacity(0.3)
-                  : Colors.grey[850],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  widget.earned ? Icons.check_circle : Icons.lock,
-                  size: 16,
-                  color: widget.earned ? Colors.green[300] : Colors.grey[600],
+              const SizedBox(height: 6),
+              // Type badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.grey[850],
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  widget.earned
-                      ? (widget.earnedDate.isNotEmpty
-                          ? '已获得 · ${widget.earnedDate}'
-                          : '已获得')
-                      : '未获得',
+                child: Text(
+                  typeLabel,
                   style: TextStyle(
-                    fontSize: 13,
-                    color: widget.earned ? Colors.green[300] : Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: typeColor,
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // ═══ 心得 ═══
-          if (_tipsLoading)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: SizedBox(
-                width: 20, height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
               ),
-            ),
-          if (_tips.isNotEmpty)
-            Padding(
+              const SizedBox(height: 10),
+              // Description
+              if (widget.description.isNotEmpty)
+                Text(
+                  widget.description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[400]),
+                ),
+              const SizedBox(height: 10),
+              // Earned status
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: widget.earned
+                      ? Colors.green[900]!.withOpacity(0.3)
+                      : Colors.grey[850],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      widget.earned ? Icons.check_circle : Icons.lock,
+                      size: 14,
+                      color: widget.earned ? Colors.green[300] : Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.earned
+                          ? (widget.earnedDate.isNotEmpty
+                              ? '已获得 · ${widget.earnedDate}'
+                              : '已获得')
+                          : '未获得',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: widget.earned ? Colors.green[300] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              // ═══ 心得 ═══
+              if (_tipsLoading)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: SizedBox(
+                    width: 20, height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        // ── 心得列表（可滚动） ──
+        if (_tips.isNotEmpty)
+          Flexible(
+            child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text('💬 心得',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(height: 8),
-                  ..._tips.map((tip) => Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[850],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      children: _tips.map((tip) => Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(tip['user'] ?? '',
-                                style: TextStyle(fontSize: 11, color: Colors.cyan[300], fontWeight: FontWeight.w500)),
-                            const Spacer(),
-                            Text(tip['date'] ?? '',
-                                style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                            Row(
+                              children: [
+                                // 用户头像
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: Image.network(
+                                      tip['avatar']?.toString() ?? '',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          Container(color: Colors.grey[700]),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(tip['user'] ?? '',
+                                    style: TextStyle(fontSize: 11, color: Colors.cyan[300], fontWeight: FontWeight.w500)),
+                                const Spacer(),
+                                Text(tip['date'] ?? '',
+                                    style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(tip['content'] ?? '',
+                                style: TextStyle(fontSize: 13, color: Colors.grey[300])),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(tip['content'] ?? '',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[300])),
-                      ],
+                      )).toList(),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),
-          const SizedBox(height: 24),
-        ],
-      ),
+          ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

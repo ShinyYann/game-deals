@@ -220,6 +220,13 @@ class PsnineClient {
         final nameM = RegExp(r'class="psnnode"[^>]*>(.*?)<').firstMatch(item);
         final userName = nameM?.group(1)?.trim() ?? '';
         
+        // 用户头像
+        String avatar = '';
+        final avatarM = RegExp(r'<a class="l"[^>]*><img[^>]*src="([^"]+)"').firstMatch(item);
+        if (avatarM != null) {
+          avatar = avatarM.group(1)!;
+        }
+        
         // 内容（心得文字）
         final contentM = RegExp(r'class="content[^"]*"[^>]*>(.*?)</div>',
             dotAll: true).firstMatch(item);
@@ -242,6 +249,7 @@ class PsnineClient {
         if (content.isNotEmpty) {
           tips.add({
             'user': userName,
+            'avatar': avatar,
             'content': content,
             'date': date,
             'location': location,

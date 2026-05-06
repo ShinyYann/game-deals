@@ -670,6 +670,11 @@ class _HomePageState extends State<HomePage>
                   padding: EdgeInsets.zero,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2D1B69), Color(0xFF1A1A2E)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.4),

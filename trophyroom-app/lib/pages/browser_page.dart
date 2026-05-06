@@ -56,6 +56,16 @@ class _BrowserPageState extends State<BrowserPage> {
       )
       ..setNavigationDelegate(
         NavigationDelegate(
+          onNavigationRequest: (request) {
+            final url = request.url;
+            // Steam 社区/商店链接 → 跳系统浏览器
+            if (url.contains('steamcommunity.com') ||
+                url.contains('store.steampowered.com')) {
+              _launchExternal(url);
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
           onPageStarted: (url) {
             if (mounted) setState(() => _isLoading = true);
           },

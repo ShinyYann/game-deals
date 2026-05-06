@@ -958,7 +958,7 @@ class _HomePageState extends State<HomePage>
                       children: [
                         Text(
                           name,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 14,

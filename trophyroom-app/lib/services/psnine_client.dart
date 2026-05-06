@@ -23,16 +23,30 @@ class PsnineClient {
       if (gidM == null) continue;
       final gid = gidM.group(1)!;
 
-      // 游戏名：从 <a href> 文本提取（比 alt 更可靠）
+      // 游戏名：从封面图 alt 提取（和封面 URL 共用一个 img 匹配，保证取对）
       String gname = 'Unknown';
-      final aM = RegExp(r'<a[^>]*href="/psngame/' + RegExp.escape(gid) +
-          r'[^>]*>(.*?)</a>', dotAll: true, caseSensitive: false).firstMatch(tr);
-      if (aM != null) {
-        gname = aM.group(1)!.trim();
+      final nameCoverM = RegExp(
+              r'<img[^>]*src="([^"]+\.(?:playstation|psnobj)[^"]*)"[^>]*alt="([^"]*)"[^>]*width="(?:91|50)"')
+          .firstMatch(tr);
+      if (nameCoverM != null) {
+        gname = nameCoverM.group(2)!.trim();
       } else {
-        // 兜底：从封面图 alt 提取
-        final altM = RegExp(r'alt="([^"]+)"').firstMatch(tr);
-        if (altM != null) gname = altM.group(1)!.trim();
+        // 兜底：从 <a> 链接文本提取
+        final aM = RegExp(r'<a[^>]*href="[^"]*psngame/' + RegExp.escape(gid) +
+            r'[^>]*>([^<]+)</a>', caseSensitive: false).firstMatch(tr);
+        if (aM != null) {
+          gname = aM.group(1)!.trim();
+        } else {
+          // 最终兜底：从任意 alt 提取（排除头像和空值）
+          final allAlt = RegExp(r'alt="([^"]+)"').allMatches(tr);
+          for (final m in allAlt) {
+            final val = m.group(1)!.trim();
+            if (val.isNotEmpty && val != '头像' && val.length > 2) {
+              gname = val;
+              break;
+            }
+          }
+        }
       }
 
       // 封面

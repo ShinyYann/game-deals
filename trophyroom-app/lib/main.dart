@@ -1348,10 +1348,23 @@ class _HomePageState extends State<HomePage>
   Future<void> _cacheToServer(Map<String, dynamic> data) async {
     try {
       final games = data['games'] as List? ?? [];
+      // 包含所有数据：游戏列表 + 档案统计
+      final cacheBody = {
+        'uid': _psnId,
+        'games': games,
+      };
+      // 复制档案级字段
+      for (final key in ['level', 'platinum', 'gold', 'silver', 'bronze',
+                         'total_games', 'perfect_games', 'completion_rate',
+                         'avatar', 'trophy_level', 'progress', 'psn_data_source']) {
+        if (data.containsKey(key)) {
+          cacheBody[key] = data[key];
+        }
+      }
       await http.post(
         Uri.parse('http://8.153.97.56/api/psn_cache'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'uid': _psnId, 'games': games}),
+        body: json.encode(cacheBody),
       ).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PsnineClient {
@@ -166,6 +167,65 @@ class PsnineClient {
     }
     
     return trophies;
+  }
+
+  /// 从 psnine 抓取单个奖杯的玩家心得（Tips）
+  Future<List<Map<String, dynamic>>> fetchTrophyTips(String trophyId) async {
+    if (trophyId.isEmpty) return [];
+    try {
+      final html = await _fetch('https://www.psnine.com/trophy/$trophyId');
+      
+      // 查找评论列表区域
+      final listM = RegExp(r'<ul class="list">(.*?)<div class="pd10">',
+          dotAll: true).firstMatch(html);
+      if (listM == null) return [];
+      
+      final listHtml = listM.group(1)!;
+      final tips = <Map<String, dynamic>>[];
+      
+      // 解析每个评论
+      final items = listHtml.split('<li');
+      for (int i = 1; i < items.length; i++) {
+        final item = items[i];
+        
+        // 用户名
+        final nameM = RegExp(r'class="psnnode"[^>]*>(.*?)<').firstMatch(item);
+        final userName = nameM?.group(1)?.trim() ?? '';
+        
+        // 内容（心得文字）
+        final contentM = RegExp(r'class="content[^"]*"[^>]*>(.*?)</div>',
+            dotAll: true).firstMatch(item);
+        String content = '';
+        if (contentM != null) {
+          content = contentM.group(1)!
+              .replaceAll(RegExp(r'<[^>]*>'), '')
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+        }
+        
+        // 日期
+        final dateM = RegExp(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2})').firstMatch(item);
+        final date = dateM?.group(1) ?? '';
+        
+        // 地点
+        final locM = RegExp(r'<span>\d{4}-\d{2}-\d{2}[^<]*</span>\s*([^<]+)').firstMatch(item);
+        final location = locM?.group(1)?.trim() ?? '';
+        
+        if (content.isNotEmpty) {
+          tips.add({
+            'user': userName,
+            'content': content,
+            'date': date,
+            'location': location,
+          });
+        }
+      }
+      
+      return tips;
+    } catch (e) {
+      print('[psnine] fetchTips failed: $e');
+      return [];
+    }
   }
 
   /// 合并 profile + games 为统一格式

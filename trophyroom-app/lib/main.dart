@@ -882,7 +882,8 @@ class _HomePageState extends State<HomePage>
   Widget _buildExpandableGameCard(Map<String, dynamic> game,
       {required bool isExpanded}) {
     final gameId = game['game_id']?.toString() ?? '';
-    final name = game['name']?.toString() ?? '';
+    final rawName = game['name']?.toString() ?? '';
+    final name = _translateGameName(rawName);
     final coverUrl = game['cover_url']?.toString() ?? '';
     final platform = game['platform']?.toString() ?? '';
     final cr = ((game['completion_rate'] ?? 0) as num).toDouble();
@@ -1194,6 +1195,7 @@ class _HomePageState extends State<HomePage>
     final earnedDate = trophy['earned_date']?.toString() ?? '';
     final iconUrl = trophy['icon_url']?.toString() ?? '';
     final description = trophy['description']?.toString() ?? '';
+    final trophyId = trophy['id']?.toString() ?? '';
 
     showModalBottomSheet(
       context: context,
@@ -1208,6 +1210,7 @@ class _HomePageState extends State<HomePage>
         earnedDate: earnedDate,
         iconUrl: iconUrl,
         description: description,
+        trophyId: trophyId,
       ),
     );
   }
@@ -1224,6 +1227,27 @@ class _HomePageState extends State<HomePage>
 
     if (!_gameTrophies.containsKey(gameId)) {
       setState(() => _expandedLoading[gameId] = true);
+
+      // 1. 手机直连 psnine 获取奖杯
+      if (_psnId.isNotEmpty) {
+        try {
+          final psnine = PsnineClient(_psnId);
+          final trophies = await psnine.fetchGameTrophies(gameId);
+          if (trophies.isNotEmpty) {
+            setState(() {
+              _gameTrophies[gameId] = trophies;
+              _expandedLoading[gameId] = false;
+            });
+            // 异步缓存到服务器
+            _cacheTrophiesToServer(gameId, trophies);
+            return;
+          }
+        } catch (e) {
+          print('[Trophies] psnine direct failed: $e');
+        }
+      }
+
+      // 2. 服务器兜底
       try {
         final prefs = await SharedPreferences.getInstance();
         final npsso = prefs.getString('psn_npsso') ?? '';
@@ -1367,6 +1391,72 @@ class _HomePageState extends State<HomePage>
         body: json.encode(cacheBody),
       ).timeout(const Duration(seconds: 5));
     } catch (_) {}
+  }
+
+  /// 缓存奖杯数据到服务器
+  Future<void> _cacheTrophiesToServer(String gameId, List<dynamic> trophies) async {
+    try {
+      await http.post(
+        Uri.parse('http://8.153.97.56/api/psn_cache'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'uid': _psnId,
+          'game_id': gameId,
+          'trophies': trophies,
+        }),
+      ).timeout(const Duration(seconds: 5));
+    } catch (_) {}
+  }
+
+  /// 游戏名称中文化（映射英文→中文）
+  static final Map<String, String> _gameNameMap = {
+    'Clair Obscur: Expedition 33': '光与影 33号远征队',
+    'ELDEN RING NIGHTREIGN': '艾尔登法环 黑夜君临',
+    'ELDEN RING': '艾尔登法环',
+    'STEINS;GATE ELITE': '命运石之门 精英版',
+    'STEINS;GATE': '命运石之门',
+    'Monster Hunter Wilds': '怪物猎人 荒野',
+    'Monster Hunter Rise': '怪物猎人 崛起',
+    'Monster Hunter World': '怪物猎人 世界',
+    'Cyberpunk 2077': '赛博朋克 2077',
+    'Stellar Blade': '剑星',
+    'Trails through Daybreak': '界之轨迹',
+    'Trails into Reverie': '黎之轨迹',
+    'Trails of Cold Steel': '闪之轨迹',
+    "Astro's Playroom": '宇宙机器人无线控制器使用指南',
+    'ASTRO BOT': '宇宙机器人',
+    'God of War Ragnarök': '战神 诸神黄昏',
+    'God of War': '战神',
+    'Final Fantasy VII Rebirth': '最终幻想7 重生',
+    'Final Fantasy VII Remake': '最终幻想7 重制版',
+    'Final Fantasy XVI': '最终幻想16',
+    'Black Myth: Wukong': '黑神话 悟空',
+    'Ghost of Tsushima': '对马岛之魂',
+    'Horizon Forbidden West': '地平线 西之绝境',
+    'Horizon Zero Dawn': '地平线 零之黎明',
+    'Marvel\'s Spider-Man 2': '漫威蜘蛛侠2',
+    'Marvel\'s Spider-Man': '漫威蜘蛛侠',
+    'The Last of Us Part I': '最后生还者 第一章',
+    'The Last of Us Part II': '最后生还者 第二章',
+    'Baldur\'s Gate 3': '博德之门3',
+    'Red Dead Redemption 2': '荒野大镖客 救赎2',
+    'Grand Theft Auto V': '给他爱5',
+    'Wukong': '黑神话 悟空',
+    'Persona 5 Royal': '女神异闻录5 皇家版',
+    'Persona 5': '女神异闻录5',
+    'Persona 4 Golden': '女神异闻录4 黄金版',
+    'NieR: Automata': '尼尔 机械纪元',
+  };
+
+  /// 翻译游戏名为中文（如果在映射表中）
+  String _translateGameName(String name) {
+    if (_gameNameMap.containsKey(name)) return _gameNameMap[name]!;
+    // 模糊匹配：忽略大小写
+    final lower = name.toLowerCase();
+    for (final entry in _gameNameMap.entries) {
+      if (lower == entry.key.toLowerCase()) return entry.value;
+    }
+    return name;
   }
 
   /// 从索尼 API 获取精确游玩时间并合并到 psnine 数据中（不覆盖奖杯状态）
@@ -1764,6 +1854,7 @@ class _TrophyDetailSheet extends StatefulWidget {
   final String earnedDate;
   final String iconUrl;
   final String description;
+  final String trophyId;
 
   const _TrophyDetailSheet({
     required this.name,
@@ -1772,6 +1863,7 @@ class _TrophyDetailSheet extends StatefulWidget {
     required this.earnedDate,
     required this.iconUrl,
     required this.description,
+    this.trophyId = '',
   });
 
   @override
@@ -1779,6 +1871,34 @@ class _TrophyDetailSheet extends StatefulWidget {
 }
 
 class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
+  List<Map<String, dynamic>> _tips = [];
+  bool _tipsLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.trophyId.isNotEmpty) {
+      _fetchTips();
+    }
+  }
+
+  Future<void> _fetchTips() async {
+    if (!mounted) return;
+    setState(() => _tipsLoading = true);
+    try {
+      final psnine = PsnineClient('');
+      final tips = await psnine.fetchTrophyTips(widget.trophyId);
+      if (mounted) {
+        setState(() {
+          _tips = tips;
+          _tipsLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _tipsLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final typeLabel = widget.type == 'platinum' ? '白金' :
@@ -1904,6 +2024,54 @@ class _TrophyDetailSheetState extends State<_TrophyDetailSheet> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          // ═══ 心得 ═══
+          if (_tipsLoading)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: SizedBox(
+                width: 20, height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          if (_tips.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('💬 心得',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 8),
+                  ..._tips.map((tip) => Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(tip['user'] ?? '',
+                                style: TextStyle(fontSize: 11, color: Colors.cyan[300], fontWeight: FontWeight.w500)),
+                            const Spacer(),
+                            Text(tip['date'] ?? '',
+                                style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(tip['content'] ?? '',
+                            style: TextStyle(fontSize: 13, color: Colors.grey[300])),
+                      ],
+                    ),
+                  )),
+                ],
+              ),
+            ),
           const SizedBox(height: 24),
         ],
       ),

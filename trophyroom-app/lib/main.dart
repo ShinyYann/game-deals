@@ -10,6 +10,7 @@ import 'pages/web_view_page.dart';
 import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/steam_video.dart';
+import 'services/psn_api_client.dart';
 import 'psn_login_page.dart';
 
 void main() {
@@ -1554,14 +1555,41 @@ v.play().catch(function(){});
     if (_psnId.isEmpty || _accountsLoaded == false) {
       return {'psn_id': '', 'games': []};
     }
+
+    // 1. 如果有 NPSSO，尝试手机端直接调索尼 API
+    if (_npsso.isNotEmpty) {
+      try {
+        final client = PsnApiClient(_npsso);
+        final games = await client.getGames();
+        final onlineId = await client.getOnlineId();
+
+        if (onlineId != null && games != null) {
+          final mapped = _mapSonyGames(games);
+          final data = {
+            'psn_id': onlineId,
+            'online_id': onlineId,
+            'games': mapped,
+            'source': 'sony_direct',
+          };
+          _saveHomeCache(data);
+          _cachedHomeData = data;
+          return data;
+        }
+      } catch (e) {
+        print('[PSN Direct] Failed: $e');
+        // fall through to server fallback
+      }
+    }
+
+    // 2. 失败则走服务器中转（阿里云可能调不通索尼）
     try {
       final apiBase = 'http://8.153.97.56';
       final url = '${apiBase}/api/psn?uid=$_psnId${_npsso.isNotEmpty ? (_oauthUid.isNotEmpty ? '&oauth_uid=$_oauthUid&npsso=$_npsso' : '&npsso=$_npsso') : (_oauthUid.isNotEmpty ? '&oauth_uid=$_oauthUid' : '')}';
       final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 15));
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
-        if (data['psn_id'] != null) {
+        if (data['psn_id'] != null && data['error'] == null) {
           _saveHomeCache(data);
           _cachedHomeData = data;
           return data;
@@ -1570,7 +1598,64 @@ v.play().catch(function(){});
     } catch (e) {
       _error = '$e';
     }
-    return {'psn_id': _psnId, 'error': _error, 'games': []};
+    return {'psn_id': _psnId, 'error': '加载失败', 'games': []};
+  }
+
+  /// 将索尼 API 的游戏列表映射为 App 所需格式
+  List<Map<String, dynamic>> _mapSonyGames(List<Map<String, dynamic>> raw) {
+    return raw.map((g) {
+      final titleId = g['titleId']?.toString() ?? '';
+      final name = g['name']?.toString() ?? '未知游戏';
+      final playDuration = _parseDuration(g['playDuration']?.toString() ?? '');
+      final imageUrl = g['imageUrl']?.toString() ?? g['localImageUrl']?.toString() ?? '';
+      final trophySummary = g['trophyTitleSummaries'] as List? ?? [];
+      int bronze = 0, silver = 0, gold = 0, platinum = 0;
+
+      if (trophySummary.isNotEmpty) {
+        final summary = trophySummary[0] as Map? ?? {};
+        final definedTrophies = summary?['definedTrophies'] as Map? ?? {};
+        bronze = definedTrophies?['bronze'] ?? 0;
+        silver = definedTrophies?['silver'] ?? 0;
+        gold = definedTrophies?['gold'] ?? 0;
+        platinum = definedTrophies?['platinum'] ?? 0;
+      }
+
+      // NP 通信 ID（用于获取奖杯明细）
+      String npCommId = '';
+      if (trophySummary.isNotEmpty) {
+        final summary = trophySummary[0] as Map? ?? {};
+        npCommId = summary?['npCommunicationId']?.toString() ?? '';
+      }
+
+      return {
+        'id': titleId,
+        'name': name,
+        'img': imageUrl,
+        'playDuration': playDuration,
+        'bronze': bronze,
+        'silver': silver,
+        'gold': gold,
+        'platinum': platinum,
+        'npCommId': npCommId,
+        'platform': 'PSN',
+        'source': 'sony_direct',
+      };
+    }).toList();
+  }
+
+  /// 解析 ISO 8601 时长 → 小时数
+  int _parseDuration(String iso) {
+    if (iso.isEmpty) return 0;
+    try {
+      // PT12H30M → 12小时30分
+      final match = RegExp(r'PT(?:(\d+)H)?(?:(\d+)M)?').firstMatch(iso);
+      if (match == null) return 0;
+      final hours = int.tryParse(match.group(1) ?? '0') ?? 0;
+      final mins = int.tryParse(match.group(2) ?? '0') ?? 0;
+      return hours * 60 + mins;
+    } catch (_) {
+      return 0;
+    }
   }
 
   Widget _buildDeals() {
@@ -2250,6 +2335,40 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
     setState(() => _npssoLoading = true);
+
+    // 1. 先试手机端直连索尼 API 验证 NPSSO
+    String? onlineId;
+    try {
+      final client = PsnApiClient(npsso);
+      onlineId = await client.getOnlineId();
+      debugPrint('[NPSSO] Direct Sony API: onlineId=$onlineId');
+    } catch (e) {
+      debugPrint('[NPSSO] Direct Sony API failed: $e');
+    }
+
+    // 2. 直连成功 → 保存 NPSSO + onlineId
+    if (onlineId != null && onlineId.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('psn_npsso', npsso);
+      await prefs.setString('psn_id', onlineId!);
+      setState(() {
+        _savedNpsso = npsso;
+        _savedPsnId = onlineId!;
+        _psnCtrl.text = onlineId!;
+        _npssoLoading = false;
+      });
+      widget.onNpssoChanged?.call();
+      // 异步存到服务器（不阻塞）
+      _saveNpssoToServer(npsso);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ 登录成功！PSN 账号：$onlineId')),
+        );
+      }
+      return;
+    }
+
+    // 3. 直连失败 → 走服务器验证（兜底）
     try {
       final uri = Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso');
       final resp = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -2257,8 +2376,8 @@ class _SettingsPageState extends State<SettingsPage> {
       if (data['ok'] == true) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('psn_npsso', npsso);
-        final onlineId = data['online_id']?.toString() ?? '';
-        final realId = onlineId.isNotEmpty ? onlineId : '未识别';
+        final serverOnlineId = data['online_id']?.toString() ?? '';
+        final realId = serverOnlineId.isNotEmpty ? serverOnlineId : '未识别';
         await prefs.setString('psn_id', realId);
         setState(() {
           _savedNpsso = npsso;
@@ -2288,6 +2407,15 @@ class _SettingsPageState extends State<SettingsPage> {
         );
       }
     }
+  }
+
+  /// 异步保存 NPSSO 到服务器（后台，不阻塞 UI）
+  Future<void> _saveNpssoToServer(String npsso) async {
+    try {
+      await http.get(
+        Uri.parse('http://8.153.97.56/api/psn_set_npsso?uid=npssologin&npsso=$npsso'),
+      ).timeout(const Duration(seconds: 5));
+    } catch (_) {}
   }
 
   void _showNpssoGuide() {

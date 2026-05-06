@@ -331,7 +331,7 @@ class _HomePageState extends State<HomePage>
   bool _filter100pct = false;    // Steam 只看全成就的
   bool _summaryExpanded = false; // 汇总卡详情展开
   // ── PageView 切换 ──
-  int _platformTab = 0; // 0=PSN, 1=Steam
+  int _platformTab = 0; // 0=汇总, 1=PSN, 2=Steam
   late final PageController _platformPageCtrl;
 
   @override
@@ -646,23 +646,66 @@ class _HomePageState extends State<HomePage>
 
     return Column(
       children: [
-        // ── 跨平台成就汇总卡 ──
-        if (_psnId.isNotEmpty && _steamId.isNotEmpty)
-          _buildSummaryCard(),
-        // ── 平台切换标签 ──
+        // ── 三页切换标签（双平台时显示）──
         if (_psnId.isNotEmpty && _steamId.isNotEmpty)
           _buildPlatformTabs(),
         // ── 页面内容 ──
         Expanded(
-          child: PageView(
-            controller: _platformPageCtrl,
-            onPageChanged: (i) => setState(() => _platformTab = i),
-            children: [
-              _buildPsnPage(),
-              _buildSteamPage(),
-            ],
-          ),
+          child: (_psnId.isNotEmpty && _steamId.isNotEmpty)
+            ? PageView(
+                controller: _platformPageCtrl,
+                onPageChanged: (i) => setState(() => _platformTab = i),
+                children: [
+                  _buildSummaryPage(),
+                  _buildPsnPage(),
+                  _buildSteamPage(),
+                ],
+              )
+            : (_psnId.isNotEmpty ? _buildPsnPage() : _buildSteamPage()),
         ),
+      ],
+    );
+  }
+
+  /// 汇总页 = 统计卡 + PSN列表 + Steam列表
+  Widget _buildSummaryPage() {
+    final psnData = _cachedHomeData;
+    final psnGames = (psnData?['games'] as List?) ?? [];
+    final steamData = _steamData;
+    final steamGamesRaw = (steamData != null && !steamData.containsKey('error'))
+        ? (steamData['games'] as List? ?? [])
+        : [];
+    final steamGames = _filteredGames(steamGamesRaw);
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 16),
+      children: [
+        _buildSummaryCard(),
+
+        // ── PSN 游戏 ──
+        if (psnData != null && psnGames.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text('🏆 PSN 游戏 (${psnGames.length})',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          ),
+          ...psnGames.map((g) {
+            final game = Map<String, dynamic>.from(g as Map);
+            final gameId = game['game_id']?.toString() ?? '';
+            final isExpanded = _expandedGameId == gameId;
+            return _buildExpandableGameCard(game, isExpanded: isExpanded);
+          }),
+        ],
+
+        // ── Steam 游戏 ──
+        if (steamData != null && !steamData.containsKey('error') && steamGames.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text('🎮 Steam 游戏 (${steamGames.length}${_filterPlaytime ? " | 有数据" : _filter100pct ? " | 全成就" : ""})',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          ),
+          ...steamGames.map((g) => _buildSteamGameCard(Map<String, dynamic>.from(g as Map))),
+        ],
       ],
     );
   }
@@ -876,8 +919,9 @@ class _HomePageState extends State<HomePage>
       ),
       child: Row(
         children: [
-          _platformTabBtn('🏆 PSN 奖杯', 0),
-          _platformTabBtn('🎮 Steam 成就', 1),
+          _platformTabBtn('📊 汇总', 0),
+          _platformTabBtn('🏆 PSN', 1),
+          _platformTabBtn('🎮 Steam', 2),
         ],
       ),
     );
@@ -1993,6 +2037,7 @@ class _HomePageState extends State<HomePage>
         final displayName = SteamClient.translateAchievement(ach['display_name'] ?? ach['api_name'] ?? '');
         final desc = SteamClient.translateDescription(ach['description'] ?? '');
         final achIcon = achieved ? (ach['icon'] ?? '') : (ach['icon_gray'] ?? '');
+        final globalPct = (ach['global_pct'] ?? 0).toDouble();
         return Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), child: Row(children: [
           // 成就图标
           ClipRRect(
@@ -2009,6 +2054,15 @@ class _HomePageState extends State<HomePage>
               padding: const EdgeInsets.only(top: 2),
               child: Text(desc, style: TextStyle(fontSize: 11, color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis)),
           ])),
+          if (globalPct > 0)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Column(children: [
+                Text('${globalPct.toStringAsFixed(1)}%', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                  color: globalPct < 5 ? const Color(0xFFFFD700) : globalPct < 20 ? const Color(0xFF4ECDC4) : Colors.grey[500])),
+                Text('全球', style: TextStyle(fontSize: 8, color: Colors.grey[600])),
+              ]),
+            ),
         ]));
       }),
       if (achievements.length > 20)
@@ -2055,8 +2109,12 @@ class _HomePageState extends State<HomePage>
   }
 
   String _translateSteamGameName(String name) {
+    // 已有中文 → 直接返回
+    if (RegExp(r'[\u4e00-\u9fff]').hasMatch(name)) return name;
+    // 查字典
     if (_steamGameNameMap.containsKey(name)) return _steamGameNameMap[name]!;
-    return name;
+    // 兜底规则翻译
+    return SteamClient.translateAchievement(name);
   }
 
   /// 加载 Switch 游戏库

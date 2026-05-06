@@ -83,6 +83,8 @@ class SteamClient {
 
   /// Steam 成就名 → 中文翻译（字典 + 规则引擎兜底）
   static String translateAchievement(String name) {
+    // 已有中文 → 直接返回
+    if (RegExp(r'[\u4e00-\u9fff]').hasMatch(name)) return name;
     if (_achTrans.containsKey(name)) return _achTrans[name]!;
     return _autoTranslate(name);
   }

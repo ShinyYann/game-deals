@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/psnine_client.dart';
+import 'services/bookmark_service.dart';
+import 'pages/browser_page.dart';
 import 'widgets/trophy_icon.dart';
 
 void main() {
@@ -1664,6 +1667,82 @@ class _HomePageState extends State<HomePage>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // ── ★ 收藏夹 ──
+        FutureBuilder<List<Bookmark>>(
+          future: BookmarkService.load(),
+          builder: (context, snapshot) {
+            final bookmarks = snapshot.data ?? [];
+            if (bookmarks.isEmpty) return const SizedBox.shrink();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 18),
+                    const SizedBox(width: 6),
+                    Text('收藏夹',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[200])),
+                    const Spacer(),
+                    Text('${bookmarks.length} 个收藏',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ...bookmarks.map((bm) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => BrowserPage(
+                            initialUrl: bm.url,
+                            initialTitle: bm.title,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[800]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.bookmark, color: Colors.amber[700], size: 16),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(bm.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 2),
+                                Text(bm.url,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+                )),
+                const SizedBox(height: 8),
+              ],
+            );
+          },
+        ),
+        // ── 攻略卡片 ──
         _guideCard(
           icon: '🐉',
           title: '宝可梦殿堂',
@@ -1766,6 +1845,42 @@ class _HomePageState extends State<HomePage>
       ),
     );
   }
+}
+
+/// 解析心得内容中的 HTML 链接为 RichText 可点击 span
+InlineSpan _parseHtmlLinks(String text, BuildContext context) {
+  final spans = <InlineSpan>[];
+  final linkPattern = RegExp(r'<a\s+href="([^"]+)"[^>]*>([^<]+)</a>');
+  int lastEnd = 0;
+
+  for (final match in linkPattern.allMatches(text)) {
+    // 链接前的文本
+    if (match.start > lastEnd) {
+      spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
+    }
+    final url = match.group(1) ?? '';
+    final label = match.group(2) ?? url;
+    spans.add(TextSpan(
+      text: label,
+      style: const TextStyle(color: Colors.lightBlue, decoration: TextDecoration.underline),
+      recognizer: TapGestureRecognizer()
+        ..onTap = () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BrowserPage(initialUrl: url, initialTitle: label),
+            ),
+          );
+        },
+    ));
+    lastEnd = match.end;
+  }
+
+  // 剩余文本
+  if (lastEnd < text.length) {
+    spans.add(TextSpan(text: text.substring(lastEnd)));
+  }
+
+  return TextSpan(children: spans);
 }
 
 class _TrophyDetailDialog extends StatefulWidget {
@@ -2011,8 +2126,10 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
                               ],
                             ),
                             const SizedBox(height: 4),
-                            Text(tip['content'] ?? '',
-                                style: TextStyle(fontSize: 13, color: Colors.grey[300])),
+                            Text.rich(
+                              _parseHtmlLinks(tip['content'] ?? '', context),
+                              style: TextStyle(fontSize: 13, color: Colors.grey[300]),
+                            ),
                           ],
                         ),
                       )).toList(),

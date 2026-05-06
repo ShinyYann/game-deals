@@ -11,6 +11,7 @@ import 'pages/bookmark_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/steam_video.dart';
 import 'services/psn_api_client.dart';
+import 'services/psnine_client.dart';
 import 'psn_login_page.dart';
 
 void main() {
@@ -1556,7 +1557,22 @@ v.play().catch(function(){});
       return {'psn_id': '', 'games': []};
     }
 
-    // 1. 如果有 NPSSO，尝试手机端直接调索尼 API
+    // 1. 优先手机端直连 psnine（快、国内可用）
+    try {
+      final psnine = PsnineClient(_psnId);
+      final data = await psnine.fetchFullData();
+      if (data['games'] is List && (data['games'] as List).isNotEmpty) {
+        print('[PSN] psnine OK: ${(data['games'] as List).length} games');
+        _saveHomeCache(data);
+        _cachedHomeData = data;
+        return data;
+      }
+    } catch (e) {
+      print('[PSN] psnine failed: $e');
+      // fall through
+    }
+
+    // 2. 如果有 NPSSO，尝试手机端直连索尼 API（获取精确游玩时间）
     if (_npsso.isNotEmpty) {
       try {
         final client = PsnApiClient(_npsso);
@@ -1577,11 +1593,10 @@ v.play().catch(function(){});
         }
       } catch (e) {
         print('[PSN Direct] Failed: $e');
-        // fall through to server fallback
       }
     }
 
-    // 2. 失败则走服务器中转（阿里云可能调不通索尼）
+    // 3. 最后走服务器中转（阿里云可能调不通索尼）
     try {
       final apiBase = 'http://8.153.97.56';
       final url = '${apiBase}/api/psn?uid=$_psnId${_npsso.isNotEmpty ? (_oauthUid.isNotEmpty ? '&oauth_uid=$_oauthUid&npsso=$_npsso' : '&npsso=$_npsso') : (_oauthUid.isNotEmpty ? '&oauth_uid=$_oauthUid' : '')}';

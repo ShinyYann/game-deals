@@ -59,7 +59,18 @@ jobs:
           }' android/app/src/main/AndroidManifest.xml
           # RESTORE pubspec.yaml (flutter create overwrites it!)
           cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml pubspec.yaml
-          echo "code prepared"
+          # Fix NDK version (27 is broken, use 26)
+          sed -i 's/ndkVersion = flutter\.ndkVersion/ndkVersion = "26.3.11579264"/' android/app/build.gradle.kts
+          # Insert Aliyun Maven mirrors in settings.gradle.kts (before google())
+          sed -i '/google()/i\
+        maven { url = uri("https://maven.aliyun.com/repository/google") }\
+        maven { url = uri("https://maven.aliyun.com/repository/public") }\
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }' android/settings.gradle.kts
+          # Insert Aliyun Maven mirrors in build.gradle.kts (before google())
+          sed -i '/google()/i\
+        maven { url = uri("https://maven.aliyun.com/repository/google") }\
+        maven { url = uri("https://maven.aliyun.com/repository/public") }' android/build.gradle.kts
+          echo "code prepared (ndk + maven fixed)"
 
       - name: Build APK (v2)
         run: |

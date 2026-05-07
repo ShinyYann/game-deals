@@ -1829,22 +1829,6 @@ class _HomePageState extends State<HomePage>
     final iconUrl = trophy['icon_url']?.toString() ?? '';
     final isPlatinum = type == 'platinum';
 
-    IconData icon;
-    Color iconColor;
-    if (isPlatinum) {
-      icon = Icons.star;
-      iconColor = Colors.cyan[300]!;
-    } else if (type == 'gold') {
-      icon = Icons.emoji_events;
-      iconColor = Colors.amber[400]!;
-    } else if (type == 'silver') {
-      icon = Icons.workspace_premium;
-      iconColor = Colors.grey[400]!;
-    } else {
-      icon = Icons.circle;
-      iconColor = Colors.orange[400]!;
-    }
-
     return GestureDetector(
       onTap: () => _showTrophyDetailDialog(context, trophy),
       child: Container(
@@ -1858,7 +1842,7 @@ class _HomePageState extends State<HomePage>
       ),
       child: Row(
         children: [
-          // Trophy icon
+          // Trophy icon — 优先官网图，兜底用 TrophyIcon 手绘
           if (iconUrl.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -1870,22 +1854,17 @@ class _HomePageState extends State<HomePage>
                 color: earned ? null : Colors.grey,
                 colorBlendMode:
                     earned ? null : BlendMode.saturation,
-                errorBuilder: (_, __, ___) => Icon(
-                  icon,
-                  size: 24,
-                  color: earned
-                      ? iconColor
-                      : iconColor.withOpacity(0.3),
+                errorBuilder: (_, __, ___) => TrophyIcon(type: type, size: 28).builder(
+                  earned ? null : Colors.grey[700]!,
+                  earned ? null : BlendMode.saturation,
                 ),
               ),
             )
           else
-            Icon(
-              icon,
-              size: 24,
-              color: earned
-                  ? iconColor
-                  : iconColor.withOpacity(0.3),
+            TrophyIcon(
+              type: type,
+              size: 28,
+              opacity: earned ? 1.0 : 0.35,
             ),
           const SizedBox(width: 12),
           // Trophy name

@@ -6,16 +6,28 @@ import 'package:flutter/material.dart';
 class TrophyIcon extends StatelessWidget {
   final String type; // platinum | gold | silver | bronze
   final double size;
+  final double opacity; // 0-1, for unearned trophies
 
-  const TrophyIcon({super.key, required this.type, this.size = 28});
+  const TrophyIcon({super.key, required this.type, this.size = 28, this.opacity = 1.0});
+
+  /// Creates a widget with custom color overlay (for Image.network errorBuilder compatibility)
+  Widget builder(Color? color, BlendMode? blendMode) {
+    return ColorFiltered(
+      colorFilter: ColorFilter.mode(color ?? Colors.transparent, blendMode ?? BlendMode.srcIn),
+      child: TrophyIcon(type: type, size: size),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _TrophyPainter(type: type),
+    return Opacity(
+      opacity: opacity,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(
+          painter: _TrophyPainter(type: type),
+        ),
       ),
     );
   }

@@ -2417,6 +2417,8 @@ class _HomePageState extends State<HomePage>
     final data = _steamData!;
     final name = data['name'] ?? 'Unknown';
     final avatar = data['avatar'] ?? '';
+    final avatarFrame = (data['avatar_frame'] as Map<String, dynamic>?) ?? {};
+    final avatarFrameUrl = avatarFrame['image']?.toString() ?? '';
     final level = data['level'] ?? 0;
     final gameCount = data['game_count'] ?? 0;
     final games = data['games'] as List? ?? [];
@@ -2435,7 +2437,7 @@ class _HomePageState extends State<HomePage>
       },
       child: ListView(padding: const EdgeInsets.all(16), children: [
         // Steam 档案卡
-        _buildSteamProfileCard(avatar, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
+        _buildSteamProfileCard(avatar, avatarFrameUrl, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
 
         const SizedBox(height: 16),
 
@@ -2481,22 +2483,21 @@ class _HomePageState extends State<HomePage>
   }
 
   /// Steam 档案卡（头像 + 统计）
-  /// Steam 官方头像框颜色 (基于等级)
+  /// Steam 官方头像框颜色 (基于等级) — 备用，当无点数商店框时使用
   static List<Color> _steamAvatarFrame(int level) {
-    // Steam official level frame colors:
-    if (level >= 200) return [const Color(0xFFD4AF37), const Color(0xFFF2E6B6), const Color(0xFFC8A42E)]; // Diamond
-    if (level >= 100) return [const Color(0xFFCB3850), const Color(0xFFE8758A), const Color(0xFFA82A40)]; // Pink/Red
-    if (level >= 50)  return [const Color(0xFF70489A), const Color(0xFF9B6FBF), const Color(0xFF522F7A)]; // Purple
-    if (level >= 40)  return [const Color(0xFFC46A32), const Color(0xFFE8985A), const Color(0xFFA0522A)]; // Orange
-    if (level >= 30)  return [const Color(0xFFBAA03B), const Color(0xFFDCC66A), const Color(0xFF8B7A2A)]; // Gold
-    if (level >= 20)  return [const Color(0xFF5C8A47), const Color(0xFF82B268), const Color(0xFF3E6A2E)]; // Green
-    if (level >= 10)  return [const Color(0xFF42748F), const Color(0xFF669BB8), const Color(0xFF2C5068)]; // Blue
-    return [const Color(0xFF5D5D5D), const Color(0xFF8A8A8A), const Color(0xFF3D3D3D)]; // Gray (default)
+    if (level >= 200) return [const Color(0xFFD4AF37), const Color(0xFFF2E6B6), const Color(0xFFC8A42E)];
+    if (level >= 100) return [const Color(0xFFCB3850), const Color(0xFFE8758A), const Color(0xFFA82A40)];
+    if (level >= 50)  return [const Color(0xFF70489A), const Color(0xFF9B6FBF), const Color(0xFF522F7A)];
+    if (level >= 40)  return [const Color(0xFFC46A32), const Color(0xFFE8985A), const Color(0xFFA0522A)];
+    if (level >= 30)  return [const Color(0xFFBAA03B), const Color(0xFFDCC66A), const Color(0xFF8B7A2A)];
+    if (level >= 20)  return [const Color(0xFF5C8A47), const Color(0xFF82B268), const Color(0xFF3E6A2E)];
+    if (level >= 10)  return [const Color(0xFF42748F), const Color(0xFF669BB8), const Color(0xFF2C5068)];
+    return [const Color(0xFF5D5D5D), const Color(0xFF8A8A8A), const Color(0xFF3D3D3D)];
   }
 
-  Widget _buildSteamProfileCard(String avatar, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
-    final frameColors = _steamAvatarFrame(level);
+  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
     final avatarSize = 56.0;
+    final hasFrame = avatarFrameUrl.isNotEmpty;
     return Container(padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(colors: [Color(0xFF1A3A5C), Color(0xFF0D1B2A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
@@ -2505,44 +2506,36 @@ class _HomePageState extends State<HomePage>
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           if (avatar.isNotEmpty)
-            // ── Steam 官方等级头像框 ──
-            Container(
-              width: avatarSize + 8,
-              height: avatarSize + 8,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                // 外层渐变光环 (等级颜色)
-                gradient: SweepGradient(
-                  colors: [
-                    frameColors[0],
-                    frameColors[1],
-                    frameColors[0],
-                    frameColors[2],
-                    frameColors[0],
-                  ],
-                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                ),
-                boxShadow: [
-                  BoxShadow(color: frameColors[0].withOpacity(0.5), blurRadius: 12, spreadRadius: 1),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Container(
-                width: avatarSize + 4,
-                height: avatarSize + 4,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF0D1B2A), // 深色内圈分隔
-                ),
+            // ── Steam 头像 + 点数商店头像框 ──
+            SizedBox(
+              width: avatarSize + 12,
+              height: avatarSize + 12,
+              child: Stack(
                 alignment: Alignment.center,
-                child: ClipOval(
-                  child: Image.network(_proxyImage(avatar), width: avatarSize, height: avatarSize,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_,__,___) => Container(
-                      width: avatarSize, height: avatarSize, color: Colors.grey[850],
-                      child: const Icon(Icons.person, size: 28, color: Colors.grey)),
+                children: [
+                  // 头像
+                  ClipOval(
+                    child: Image.network(_proxyImage(avatar), width: avatarSize, height: avatarSize,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_,__,___) => Container(
+                        width: avatarSize, height: avatarSize, color: Colors.grey[850],
+                        child: const Icon(Icons.person, size: 28, color: Colors.grey)),
+                    ),
                   ),
-                ),
+                  // 点数商店头像框（叠在头像上面）
+                  if (hasFrame)
+                    Image.network(
+                      avatarFrameUrl,
+                      width: avatarSize + 12,
+                      height: avatarSize + 12,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (_, child, progress) {
+                        if (progress == null) return child;
+                        return const SizedBox.shrink();
+                      },
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                ],
               ),
             ),
           const SizedBox(width: 14),

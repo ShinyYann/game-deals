@@ -318,9 +318,32 @@ int _lastPlayedTimestamp(Map<String, dynamic> data, String source) {
     final rtime = (data['rtime_last_played'] ?? 0) as int;
     return rtime * 1000;
   } else {
-    // Switch: last_played is relative string like "1天前", can't sort by it
-    // Use total_hours as tiebreaker
-    return (data['total_hours'] as num?)?.toDouble().toInt() ?? 0;
+    // Switch: last_played 是中文相对时间，如 "1天前"、"2小时前"
+    final lp = (data['last_played'] ?? '').toString();
+    if (lp.isEmpty) return 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // 解析中文相对时间 → 近似时间戳
+    final patterns = {
+      r'刚刚':                           const Duration(minutes: 1),
+      r'(\d+)\s*分钟前': const Duration(minutes: 1),
+      r'(\d+)\s*小时前': const Duration(hours: 1),
+      r'(\d+)\s*天前':   const Duration(days: 1),
+      r'(\d+)\s*周前':   const Duration(days: 7),
+      r'(\d+)\s*个月前': const Duration(days: 30),
+      r'(\d+)\s*年前':   const Duration(days: 365),
+    };
+    for (final entry in patterns.entries) {
+      final match = RegExp(entry.key).firstMatch(lp);
+      if (match != null) {
+        int n = 1;
+        if (match.groupCount >= 1 && match.group(1) != null) {
+          n = int.tryParse(match.group(1)!) ?? 1;
+        }
+        final dur = entry.value * n;
+        return now - dur.inMilliseconds;
+      }
+    }
+    return 0; // 无法解析 → 归零
   }
 }
 
@@ -897,6 +920,8 @@ class _HomePageState extends State<HomePage>
               final gameId = m.data['game_id']?.toString() ?? '';
               final isExpanded = _expandedGameId == gameId;
               return _buildExpandableGameCard(m.data, isExpanded: isExpanded);
+            } else if (m.source == 'switch') {
+              return _buildSwitchCompactCard(m.data);
             } else {
               return _buildCompactSteamCard(m.data);
             }
@@ -1102,6 +1127,67 @@ class _HomePageState extends State<HomePage>
     return Container(
       color: Colors.grey[850],
       child: const Icon(Icons.sports_esports, size: 24, color: Colors.grey),
+    );
+  }
+
+  /// Switch 游戏紧凑卡（汇总页）
+  Widget _buildSwitchCompactCard(Map<String, dynamic> game) {
+    final name = (game['name'] ?? '???').toString();
+    final hours = (game['total_hours'] as num?)?.toDouble() ?? 0;
+    final coverUrl = game['cover_url']?.toString() ?? '';
+    final lastPlayed = game['last_played'] ?? '';
+
+    return Card(
+      color: const Color(0xFF1A1A2E),
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: const Color(0xFFE60012).withOpacity(0.3)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showSwitchGameDetail(game),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 50, height: 50,
+                child: coverUrl.isNotEmpty
+                    ? Image.network(coverUrl, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _steamPlaceholderIcon())
+                    : _steamPlaceholderIcon(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Row(children: [
+                  const Icon(Icons.access_time, size: 13, color: Colors.grey),
+                  const SizedBox(width: 3),
+                  Text('${hours.toStringAsFixed(1)}h', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                  if (lastPlayed.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    const Icon(Icons.history, size: 13, color: Colors.grey),
+                    const SizedBox(width: 3),
+                    Flexible(child: Text(lastPlayed.toString(), style: TextStyle(fontSize: 11, color: Colors.grey[500]), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  ],
+                ]),
+              ]),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE60012).withOpacity(0.2), borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text('Switch', style: TextStyle(fontSize: 9, color: Color(0xFFE60012))),
+            ),
+          ]),
+        ),
+      ),
     );
   }
 

@@ -68,6 +68,33 @@ def _zh_desc(name: str) -> str:
     return BADGE_DESC_ZH.get(name, "")
 
 
+# ── English date → Chinese date ──
+_MONTHS_EN = {'January':'1','February':'2','March':'3','April':'4','May':'5','June':'6',
+              'July':'7','August':'8','September':'9','October':'10','November':'11','December':'12',
+              'Jan':'1','Feb':'2','Mar':'3','Apr':'4','May':'5','Jun':'6',
+              'Jul':'7','Aug':'8','Sep':'9','Oct':'10','Nov':'11','Dec':'12'}
+
+def _cn_date(unlocked_str: str) -> str:
+    """Convert Steam English unlock date to Chinese: 'Unlocked 4 Jun, 2018 @ 6:18am' → '2018年6月4日 06:18'"""
+    # With year: Unlocked 4 Jun, 2018 @ 6:18am
+    m = re.match(r'Unlocked\s+(\d+)\s+(\w+),?\s+(\d{4})\s*@\s*(\d+):(\d+)(am|pm)', unlocked_str, re.IGNORECASE)
+    if m:
+        day, mon, year, hour, minute, ampm = m.groups()
+        h = int(hour)
+        if ampm.lower() == 'pm' and h != 12: h += 12
+        if ampm.lower() == 'am' and h == 12: h = 0
+        return f'{year}年{_MONTHS_EN[mon]}月{day}日 {h:02d}:{minute}'
+    # Without year: Unlocked 10 Jan @ 8:46pm
+    m2 = re.match(r'Unlocked\s+(\d+)\s+(\w+)\s*@\s*(\d+):(\d+)(am|pm)', unlocked_str, re.IGNORECASE)
+    if m2:
+        day, mon, hour, minute, ampm = m2.groups()
+        h = int(hour)
+        if ampm.lower() == 'pm' and h != 12: h += 12
+        if ampm.lower() == 'am' and h == 12: h = 0
+        return f'{_MONTHS_EN[mon]}月{day}日 {h:02d}:{minute}'
+    return unlocked_str
+
+
 def scrape_steam_badges(steam_id: str) -> dict:
     """Scrape Steam badge page, return structured JSON with cards."""
     req = urllib.request.Request(
@@ -124,7 +151,7 @@ def scrape_steam_badges(steam_id: str) -> dict:
         # Unlock date — need re.DOTALL because date is on next line
         date_m = re.search(r'class="badge_info_unlocked"[^>]*>(.+?)</div>', block, re.DOTALL)
         if date_m:
-            b['unlocked'] = re.sub(r'<[^>]+>', '', date_m.group(1)).strip()
+            b['unlocked'] = _cn_date(re.sub(r'<[^>]+>', '', date_m.group(1)).strip())
 
         # Playtime
         pt_pat = r'(\d+(?:[.,]\d+)?)\s*hrs on record'

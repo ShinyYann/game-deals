@@ -14,7 +14,7 @@
       "level_name": "Pillar of Community",
       "level": 1,
       "xp": 100,
-      "unlocked": "Unlocked 4 Jun, 2018 @ 6:18am",
+      "unlocked": "2018年6月4日 06:18",
       "name_zh": "社区栋梁",
       "desc_zh": "参与社区活动获得的徽章"
     },
@@ -26,7 +26,7 @@
       "level_name": "Power Player",
       "level": 1,
       "xp": 343,
-      "unlocked": "Unlocked 10 Jan @ 8:46pm",
+      "unlocked": "1月10日 20:46",
       "name_zh": "强力玩家",
       "desc_zh": "拥有大量游戏的玩家徽章"
     },
@@ -38,7 +38,7 @@
       "level_name": "Steam Replay 2025",
       "level": 1,
       "xp": 50,
-      "unlocked": "Unlocked 20 Dec, 2025 @ 4:23pm",
+      "unlocked": "2025年12月20日 16:23",
       "name_zh": "Steam 年度回顾 2025",
       "desc_zh": "2025 年度游戏回顾徽章"
     },
@@ -50,7 +50,7 @@
       "level_name": "Years of Service",
       "level": 1,
       "xp": 500,
-      "unlocked": "Unlocked 13 Jul, 2025 @ 8:47am",
+      "unlocked": "2025年7月13日 08:47",
       "name_zh": "服役年数",
       "desc_zh": "Steam 账号注册周年纪念徽章"
     },
@@ -62,7 +62,7 @@
       "level_name": "Steam Replay 2022",
       "level": 1,
       "xp": 50,
-      "unlocked": "Unlocked 14 Feb, 2023 @ 11:43pm",
+      "unlocked": "2023年2月14日 23:43",
       "name_zh": "Steam 年度回顾 2022",
       "desc_zh": "2022 年度游戏回顾徽章"
     },
@@ -74,7 +74,7 @@
       "level_name": "Steam Grand Prix 2019",
       "level": 1,
       "xp": 155600,
-      "unlocked": "Unlocked 20 Jul, 2019 @ 5:01am",
+      "unlocked": "2019年7月20日 05:01",
       "name_zh": "Steam 大奖赛 2019",
       "desc_zh": "2019 年 Steam 夏季大奖赛活动徽章"
     },
@@ -86,8 +86,9 @@
       "level_name": "Career Criminal",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 16 Jun, 2019 @ 5:50am",
+      "unlocked": "2019年6月16日 05:50",
       "playtime": "40 小时",
+      "name_zh": "收获日 2",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -101,11 +102,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClZavdic_vHxwCwruTGCHzyIxDRJiXcV1FuVsEPbDbPp270sriZSj3KFL4pEFxVL6oC92caNciMbBI614IN-j3hzxUlGkJ8dsYUIQrtyDoDP7pjyi4AIc4Q9n2td8OMiA1gbhU-WbuxX-nHO4CtmXkgCR5vGfFMbYnH7Czp-8akPPePfvBiZ_gp78uAkUBPHQZLQO35",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClbaeRofsLLwQL-_LvaSyT0PmHGenOOT1g6GbtfY2ra92Hws-SQFjrMEOkuFg0NKfRQ-21XfZfeKUBiltNeuVqxmkV6G0sqIJNFdFzozC0WZLl0kHgUcc9WkSKhcJ3b1wtrbUU7D-7nX-_KOoKsjm96CgwhEqLa5yL-tA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClaaulqfsLLwQL-_LuMRXWkMGKVf3OPSgc4TOALNT2K-mfx4O6cQTuYFekuQl8HL6dS-mVXfZfeKUBiltNeuVqxmkV6G0sqIJNFdFzozC0WZLl0kHgUcc9WkSKhcJ3b1wtrbUU7D-7nX-_KOoKsjm96CgwhEqJf-MFNVw"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "收获日 2"
+      ]
     },
     {
       "type": "game",
@@ -115,8 +112,9 @@
       "level_name": "Riot Gear",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 13 Jun, 2019 @ 4:59am",
+      "unlocked": "2019年6月13日 04:59",
       "playtime": "23 小时",
+      "name_zh": "逃脱者 2",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -128,11 +126,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClFSNUnF83A0w30s-fLFXn2bzKZeXOLHwhpHLteZG3Q-zek4L6QSmnLROkkRF8MKKZX-jVIOcncP0M11JlLpWL-lUtvGhM6TcxLcQi-l3dKNb5ykHARJ8gDzyb1dZTfjAtibU9qCbrlA76XaoWikC0iXEtnH_MEJNXCrmPh-nKdGCdM",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClGRNVDD43PzQT8pL_YGSSvOWXAfyONS1tpSLANNmGM-jus7OmSQ2zBRet6QlwHdKsH-jdAI4nXaARvi8VfrneHnkl8GRN1cZxCc1jjm3cRMrwjmnQRdZ1bzST1L5SKh103ahNvXr_nVLrDPoGlwzFkA01xWa0YynnUHT8",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClYVtYnGcXJzQT3uKSEEXXwbWrHeieATggxHuFdMGDd-zL0sezAQT7BEup_SgoNLKEGoTFLO5qPahdsysdVrCO6mFZ5GwQXe8hHdwrmyS0XMup9mSIQJsoEmyGjJpLQ0V9nYUY5WLqyVOnHa4alkiklDBpnTL5aOtyD_ijumh0GaHg"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "逃脱者 2"
+      ]
     },
     {
       "type": "game",
@@ -142,8 +136,9 @@
       "level_name": "Saviour",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 13 Jun, 2019 @ 4:53am",
+      "unlocked": "2019年6月13日 04:53",
       "playtime": "243 小时",
+      "name_zh": "战锤：末日鼠疫 2",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -163,11 +158,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02CldfPdjNcrIwwDp5-uAHXPyNWaUfCCJGghsRLpePWiMqGCn4bmSSj6dEuEvEApWfKEMpjdLPJzaNxcjlNlc7We3hUB4DCkhf8RBdVLvmHUXYLx9m3EXcchamCXxJJaP11hmaURuCLzkBb_DPND3lCgiXB4xAeBEM53TtSeCg_1o4w",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02ClLaup4c-DIyQLztaSEEXXwbWqRf3OITA1uSuAPMGjR-TPxse6dRj_NQ-klRwhQfKJW-zdNbpqNPUE5ysdVrCO6mFZ5GwQXe8hHdwrmniYSNewkkHJCIJ8BkSXxJ5bb0w1lbEdoXurjVe_BbtL0wisjWxtjSb5aOtyD_iju_MJNVGY",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02ClFcOt4K8bHzkPyrOOKGSmlOGHHKXaNSwcxTOdaMmCI_WKm4OzGS2yaFOsrR1wDK6RS8mwabp_cIVJjg5FZpHe8klZCFxspdcAbJF26ziUSae51zXURfZpTmCbycMbegV5gbBRuWevkV--TPYWili4gCwQnQfcMIoaX7nxBdFk"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "战锤：末日鼠疫 2"
+      ]
     },
     {
       "type": "game",
@@ -177,7 +168,8 @@
       "level_name": "Killer Croc",
       "level": 2,
       "xp": 200,
-      "unlocked": "Unlocked 28 May, 2019 @ 7:29pm",
+      "unlocked": "2019年5月28日 19:29",
+      "name_zh": "蝙蝠侠：阿卡姆起源",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -191,11 +183,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02ClGbOlgPdmN4xf0oqSEEXXwbWrHLHGOH19pTroINzqPrzWisOSSRWqcQbp4Rl0CfPRQ9DVMaMyJPhVsysdVrCO6mFZ5GwQXe8hHdwrmnC1KYugmkSVCdJNQyyb0I8XZ1FlkakQ4CLriX7rBbNWnwScmXhk1Tr5aOtyD_ijuEjRXjUY",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02ClLbPdpPsffhgz2oOWIQSykbDWWdnaBSQc6HrQNNGDbrGCm57vFF2mcEuokSgsHL6UE8TVANcGXf0xqwtVUuWG9hXt0Excvd5gQKVbon3dKNe10kHMQd59XyCShIJLbhw0wakNjXLvkAr6TZ4Omk311Q1o5SLZcaYkcfvRSgA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02Clebex6OY3PzQT8pL-LGiDxP2eRdnOBHQhrTuAMMDmL9zqt5L6SFDHPErspFw0ELvRVpmAbI4nXaARvi8VfrneHnkl8GRN1JJwfI1q4k3BDYOV3ynNGcMpSyCL2JJaL111nYUBpWezlB7TAbIL3wTFkA01xWa0YBvuJI-s"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "蝙蝠侠：阿卡姆起源"
+      ]
     },
     {
       "type": "game",
@@ -205,7 +193,8 @@
       "level_name": "Oswald Chesterfield Cobblepot",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 7:07pm",
+      "unlocked": "2019年5月28日 19:07",
+      "name_zh": "蝙蝠侠：阿卡姆之城 年度版",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -217,11 +206,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClAd6snHtnDxR_-5-uAHXPyNTXCdyCJSw0-SrdbZmHaqjqstuzHQDHBQbwtRA0BdPcB92BMP53fNkQjjsdc7We3hUB4DCkhf8RBdVK6niERY75xmCQRcpNXmiz5JcLZhwxmPUduU7HjU7zAO4P0xScgWUlnAeBEM53TtScDMqwspA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClfbOFoNM7Uhgz2oOWIQSGhbWfCe3WLHwcxTrZfZzzZ_2H35L_CE2udQuAvSwsMf6UF9jJLa8GXZVJqwtVUuWG9hXt0Excvd5hHJFq5mHdHYbgmn3lHdpNbmnLwJMfd0F5mYU9uX7jlAr6TOomhlHwkQ1o5SLZcaYm1h7YigQ",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClZcuohHsrFxUPyrOOKGSmhPDWQLiXbRQoxH7MIPDre-TKnt-iQEW3PFe59FQ4EdPEHp2Eaa5rfIUh9g5FZpHe8klZCFxspdcAbcVvuyCYQZe0gy3ZKcJhakCemJpaKgQpjbE9jXr3nVOjAPtStlCt3XQQnQfcMIoaX6Rgc4CI"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "蝙蝠侠：阿卡姆之城 年度版"
+      ]
     },
     {
       "type": "game",
@@ -231,7 +216,8 @@
       "level_name": "Companionsheep",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 10:02am",
+      "unlocked": "2019年5月28日 10:02",
+      "name_zh": "凯瑟琳 经典版",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -245,11 +231,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClCd-ltNs_Jhgz2oOWIQXL0bGCUeHaLRQ4_TuFfZjrd_mH24e7FEDjNR-h6QQ5RefNX8mFKaMqXf0xqwtVUuWG9hXt0Excvd5gScVrsnSFAZL91zCARIJhQzSSidJLYjV5rbEFuD76yAu_CadSmwnlyQ1o5SLZcaYl_Vj804A",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClZaud1fsLLwQL-_LHaTHKgPTXCLHjdGFo-TLVXPG2I92XzsemRRTGaEL4tQgsHdKcB92NXfZfeKUBiltNeuVqxmkV6G0t8c5ARJ1ron3ZDNbwmzXJAIZsAyyLxLpXQgVhmPUA_DuvnUOnBPdfzjm96CgwhEqLBcE2fFA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClZd-x_MMqAyQj6pufQGHGuPWTHKSKPHl85RLsPY2CP-mKlt-WRS2qfROwvFVsDfaNX9mEYOdfJYUUrhthJr2CqqE1wHxEtL5FHJVjsnydGM-0hySIXdpkGmXaiIJXRhFZmb0I_XO2zBbzEOoL3xnk6HUQwCeYXZtLgqV6q"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "凯瑟琳 经典版"
+      ]
     },
     {
       "type": "game",
@@ -259,7 +241,8 @@
       "level_name": "World's Greatest Detective",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 9:58am",
+      "unlocked": "2019年5月28日 09:58",
+      "name_zh": "蝙蝠侠：阿卡姆疯人院 年度版",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -269,11 +252,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gEV4bOt2PceAyQj6pufQSS2gODLCKnDaHV05RbdYNz7b_Df04eSdRTDJF-h9RFwBKPQC8WwbNNfTf0UrhthJr2CqqE1wHxEtL8FAclq9zyIRYex0zXlAfc5SnCbzJsffgApnak48X7u2UemQaIilkS46HUQwCeYXZnH05pDi",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gEBlYPdpc-LViyv06sGfHXryLj7JLibcQQ9uTrpXNGnbq2Dz4u3AFD-YFOktEglWeaUCpjZLOZ3aPBM8hdVZqjz2nVR6WBQnYMFDYjCyx3UUNOAhziNHI85UyyTxJ8HRh1c3aENoWbi0ULmXaoOtxionDB0yTacTZIqUpmWyr4G3Z_WzBeawHg",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gFZiceRiMdjSiyzoreeUWn36aTDBcifaTF86T7cPYW_fqjakt7jGRj3JSLstRAFSeqsH9zVMbJuKORE63IAVoXW_0UZyDBItYPpPfQ68zykXN79wziREJ5tTmHH4JJyMhVpga0Y5XL2yU77KOYSmwShxDx1uH6EbesvL7zOq9ZUeAugZxg"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "蝙蝠侠：阿卡姆疯人院 年度版"
+      ]
     },
     {
       "type": "game",
@@ -283,8 +262,9 @@
       "level_name": "A whirlwind of rage and steel",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 9:53am",
+      "unlocked": "2019年5月28日 09:53",
       "playtime": "0.2 小时",
+      "name_zh": "巫师 2：国王刺客 增强版",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -297,11 +277,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gFhoce1jfsLLwQL-_ObUHXCvbmScLCfYRQ06S7VWYTze_jal4ejFRDudELt5Sg5SevED8GVXfZfeKUBiltNeuVqxmkV6G0t7IJJDdFvpnSwSZ7t2kXVLI50EzXbzJ5bb1lZhbUBtWLnjU-_KPoX0jm96CgwhEqLv0QLpRg",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gE5iafFtNo3PzQT8pL-LSXb2ajOUfCKKHQ46T7dWPW7Q9jqjtOuWQW2bQul6QAgEeKcH92EbI4nXaARvi8VfrneHnkl8GRN1IZcRdQvvmCNLMOsjm3hGfM1Uz3CiJZXbhwxra0NsXbrmUrmRZ9ChwTFkA01xWa0YN_ZXAdo",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gFNod-RgLIDJxk7JqPSEHTL-ZTbDKnzdRQpsReBdPDnQ-ment--dF2ydQOwlSwwBevYE8TVJNJ2JPRA00dJe5XW2kAJ_EQQsd9d5eQK6zXFOYu9yzSVGd5xayCKmJZ3djAlkPhI4WbnlVO_LbISjly0lWR80F_EeNZXV5nL6vprzESFTDUQ"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "巫师 2：国王刺客 增强版"
+      ]
     },
     {
       "type": "game",
@@ -311,8 +287,9 @@
       "level_name": "Mystery Badge",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 9:48am",
+      "unlocked": "2019年5月28日 09:48",
       "playtime": "13.7 小时",
+      "name_zh": "英雄传说：空之轨迹 the 3rd",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -332,11 +309,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClObexgNMLIhVes5-uAHXPyNWCUe3OAHlhrRLtaMWzerzKh4-TAFGudRL4pEVhQeaEH-2IbOJuLNxsjlNlc7We3hUB4DCkhf8RBdVLjkyYSNO0jmSdFd85WzHb0I5DcjQ4xbEM-W77lVbrLOoilkydwDh9kAeBEM53TtSfjgWx99Q",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClZbeAnC8DPxRawgOCCCnGxYTrFKCSESF9pGbMKNWDbqjGl5O6VEDqfRegtFQkDLKMB9mIdbs-BbBNu3YNerSuomUM7HBk6dsBUTwa2y3MWbOV8miAXdc1TzyPyc5CM11tnbENiC-vjU-jDaYOmliZxVBpkF_RJYYiL-Hu77tH8aFhw-eDT",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClPYK5fOc3DhVeq5-uAHXPyNWDBenmPRQw9S7EPMWnaqjOts-rAET7IRL0vElsDfaUC8zcbNM_YbEcjlNlc7We3hUB4DCkhf8RBdVLjkyYSNO0jmSdFd85WzHb0I5DcjQ4xbEM-W77lVbrLOoilkydwDh9kAeBEM53TtScdKkpPRw"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "英雄传说：空之轨迹 the 3rd"
+      ]
     },
     {
       "type": "game",
@@ -346,8 +319,9 @@
       "level_name": "Divine",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 9:37am",
+      "unlocked": "2019年5月28日 09:37",
       "playtime": "0.5 小时",
+      "name_zh": "神界：原罪 2",
       "cards": [
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
         "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
@@ -360,11 +334,7 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClebeR8PdjOyQPvpPDIT1W8RD7eLjPdWldlHOQLOGrd_TLx7OSURWzOQeF9RFhXeqYGp2ZLaM7cNhs_ho8NrTPrkxAsTkVmYstBNg202HAWI4IsxSAVIJYHkXX3IpzRh1hmOkA_CLzlUe_LPImkl30mC09mSvZMYtmRune__cP0dLfYeu5xafMFpaqK5Q",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClebeR8PdjOyQPvpPDIT1W8TCDFPSefFVNpGuZTZGjRrGCstrzCFjnOEOwkSw0GdKNRoGBLPpvfORA_1oACqmG5lBF8G1g4fMIAcgCpznEBDrQoySYXeM5ayCP0LpzbglswbhM4XrrgBbWRZ4Ciwi1yCBsySfYcNo-X6nbprJLvKqnRO746ZpPYIo4k",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClebeR8PdjOyQPvpPDIT1W8QCLJLi-fFVNpGuZTMW7e-DLx7O3HQm6dSe4rQA8GfqMB82RBOsuANxs10YZd-j3hw0ckH1g4fMIAcgCpznEBDrQoySYXeM5ayCP0LpzbglswbhM4XrrgBbWRZ4Ciwi1yCBsySfYcNo-X6nbprJLvKqnRO746ZoNjhVZ7"
-      ],
-      "foil_icon": null,
-      "foil_name": null,
-      "earn_text": "",
-      "name_zh": "神界：原罪 2"
+      ]
     },
     {
       "type": "game",
@@ -374,7 +344,7 @@
       "level_name": "The Seer",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 9:33am",
+      "unlocked": "2019年5月28日 09:33",
       "playtime": "0.8 小时",
       "name_zh": "RPG 制作大师 MV"
     },
@@ -386,7 +356,7 @@
       "level_name": "Platinum",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 9:28am",
+      "unlocked": "2019年5月28日 09:28",
       "playtime": "0.4 小时",
       "name_zh": "海贼王 寻秘世界"
     },
@@ -398,7 +368,7 @@
       "level_name": "(＊^_^＊)ゞ",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 9:19am",
+      "unlocked": "2019年5月28日 09:19",
       "playtime": "0.5 小时",
       "name_zh": "超次元游戏 海王星 重生 1"
     },
@@ -410,7 +380,7 @@
       "level_name": "Champion",
       "level": 1,
       "xp": 100,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:56am",
+      "unlocked": "2019年5月28日 08:56",
       "playtime": "2.7 小时",
       "name_zh": "全面战争：三国"
     },
@@ -422,7 +392,7 @@
       "level_name": "Warmonger",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:45am",
+      "unlocked": "2019年5月28日 08:45",
       "playtime": "163 小时",
       "name_zh": "壁纸引擎"
     },
@@ -434,7 +404,7 @@
       "level_name": "Odette",
       "level": 2,
       "xp": 200,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:37am",
+      "unlocked": "2019年5月28日 08:37",
       "playtime": "5.6 小时",
       "name_zh": "猎天使魔女"
     },
@@ -446,7 +416,7 @@
       "level_name": "Rathalos",
       "level": 5,
       "xp": 500,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:36am",
+      "unlocked": "2019年5月28日 08:36",
       "playtime": "167 小时",
       "name_zh": "怪物猎人：世界"
     },
@@ -458,7 +428,7 @@
       "level_name": "Copper Batarang",
       "level": 2,
       "xp": 200,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:27am",
+      "unlocked": "2019年5月28日 08:27",
       "playtime": "3.0 小时",
       "name_zh": "蝙蝠侠：阿卡姆骑士"
     },
@@ -470,7 +440,7 @@
       "level_name": "Chicken",
       "level": 1,
       "xp": 100,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:26am",
+      "unlocked": "2019年5月28日 08:26",
       "playtime": "6.0 小时",
       "name_zh": "星露谷物语"
     },
@@ -482,7 +452,7 @@
       "level_name": "Hero Class",
       "level": 2,
       "xp": 200,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:24am",
+      "unlocked": "2019年5月28日 08:24",
       "playtime": "3.8 小时",
       "name_zh": "弹丸论破 绝对绝望少女"
     },
@@ -494,7 +464,7 @@
       "level_name": "Silver",
       "level": 3,
       "xp": 300,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:20am",
+      "unlocked": "2019年5月28日 08:20",
       "playtime": "22 小时",
       "name_zh": "铁拳 7"
     },
@@ -506,7 +476,7 @@
       "level_name": "Private Zombie Punisher",
       "level": 2,
       "xp": 200,
-      "unlocked": "Unlocked 28 May, 2019 @ 8:12am",
+      "unlocked": "2019年5月28日 08:12",
       "playtime": "1.6 小时",
       "name_zh": "僵尸部队三部曲"
     },
@@ -518,7 +488,7 @@
       "level_name": "Sophomore",
       "level": 2,
       "xp": 200,
-      "unlocked": "Unlocked 28 May, 2019 @ 5:59am",
+      "unlocked": "2019年5月28日 05:59",
       "playtime": "42 小时",
       "name_zh": "弹丸论破：希望的学园与绝望高中生"
     },
@@ -530,7 +500,7 @@
       "level_name": "Something to Hope For",
       "level": 1,
       "xp": 100,
-      "unlocked": "Unlocked 28 May, 2019 @ 5:52am",
+      "unlocked": "2019年5月28日 05:52",
       "playtime": "55 小时",
       "name_zh": "超级弹丸论破 2：再见绝望学园"
     },
@@ -542,7 +512,7 @@
       "level_name": "LEVEL1",
       "level": 1,
       "xp": 100,
-      "unlocked": "Unlocked 28 May, 2019 @ 5:47am",
+      "unlocked": "2019年5月28日 05:47",
       "playtime": "13.2 小时",
       "name_zh": "命运石之门"
     },
@@ -554,7 +524,7 @@
       "level_name": "Gem Maker",
       "level": 1,
       "xp": 100,
-      "unlocked": "Unlocked 31 Oct, 2017 @ 7:26am",
+      "unlocked": "2017年10月31日 07:26",
       "name_zh": "宝石工匠",
       "desc_zh": "通过合成宝石获得的徽章"
     }

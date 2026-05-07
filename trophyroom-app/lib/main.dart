@@ -328,7 +328,6 @@ class _HomePageState extends State<HomePage>
   late AnimationController _animCtrl;
   late Animation<double> _titleSlide;
   late AnimationController _scanCtrl;
-  late AnimationController _frameSweepCtrl;  // Chase 框红蓝流光扫光
   bool _animDone = false;
   List<Map<String, dynamic>> _deals = [];
   String _dealsStatus = '';
@@ -385,10 +384,6 @@ class _HomePageState extends State<HomePage>
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
-    _frameSweepCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) _animCtrl.forward().then((_) => setState(() => _animDone = true));
     });
@@ -404,7 +399,6 @@ class _HomePageState extends State<HomePage>
   void dispose() {
     _animCtrl.dispose();
     _scanCtrl.dispose();
-    _frameSweepCtrl.dispose();
     _platformPageCtrl.dispose();
     super.dispose();
   }
@@ -2431,7 +2425,7 @@ class _HomePageState extends State<HomePage>
       },
       child: ListView(padding: const EdgeInsets.all(16), children: [
         // Steam 档案卡
-        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime, _frameSweepCtrl),
+        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
 
         const SizedBox(height: 16),
 
@@ -2489,7 +2483,7 @@ class _HomePageState extends State<HomePage>
     return [const Color(0xFF5D5D5D), const Color(0xFF8A8A8A), const Color(0xFF3D3D3D)];
   }
 
-  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String profileBgMovie, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime, AnimationController frameSweepCtrl) {
+  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String profileBgMovie, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
     final avatarSize = 56.0;
     final hasFrame = avatarFrameUrl.isNotEmpty;
     final hasBg = profileBgUrl.isNotEmpty;
@@ -2556,30 +2550,14 @@ class _HomePageState extends State<HomePage>
                         child: const Icon(Icons.person, size: 28, color: Colors.grey)),
                     ),
                   ),
-                  // 点数商店头像框 — 红蓝 SweepGradient 流光（方形边框扫光效果）
+                  // 点数商店头像框（叠在头像上面，比头像大一圈露出装饰边）
                   if (hasFrame)
-                    AnimatedBuilder(
-                      animation: frameSweepCtrl,
-                      builder: (context, _) => ShaderMask(
-                        shaderCallback: (bounds) => SweepGradient(
-                          startAngle: frameSweepCtrl.value * 2 * math.pi,
-                          endAngle: frameSweepCtrl.value * 2 * math.pi + 2 * math.pi,
-                          colors: const [
-                            Color(0xCCFF4444),
-                            Color(0xCC4488FF),
-                            Color(0xCCFF4444),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ).createShader(bounds),
-                        blendMode: BlendMode.srcATop,
-                        child: Image.network(
-                          _proxyImage(avatarFrameUrl),
-                          width: containerSize,
-                          height: containerSize,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                        ),
-                      ),
+                    Image.network(
+                      _proxyImage(avatarFrameUrl),
+                      width: containerSize,
+                      height: containerSize,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                     ),
                 ],
               ),
@@ -3192,10 +3170,12 @@ class _HomePageState extends State<HomePage>
 
     final games = (data['games'] as List? ?? []).cast<Map<String, dynamic>>();
     final totalHours = (data['total_hours'] as num?)?.toDouble() ?? 0;
-    final userName = data['user_name'] ?? 'Nintendo Switch';
-    final totalGamePrice = data['total_game_price'] ?? '0';
-    final lastUpdate = data['last_update'] ?? '';
-    final region = data['region'] ?? '';
+    // 名字修复: 小黑盒未绑定时返回「玩家None」
+    var rawName = (data['user_name'] ?? '').toString();
+    final userName = (rawName.isEmpty || rawName == '玩家None') ? 'Nintendo Switch' : rawName;
+    final totalGamePrice = (data['total_price'] ?? '0').toString();
+    final lastUpdate = (data['last_update'] ?? '').toString();
+    final region = (data['region'] ?? '').toString();
     final showSwitch = _allSwitchAccounts.length > 1;
 
     return Column(children: [
@@ -3216,10 +3196,9 @@ class _HomePageState extends State<HomePage>
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                   items: List.generate(_allSwitchAccounts.length, (i) {
                     final a = _allSwitchAccounts[i];
-                    return DropdownMenuItem(
-                      value: i,
-                      child: Text(a['user_name'] ?? '账号 ${i+1}', style: const TextStyle(fontSize: 13)),
-                    );
+                    var n = (a['user_name'] ?? '').toString();
+                    if (n.isEmpty || n == '玩家None') n = '账号 ${i+1}';
+                    return DropdownMenuItem(value: i, child: Text(n, style: const TextStyle(fontSize: 13)));
                   }),
                   onChanged: (i) {
                     if (i != null && i < _allSwitchAccounts.length) {
@@ -3234,109 +3213,228 @@ class _HomePageState extends State<HomePage>
       // 主内容
       Expanded(child: ListView(
         padding: const EdgeInsets.all(16),
-      children: [
-        // 用户卡片
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFFE60012), Color(0xFF8B0000)]),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: Colors.white.withOpacity(0.2),
-              backgroundImage: data['avatar'] != null ? NetworkImage(data['avatar'] as String) : null,
-              child: data['avatar'] == null ? const Icon(Icons.sports_esports, size: 28, color: Colors.white) : null,
-            ),
-            const SizedBox(width: 14),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(userName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
-              const SizedBox(height: 4),
-              Row(children: [
-                Text('${games.length} 款 · ${totalHours.toStringAsFixed(0)} 小时',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
-                  child: Text('¥$totalGamePrice', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                ),
-              ]),
-              if (lastUpdate.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text('更新于$lastUpdate', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11)),
-                ),
-            ])),
-          ]),
-        ),
-        const SizedBox(height: 16),
-        const Text('🎮 游戏时长排行', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-        const SizedBox(height: 10),
-        ...games.map((g) {
-          final name = g['name'] ?? '???';
-          final hours = (g['total_hours'] as num?)?.toDouble() ?? 0;
-          final recentHours = (g['recent_hours'] as num?)?.toDouble() ?? 0;
-          final lastPlayed = g['last_played'] ?? '';
-          final coverUrl = g['cover_url'] ?? '';
-          final maxHours = games.isNotEmpty ? ((games.first['total_hours'] as num?)?.toDouble() ?? 1) : 1;
-          final barRatio = hours / (maxHours > 0 ? maxHours : 1);
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        children: [
+          // ── 头图卡片 ──
+          Container(
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
-              borderRadius: BorderRadius.circular(12),
+              gradient: const LinearGradient(colors: [Color(0xFFE60012), Color(0xFF8B0000)]),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Row(children: [
-              // 封面
-              if (coverUrl.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(coverUrl, width: 40, height: 40, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(width: 40, height: 40, color: Colors.white.withOpacity(0.05))),
-                )
-              else
-                Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(8))),
-              const SizedBox(width: 10),
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundImage: data['avatar'] != null ? NetworkImage(data['avatar'] as String) : null,
+                child: data['avatar'] == null ? const Icon(Icons.sports_esports, size: 28, color: Colors.white) : null,
+              ),
+              const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
-                Row(children: [
-                  Container(
-                    width: 60 + barRatio * 80,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFFE60012), Color(0xFF00A0E9)]),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('${hours.toStringAsFixed(1)}h', style: TextStyle(color: Colors.grey[400], fontSize: 12, fontWeight: FontWeight.w500)),
-                ]),
-                if (lastPlayed.isNotEmpty)
+                Text(userName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                if (region.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Text('上次: $lastPlayed', style: TextStyle(color: Colors.grey[600], fontSize: 11)),
+                    child: Text(region, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
                   ),
               ])),
-              if (recentHours > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFF00A0E9), Color(0xFF0080CC)]),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('${recentHours.toStringAsFixed(1)}h', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
-                ),
+              if (lastUpdate.isNotEmpty)
+                Text(lastUpdate, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
             ]),
-          );
-        }),
-      ],
-    )),
-  ]);
+          ),
+          const SizedBox(height: 12),
+          // ── 统计卡片 ──
+          Row(children: [
+            _switchStatCard('🎮', '${games.length}', '游戏数量'),
+            const SizedBox(width: 8),
+            _switchStatCard('⏱️', '${totalHours.toStringAsFixed(0)}h', '总时长'),
+            const SizedBox(width: 8),
+            _switchStatCard('💰', '¥$totalGamePrice', '游戏价值'),
+          ]),
+          const SizedBox(height: 16),
+          // ── 游戏封面网格 ──
+          if (games.isNotEmpty) ...[
+            const Text('🎮 游戏库', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 10),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: games.length,
+              itemBuilder: (ctx, i) {
+                final g = games[i];
+                final name = g['name'] ?? '???';
+                final hours = (g['total_hours'] as num?)?.toDouble() ?? 0;
+                final coverUrl = g['cover_url'] ?? '';
+                return GestureDetector(
+                  onTap: () => _showSwitchGameDetail(g),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withOpacity(0.06)),
+                    ),
+                    child: Column(children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                          child: coverUrl.isNotEmpty
+                              ? Image.network(coverUrl, width: double.infinity, fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(color: Colors.white.withOpacity(0.05), child: const Icon(Icons.sports_esports, size: 32, color: Colors.white24)))
+                              : Container(color: Colors.white.withOpacity(0.05), child: const Icon(Icons.sports_esports, size: 32, color: Colors.white24)),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(name, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500), maxLines: 2, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text('${hours.toStringAsFixed(0)}h', style: TextStyle(color: Colors.grey[500], fontSize: 10)),
+                        ]),
+                      ),
+                    ]),
+                  ),
+                );
+              },
+            ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(child: Text('暂无游戏数据', style: TextStyle(color: Colors.grey[600], fontSize: 14))),
+            ),
+        ],
+      )),
+    ]);
+  }
+
+  Widget _switchStatCard(String icon, String value, String label) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
+        ),
+        child: Column(children: [
+          Text(icon, style: const TextStyle(fontSize: 22)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+        ]),
+      ),
+    );
+  }
+
+  void _showSwitchGameDetail(Map<String, dynamic> game) {
+    final name = game['name'] ?? '???';
+    final hours = (game['total_hours'] as num?)?.toDouble() ?? 0;
+    final recentHours = (game['recent_hours'] as num?)?.toDouble() ?? 0;
+    final lastPlayed = game['last_played'] ?? '';
+    final coverUrl = game['cover_url'] ?? '';
+    final bannerUrl = game['banner_url'] ?? '';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1D21),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: EdgeInsets.zero,
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            // 头图
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: bannerUrl.isNotEmpty
+                  ? Image.network(bannerUrl, width: double.infinity, height: 140, fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(height: 140, color: const Color(0xFFE60012).withOpacity(0.3)))
+                  : Container(height: 140, color: const Color(0xFFE60012).withOpacity(0.3)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // 封面 + 标题
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  if (coverUrl.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(coverUrl, width: 72, height: 72, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                    ),
+                  if (coverUrl.isNotEmpty) const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(name, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Row(children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFFE60012), Color(0xFF8B0000)]),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text('${hours.toStringAsFixed(1)} 小时', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                        ),
+                        if (recentHours > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [Color(0xFF00A0E9), Color(0xFF0080CC)]),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('最近 ${recentHours.toStringAsFixed(1)}h', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+                          ),
+                        ],
+                      ]),
+                    ]),
+                  ),
+                ]),
+                const SizedBox(height: 20),
+                // 详细数据
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(children: [
+                    _switchDetailRow('🎮 总游玩时长', '${hours.toStringAsFixed(1)} 小时'),
+                    if (recentHours > 0) _switchDetailRow('🕐 最近两周', '${recentHours.toStringAsFixed(1)} 小时'),
+                    if (lastPlayed.isNotEmpty) _switchDetailRow('📅 最后游玩', lastPlayed),
+                  ]),
+                ),
+                const SizedBox(height: 16),
+                // 关闭按钮
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+                    child: const Text('关闭'),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _switchDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+      ]),
+    );
   }
 
   /// ───── 旧 Switch 游戏库（折扣页）─────

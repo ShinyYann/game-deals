@@ -54,8 +54,8 @@ mv android/app/src/main/AndroidManifest_tmp.xml android/app/src/main/AndroidMani
 # PSN OAuth 深链 intent-filter（macOS sed 不支持 \n，用 perl）
 perl -i -pe 'if(/^        <\/activity>/ && !$done){$_="        <intent-filter>\n            <action android:name=\"android.intent.action.VIEW\" />\n            <category android:name=\"android.intent.category.DEFAULT\" />\n            <category android:name=\"android.intent.category.BROWSABLE\" />\n            <data android:scheme=\"com.scee.psxandroid\" />\n        </intent-filter>\n$_"; $done=1}' android/app/src/main/AndroidManifest.xml
 
-# 4. NDK 版本（27 损坏了，用 26）
-sed -i '' 's/ndkVersion = flutter.ndkVersion/ndkVersion = "26.3.11579264"/' android/app/build.gradle.kts
+# 4. NDK 版本（插件需要 27）
+sed -i '' 's/ndkVersion = flutter.ndkVersion/ndkVersion = "27.0.12077973"/' android/app/build.gradle.kts
 
 # 5. 阿里云镜像（国内加速）
 cat > android/settings.gradle.kts << 'KTS'

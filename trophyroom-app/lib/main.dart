@@ -504,6 +504,10 @@ class _HomePageState extends State<HomePage>
     if (steam.isNotEmpty && _steamData == null) {
       _fetchSteamData();
     }
+    // 徽章独立抓取（不依赖 Steam API Key）
+    if (steam.isNotEmpty && _steamBadges == null) {
+      _fetchSteamBadges();
+    }
     // 如果有 PSN ID，自动拉取 PSN 数据
     if (psn.isNotEmpty) {
       _fetchFullPsnData().then((data) {
@@ -2286,6 +2290,8 @@ class _HomePageState extends State<HomePage>
         _steamData = {'error': e.toString()};
         _steamLoading = false;
       });
+      // 徽章独立抓取，不依赖 Steam API Key
+      _fetchSteamBadges();
       return {};
     }
   }
@@ -2329,6 +2335,10 @@ class _HomePageState extends State<HomePage>
       return const Center(child: CircularProgressIndicator(strokeWidth: 2));
     }
     if (_steamData!.containsKey('error')) {
+      // 徽章独立于 Steam API，即使主数据挂了也能显示
+      if (_steamBadges != null && (_steamBadges!['badges'] as List?)!.isNotEmpty) {
+        return _buildSteamFallbackWithBadges();
+      }
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.warning_amber, size: 48, color: Colors.orange[300]),
         const SizedBox(height: 12),
@@ -2458,6 +2468,40 @@ class _HomePageState extends State<HomePage>
             _statItem('✅', '$gamesWithTime', '玩过'),
           ])),
       ]));
+  }
+
+  /// 降级页面：Steam API 失败但徽章可用
+  Widget _buildSteamFallbackWithBadges() {
+    return RefreshIndicator(
+      color: const Color(0xFF66C0F4),
+      onRefresh: () async {
+        setState(() { _steamData = null; _steamBadges = null; });
+        _fetchSteamData();
+        _fetchSteamBadges();
+      },
+      child: ListView(padding: const EdgeInsets.all(16), children: [
+        // 错误提示条
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.withOpacity(0.3)),
+          ),
+          child: Row(children: [
+            Icon(Icons.info_outline, color: Colors.orange[300], size: 20),
+            const SizedBox(width: 10),
+            Expanded(child: Text('Steam 详细数据需要 API Key\n徽章数据通过公开页面抓取，独立可用',
+              style: TextStyle(fontSize: 12, color: Colors.grey[400]))),
+          ]),
+        ),
+        const SizedBox(height: 16),
+        // 徽章展示
+        _buildSteamBadgesCard(),
+        const SizedBox(height: 16),
+        Center(child: Text('下拉刷新重试', style: TextStyle(fontSize: 12, color: Colors.grey[600]))),
+      ]),
+    );
   }
 
   /// Steam 最近游玩

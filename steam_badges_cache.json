@@ -1,0 +1,319 @@
+{
+  "steam_id": "76561198206837309",
+  "level": 177,
+  "total_xp": 165643,
+  "badge_count": 32,
+  "community_badges": 7,
+  "game_badges": 25,
+  "badges": [
+    {
+      "type": "community",
+      "badge_id": 2,
+      "name": "Pillar of Community",
+      "icon": "https://community.fastly.steamstatic.com/public/images/badges/01_community/community02_80.png",
+      "level_name": "Pillar of Community",
+      "level": 1,
+      "xp": 100
+    },
+    {
+      "type": "community",
+      "badge_id": 13,
+      "name": "Power Player",
+      "icon": "https://community.fastly.steamstatic.com/public/images/badges/13_gamecollector/100_80.png?v=4",
+      "level_name": "Power Player",
+      "level": 1,
+      "xp": 343
+    },
+    {
+      "type": "community",
+      "badge_id": 69,
+      "name": "Steam Replay 2025",
+      "icon": "https://community.fastly.steamstatic.com/public/images/badges/generic/YIR2025_80.png",
+      "level_name": "Steam Replay 2025",
+      "level": 1,
+      "xp": 50
+    },
+    {
+      "type": "community",
+      "badge_id": 1,
+      "name": "Years of Service",
+      "icon": "https://community.fastly.steamstatic.com/public/images/badges/02_years/steamyears10_80.png",
+      "level_name": "Years of Service",
+      "level": 1,
+      "xp": 500
+    },
+    {
+      "type": "community",
+      "badge_id": 64,
+      "name": "Steam Replay 2022",
+      "icon": "https://community.fastly.steamstatic.com/public/images/badges/generic/Replay2022_80.png",
+      "level_name": "Steam Replay 2022",
+      "level": 1,
+      "xp": 50
+    },
+    {
+      "type": "community",
+      "badge_id": 37,
+      "name": "Steam Grand Prix 2019",
+      "icon": "https://community.fastly.steamstatic.com/public/images/badges/37_summer2019/level1500_80.png",
+      "level_name": "Steam Grand Prix 2019",
+      "level": 1,
+      "xp": 155600
+    },
+    {
+      "type": "game",
+      "appid": 218620,
+      "name": "PAYDAY 2",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/218620/ebd4b6d3abff558a43bef45a99684cf33f7bd09c.png",
+      "level_name": "Career Criminal",
+      "level": 5,
+      "xp": 500,
+      "playtime": "40 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 641990,
+      "name": "The Escapists 2",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/641990/8b89f43e93d157d025d59b0c568c54c6afe26495.png",
+      "level_name": "Riot Gear",
+      "level": 5,
+      "xp": 500,
+      "playtime": "23 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 552500,
+      "name": "Warhammer: Vermintide 2",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/552500/8081c2ecda811bc593d26b314821ab05dcf47a2d.png",
+      "level_name": "Saviour",
+      "level": 5,
+      "xp": 500,
+      "playtime": "243 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 209000,
+      "name": "Batman™: Arkham Origins",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/209000/3735460d74ae569efb96b70432c8fdb86fdb5c07.png",
+      "level_name": "Killer Croc",
+      "level": 2,
+      "xp": 200
+    },
+    {
+      "type": "game",
+      "appid": 200260,
+      "name": "Batman: Arkham City GOTY",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/200260/14829e136ce41446af576c2cd4d92a9ba9af04b9.png",
+      "level_name": "Oswald Chesterfield Cobblepot",
+      "level": 5,
+      "xp": 500
+    },
+    {
+      "type": "game",
+      "appid": 893180,
+      "name": "Catherine Classic",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/893180/8046a80cdae90f72eb5acdb3a52db6c93ab6cb5e.png",
+      "level_name": "Companionsheep",
+      "level": 5,
+      "xp": 500
+    },
+    {
+      "type": "game",
+      "appid": 35140,
+      "name": "Batman: Arkham Asylum GOTY Edition",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/35140/d946aaf6fb4aa3ab1bcd3422698be1b7bcbc7ef5.png",
+      "level_name": "World's Greatest Detective",
+      "level": 5,
+      "xp": 500
+    },
+    {
+      "type": "game",
+      "appid": 20920,
+      "name": "The Witcher 2: Assassins of Kings Enhanced Edition",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/20920/28008397a813d1a22162083bb1c4520421ae5d4e.png",
+      "level_name": "A whirlwind of rage and steel",
+      "level": 5,
+      "xp": 500,
+      "playtime": "0.2 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 436670,
+      "name": "The Legend of Heroes: Trails in the Sky the 3rd",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/436670/e89b9d64467a3c354db90604884411d923869ea3.png",
+      "level_name": "Mystery Badge",
+      "level": 5,
+      "xp": 500,
+      "playtime": "13.7 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 435150,
+      "name": "Divinity: Original Sin 2",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/435150/0469d0a5867da50286e3b0ecab2da2c58dda0258.png",
+      "level_name": "Divine",
+      "level": 5,
+      "xp": 500,
+      "playtime": "0.5 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 363890,
+      "name": "RPG Maker MV",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/363890/7f1b1eba5948539c32938c9a5b0b549c80e684df.png",
+      "level_name": "The Seer",
+      "level": 5,
+      "xp": 500,
+      "playtime": "0.8 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 755500,
+      "name": "ONE PIECE World Seeker",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/755500/92e7a85c6cdf28703dc9f43218748b59882c8ec7.png",
+      "level_name": "Platinum",
+      "level": 5,
+      "xp": 500,
+      "playtime": "0.4 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 282900,
+      "name": "Hyperdimension Neptunia Re;Birth1",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/282900/ef5d3cb6222210ab088cc3cd28565da69b1f67a7.png",
+      "level_name": "(＊^_^＊)ゞ",
+      "level": 5,
+      "xp": 500,
+      "playtime": "0.5 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 779340,
+      "name": "Total War: THREE KINGDOMS",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/779340/9e1e470e5d5d5782b06c7306f64dbad0bb9cafde.png",
+      "level_name": "Champion",
+      "level": 1,
+      "xp": 100,
+      "playtime": "2.7 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 431960,
+      "name": "Wallpaper Engine",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/431960/3ac817cd2904e822e0801ce9fe59a94551d4d4ca.png",
+      "level_name": "Warmonger",
+      "level": 5,
+      "xp": 500,
+      "playtime": "163 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 460790,
+      "name": "Bayonetta",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/460790/560b2d60ed2407500c989dbd0c699ff271c39dae.png",
+      "level_name": "Odette",
+      "level": 2,
+      "xp": 200,
+      "playtime": "5.6 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 582010,
+      "name": "Monster Hunter: World",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/582010/eb30778f8d94089f2b7e66adfc7e15da49da16fd.png",
+      "level_name": "Rathalos",
+      "level": 5,
+      "xp": 500,
+      "playtime": "167 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 208650,
+      "name": "Batman™: Arkham Knight",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/208650/3c82e2461a3d0715ab81b21c37a2f25f1cba1cd5.png",
+      "level_name": "Copper Batarang",
+      "level": 2,
+      "xp": 200,
+      "playtime": "3.0 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 413150,
+      "name": "Stardew Valley",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/413150/5aa283c2c2880fd1992cdc7944cf10c108cc6283.png",
+      "level_name": "Chicken",
+      "level": 1,
+      "xp": 100,
+      "playtime": "6.0 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 555950,
+      "name": "Danganronpa Another Episode: Ultra Despair Girls",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/555950/0fff56df2982b9da082f596b9e8452247871a2a4.png",
+      "level_name": "Hero Class",
+      "level": 2,
+      "xp": 200,
+      "playtime": "3.8 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 389730,
+      "name": "TEKKEN 7",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/389730/6679ff31779e28a20f17e4cf71324301114ed28f.png",
+      "level_name": "Silver",
+      "level": 3,
+      "xp": 300,
+      "playtime": "22 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 301640,
+      "name": "Zombie Army Trilogy",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/301640/e8ade9bd6856b175ce80e3b38ac004efea994aa2.png",
+      "level_name": "Private Zombie Punisher",
+      "level": 2,
+      "xp": 200,
+      "playtime": "1.6 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 413410,
+      "name": "Danganronpa: Trigger Happy Havoc",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/413410/dc12190a817e2fbd7b0c48e382e53bb29946d1c6.png",
+      "level_name": "Sophomore",
+      "level": 2,
+      "xp": 200,
+      "playtime": "42 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 413420,
+      "name": "Danganronpa 2: Goodbye Despair",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/413420/9c1d47ab2045857aeb09c846281586f21a927a72.png",
+      "level_name": "Something to Hope For",
+      "level": 1,
+      "xp": 100,
+      "playtime": "55 hrs on record"
+    },
+    {
+      "type": "game",
+      "appid": 412830,
+      "name": "STEINS;GATE",
+      "icon": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/412830/41107b2e6a8d0d59786459d95358e41d9bc440ac.png",
+      "level_name": "LEVEL1",
+      "level": 1,
+      "xp": 100,
+      "playtime": "13.2 hrs on record"
+    },
+    {
+      "type": "community",
+      "badge_id": 21,
+      "name": "Gem Maker",
+      "icon": "https://community.fastly.steamstatic.com/public/images/badges/21_auction/scrapper_80.png?v=2",
+      "level_name": "Gem Maker",
+      "level": 1,
+      "xp": 100
+    }
+  ]
+}

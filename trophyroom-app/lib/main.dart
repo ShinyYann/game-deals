@@ -1614,6 +1614,14 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  Widget _fallbackAvatar(String avatar, double size) {
+    if (avatar.isNotEmpty) {
+      return Image.network(_proxyImage(avatar), width: size, height: size, fit: BoxFit.cover);
+    }
+    return Container(width: size, height: size, color: Colors.grey[850],
+      child: const Icon(Icons.person, size: 28, color: Colors.grey));
+  }
+
   Widget _trophyStat(String emoji, String count, String label, Color color) {
     return Column(
       children: [
@@ -2453,6 +2461,8 @@ class _HomePageState extends State<HomePage>
     final avatar = data['avatar'] ?? '';
     final avatarFrame = (data['avatar_frame'] as Map<String, dynamic>?) ?? {};
     final avatarFrameUrl = avatarFrame['image']?.toString() ?? '';
+    final animatedAvatar = (data['animated_avatar'] as Map<String, dynamic>?) ?? {};
+    final animatedAvatarUrl = animatedAvatar['image']?.toString() ?? '';
     final profileBg = (data['profile_background'] as Map<String, dynamic>?) ?? {};
     final profileBgUrl = profileBg['image']?.toString() ?? '';
     final profileBgMovie = profileBg['movie_mp4_small']?.toString() ?? '';
@@ -2474,7 +2484,7 @@ class _HomePageState extends State<HomePage>
       },
       child: ListView(padding: const EdgeInsets.all(16), children: [
         // Steam 档案卡
-        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
+        _buildSteamProfileCard(avatar, avatarFrameUrl, animatedAvatarUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
 
         const SizedBox(height: 16),
 
@@ -2532,7 +2542,7 @@ class _HomePageState extends State<HomePage>
     return [const Color(0xFF5D5D5D), const Color(0xFF8A8A8A), const Color(0xFF3D3D3D)];
   }
 
-  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String profileBgMovie, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
+  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String animatedAvatarUrl, String profileBgUrl, String profileBgMovie, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
     final avatarSize = 56.0;
     final hasFrame = avatarFrameUrl.isNotEmpty;
     final hasBg = profileBgUrl.isNotEmpty;
@@ -2590,14 +2600,15 @@ class _HomePageState extends State<HomePage>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // 头像（圆形裁切）
+                  // 头像 — 动画头像优先（Steam Points Shop 动态头像 GIF）
                   ClipOval(
-                    child: Image.network(_proxyImage(avatar), width: avatarSize, height: avatarSize,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_,__,___) => Container(
-                        width: avatarSize, height: avatarSize, color: Colors.grey[850],
-                        child: const Icon(Icons.person, size: 28, color: Colors.grey)),
-                    ),
+                    child: animatedAvatarUrl.isNotEmpty
+                        ? Image.network(_proxyImage(animatedAvatarUrl), width: avatarSize, height: avatarSize,
+                            fit: BoxFit.cover, gaplessPlayback: true,
+                            errorBuilder: (_,__,___) => _fallbackAvatar(avatar, avatarSize))
+                        : Image.network(_proxyImage(avatar), width: avatarSize, height: avatarSize,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_,__,___) => _fallbackAvatar(avatar, avatarSize)),
                   ),
                   // 点数商店头像框（叠在头像上面，比头像大一圈露出装饰边）
                   if (hasFrame)

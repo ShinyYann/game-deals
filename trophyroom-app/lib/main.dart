@@ -2495,11 +2495,9 @@ class _HomePageState extends State<HomePage>
             itemBuilder: (ctx, i) {
               final b = badges[i];
               final icon = (b['icon'] as String?) ?? '';
-              final name = (b['name'] as String?) ?? '';
+              final name = (b['name_zh'] as String?) ?? (b['name'] as String?) ?? '';
               final lv = b['level'] ?? 0;
-              final lvName = (b['level_name'] as String?) ?? '';
               final isGame = b['type'] == 'game';
-              final playtime = (b['playtime'] as String?) ?? '';
 
               return GestureDetector(
                 onTap: () => _showBadgeDetail(b),
@@ -2522,7 +2520,7 @@ class _HomePageState extends State<HomePage>
                           : Icon(isGame ? Icons.sports_esports : Icons.emoji_events, color: Colors.grey[600], size: 28),
                     ),
                     const SizedBox(height: 4),
-                    // Name
+                    // Name (Chinese)
                     Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 10, color: Colors.grey[300])),
                     // Level
@@ -2539,44 +2537,151 @@ class _HomePageState extends State<HomePage>
 
   void _showBadgeDetail(Map<String, dynamic> badge) {
     final icon = (badge['icon'] as String?) ?? '';
-    final name = (badge['name'] as String?) ?? '';
+    final name = (badge['name_zh'] as String?) ?? (badge['name'] as String?) ?? '';
+    final nameEn = (badge['name'] as String?) ?? '';
     final lv = badge['level'] ?? 0;
     final lvName = (badge['level_name'] as String?) ?? '';
     final xp = badge['xp'] ?? 0;
     final unlocked = (badge['unlocked'] as String?) ?? '';
     final playtime = (badge['playtime'] as String?) ?? '';
+    final isGame = badge['type'] == 'game';
+    final cards = (badge['cards'] as List?)?.cast<String>() ?? [];
+    final desc = (badge['desc_zh'] as String?) ?? '';
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2A3F),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          icon.isNotEmpty
-              ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(icon, width: 48, height: 48, fit: BoxFit.contain))
-              : const SizedBox(width: 48, height: 48),
-          const SizedBox(width: 12),
-          Expanded(child: Text(name, style: const TextStyle(fontSize: 16, color: Colors.white))),
-        ]),
-        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _badgeInfoRow('等级', 'Lv.$lv — $lvName'),
-          _badgeInfoRow('XP', '$_formatNumber(xp)'),
-          if (unlocked.isNotEmpty) _badgeInfoRow('解锁', unlocked),
-          if (playtime.isNotEmpty) _badgeInfoRow('游玩', playtime),
-        ]),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('关闭', style: TextStyle(color: Colors.blue))),
-        ],
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [Color(0xFF1B2838), Color(0xFF0F1923)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFF66C0F4).withAlpha(50)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Header: icon + name
+            Row(children: [
+              // Badge icon
+              Container(
+                width: 64, height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: isGame
+                        ? [const Color(0xFF2A3F5F), const Color(0xFF1A2F4F)]
+                        : [const Color(0xFF3D5A3A), const Color(0xFF2D4A2A)],
+                  ),
+                  border: Border.all(color: (isGame ? const Color(0xFF66C0F4) : const Color(0xFF90EE90)).withAlpha(80)),
+                ),
+                child: icon.isNotEmpty
+                    ? Padding(padding: const EdgeInsets.all(6), child: Image.network(icon, fit: BoxFit.contain))
+                    : Icon(isGame ? Icons.sports_esports : Icons.emoji_events, size: 32, color: Colors.grey[500]),
+              ),
+              const SizedBox(width: 16),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // Chinese name
+                Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                if (name != nameEn && nameEn.isNotEmpty)
+                  Padding(padding: const EdgeInsets.only(top: 2),
+                    child: Text(nameEn, style: TextStyle(fontSize: 12, color: Colors.grey[500]))),
+                if (desc.isNotEmpty)
+                  Padding(padding: const EdgeInsets.only(top: 4),
+                    child: Text(desc, style: TextStyle(fontSize: 11, color: Colors.grey[400]))),
+              ])),
+            ]),
+
+            const SizedBox(height: 16),
+            // Divider
+            Container(height: 1, color: Colors.white.withAlpha(15)),
+            const SizedBox(height: 12),
+
+            // Badge info grid
+            Row(children: [
+              _badgeStatCol('等级', 'Lv.$lv', const Color(0xFF66C0F4)),
+              _badgeStatCol('名称', lvName, const Color(0xFF90EE90)),
+              _badgeStatCol('经验值', _formatNumber(xp), const Color(0xFFFFD700)),
+            ]),
+
+            if (unlocked.isNotEmpty || playtime.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(height: 1, color: Colors.white.withAlpha(15)),
+              const SizedBox(height: 12),
+              if (unlocked.isNotEmpty)
+                _detailRow(Icons.lock_open, '解锁时间', unlocked),
+              if (playtime.isNotEmpty)
+                _detailRow(Icons.timer, '游玩时长', playtime),
+            ],
+
+            // Card images
+            if (cards.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(height: 1, color: Colors.white.withAlpha(15)),
+              const SizedBox(height: 12),
+              Row(children: [
+                Icon(Icons.style, size: 16, color: Colors.blue[300]),
+                const SizedBox(width: 6),
+                Text('卡牌 (${cards.length}张)', style: TextStyle(fontSize: 13, color: Colors.blue[200])),
+              ]),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 120,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: cards.length,
+                  itemBuilder: (_, i) => Container(
+                    width: 160,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white.withAlpha(30)),
+                      color: const Color(0xFF1A2A3F),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(7),
+                      child: Image.network(cards[i], fit: BoxFit.contain, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 16),
+            // Close button
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: TextButton.styleFrom(foregroundColor: Colors.blue[300]),
+                child: const Text('关闭'),
+              ),
+            ),
+          ]),
+        ),
       ),
     );
   }
 
-  Widget _badgeInfoRow(String label, String value) {
+  Widget _badgeStatCol(String label, String value, Color color) {
+    return Expanded(child: Column(children: [
+      Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+      const SizedBox(height: 4),
+      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color)),
+    ]));
+  }
+
+  Widget _detailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
-        SizedBox(width: 60, child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[400]))),
-        Expanded(child: Text(value, style: const TextStyle(fontSize: 13, color: Colors.white))),
+        Icon(icon, size: 16, color: Colors.grey[400]),
+        const SizedBox(width: 8),
+        SizedBox(width: 60, child: Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[500]))),
+        Expanded(child: Text(value, style: TextStyle(fontSize: 13, color: Colors.grey[300]))),
       ]),
     );
   }

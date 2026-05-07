@@ -1,4 +1,6 @@
-name: Build APK (v2)
+name: Build APK (v3)
+
+# trigger rebuild 2026-05-07
 
 on:
   push:

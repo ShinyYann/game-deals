@@ -84,6 +84,17 @@ class XhhPsnClient {
     final overview = await fetchOverview();
     final games = await fetchGames();
 
+    // 获取平台标签
+    Map<String, String> platforms = {};
+    try {
+      final resp = await http
+          .get(Uri.parse('http://8.153.97.56/api/psn/platforms'))
+          .timeout(const Duration(seconds: 5));
+      if (resp.statusCode == 200) {
+        platforms = Map<String, String>.from(json.decode(resp.body) as Map);
+      }
+    } catch (_) {}
+
     // 提取统计数据（headers value 可能是 String "828" 或 int 10）
     final headers = (overview['headers'] as List?) ?? [];
     int totalHours = 0;
@@ -117,7 +128,7 @@ class XhhPsnClient {
         'appid': g['appid']?.toString() ?? '',
         'name': g['game_name']?.toString() ?? '',
         'cover_url': g['game_img']?.toString() ?? '',
-        'platform': '',
+        'platform': platforms[g['psn_cid']?.toString()] ?? '',
         'completion_rate': ((g['progress'] ?? 0) as num).toDouble(),
         'playtime_second': g['playtime_second'] ?? 0,
         'playtime_desc': g['playtime_desc']?.toString() ?? '',

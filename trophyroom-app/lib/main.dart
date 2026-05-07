@@ -1612,9 +1612,11 @@ class _HomePageState extends State<HomePage>
                                       ? Colors.blue[800]
                                       : platform == 'PS4'
                                           ? Colors.indigo[800]
-                                          : platform == 'PS Vita'
-                                              ? Colors.teal[800]
-                                              : Colors.grey[700],
+                                          : platform == 'PS3'
+                                              ? Colors.blueGrey[800]
+                                              : platform == 'PS Vita' || platform == 'PSV'
+                                                  ? Colors.teal[800]
+                                                  : Colors.grey[700],
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(platform,

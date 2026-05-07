@@ -328,7 +328,7 @@ class _HomePageState extends State<HomePage>
   late AnimationController _animCtrl;
   late Animation<double> _titleSlide;
   late AnimationController _scanCtrl;
-  late AnimationController _frameSpinCtrl;  // Steam 头像框旋转
+  late AnimationController _frameSweepCtrl;  // Chase 框红蓝流光扫光
   bool _animDone = false;
   List<Map<String, dynamic>> _deals = [];
   String _dealsStatus = '';
@@ -385,9 +385,9 @@ class _HomePageState extends State<HomePage>
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
-    _frameSpinCtrl = AnimationController(
+    _frameSweepCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(seconds: 2),
     )..repeat();
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) _animCtrl.forward().then((_) => setState(() => _animDone = true));
@@ -404,7 +404,7 @@ class _HomePageState extends State<HomePage>
   void dispose() {
     _animCtrl.dispose();
     _scanCtrl.dispose();
-    _frameSpinCtrl.dispose();
+    _frameSweepCtrl.dispose();
     _platformPageCtrl.dispose();
     super.dispose();
   }
@@ -2431,7 +2431,7 @@ class _HomePageState extends State<HomePage>
       },
       child: ListView(padding: const EdgeInsets.all(16), children: [
         // Steam 档案卡
-        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime, _frameSpinCtrl),
+        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime, _frameSweepCtrl),
 
         const SizedBox(height: 16),
 
@@ -2489,26 +2489,12 @@ class _HomePageState extends State<HomePage>
     return [const Color(0xFF5D5D5D), const Color(0xFF8A8A8A), const Color(0xFF3D3D3D)];
   }
 
-  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String profileBgMovie, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime, AnimationController frameSpinCtrl) {
+  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String profileBgMovie, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime, AnimationController frameSweepCtrl) {
     final avatarSize = 56.0;
     final hasFrame = avatarFrameUrl.isNotEmpty;
     final hasBg = profileBgUrl.isNotEmpty;
     final framePadding = hasFrame ? 14.0 : 6.0;
     final containerSize = avatarSize + framePadding + 4;
-    // 头像框旋转动画（Steam 客户端效果）
-    final frameSpin = AnimatedBuilder(
-      animation: frameSpinCtrl,
-      builder: (context, _) => Transform.rotate(
-        angle: frameSpinCtrl.value * 2 * math.pi,
-        child: Image.network(
-          _proxyImage(avatarFrameUrl),
-          width: containerSize,
-          height: containerSize,
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-        ),
-      ),
-    );
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.blueGrey.withOpacity(0.3)),
@@ -2570,8 +2556,31 @@ class _HomePageState extends State<HomePage>
                         child: const Icon(Icons.person, size: 28, color: Colors.grey)),
                     ),
                   ),
-                  // 点数商店头像框（叠在头像上面，旋转动画匹配 Steam 客户端效果）
-                  if (hasFrame) frameSpin,
+                  // 点数商店头像框 — 红蓝 SweepGradient 流光（方形边框扫光效果）
+                  if (hasFrame)
+                    AnimatedBuilder(
+                      animation: frameSweepCtrl,
+                      builder: (context, _) => ShaderMask(
+                        shaderCallback: (bounds) => SweepGradient(
+                          startAngle: frameSweepCtrl.value * 2 * math.pi,
+                          endAngle: frameSweepCtrl.value * 2 * math.pi + 2 * math.pi,
+                          colors: const [
+                            Color(0xCCFF4444),
+                            Color(0xCC4488FF),
+                            Color(0xCCFF4444),
+                          ],
+                          stops: const [0.0, 0.5, 1.0],
+                        ).createShader(bounds),
+                        blendMode: BlendMode.srcATop,
+                        child: Image.network(
+                          _proxyImage(avatarFrameUrl),
+                          width: containerSize,
+                          height: containerSize,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

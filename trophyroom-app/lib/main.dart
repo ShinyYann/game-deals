@@ -2494,30 +2494,39 @@ class _HomePageState extends State<HomePage>
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // ── Steam 个人资料背景（带动画 MP4 的图） ──
+          // ── Steam 个人资料背景（静态图 + 模糊 + 渐变遮罩） ──
           if (hasBg)
             Positioned.fill(
-              child: Image.network(
-                profileBgUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            ),
-          // 深色遮罩
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
+              child: ShaderMask(
+                shaderCallback: (rect) => LinearGradient(
                   colors: [
-                    const Color(0xFF0D1B2A).withOpacity(hasBg ? 0.75 : 0.9),
-                    const Color(0xFF1A3A5C).withOpacity(hasBg ? 0.65 : 0.85),
+                    const Color(0xFF0D1B2A).withOpacity(0.55),
+                    const Color(0xFF0D1B2A).withOpacity(0.2),
+                    const Color(0xFF0D1B2A).withOpacity(0.55),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ).createShader(rect),
+                blendMode: BlendMode.darken,
+                child: Image.network(
+                  profileBgUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
             ),
-          ),
+          // 无背景时的默认渐变
+          if (!hasBg)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1A3A5C), Color(0xFF0D1B2A)],
+                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
           // 内容
           Padding(
             padding: const EdgeInsets.all(20),
@@ -2581,8 +2590,8 @@ class _HomePageState extends State<HomePage>
             _statItem('✅', '$gamesWithTime', '玩过'),
           ])),
       ],
-    ), // Padding
-    ), // dark overlay
+    ), // Column
+  ), // Padding
   ], // Stack children
 ), // Stack
 ); // Container

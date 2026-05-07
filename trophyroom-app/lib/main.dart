@@ -489,9 +489,14 @@ class _HomePageState extends State<HomePage>
     }
     // 加载本地缓存的 Steam 数据（秒开）
     final cachedSteam = prefs.getString('cache_steam_data');
+    bool needSteamRefresh = false;
     if (cachedSteam != null && steam.isNotEmpty) {
       try {
         _steamData = json.decode(cachedSteam) as Map<String, dynamic>;
+        // 缓存缺少新字段（头像框等）→ 后台静默刷新
+        if (_steamData != null && !_steamData!.containsKey('avatar_frame')) {
+          needSteamRefresh = true;
+        }
       } catch (_) {}
     }
     setState(() {
@@ -501,7 +506,7 @@ class _HomePageState extends State<HomePage>
       _accountsLoaded = true;
     });
     // 如果有 Steam ID，自动拉取 Steam 数据
-    if (steam.isNotEmpty && _steamData == null) {
+    if (steam.isNotEmpty && (_steamData == null || needSteamRefresh)) {
       _fetchSteamData();
     }
     // 如果有 PSN ID，自动拉取 PSN 数据

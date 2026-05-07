@@ -3369,9 +3369,9 @@ class _HomePageState extends State<HomePage>
                   if (coverUrl.isNotEmpty) const SizedBox(width: 14),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(name, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                      Text(name, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 8),
-                      Row(children: [
+                      Wrap(spacing: 6, runSpacing: 6, children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
@@ -3380,8 +3380,7 @@ class _HomePageState extends State<HomePage>
                           ),
                           child: Text('${hours.toStringAsFixed(1)} 小时', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                         ),
-                        if (recentHours > 0) ...[
-                          const SizedBox(width: 8),
+                        if (recentHours > 0)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
@@ -3390,7 +3389,6 @@ class _HomePageState extends State<HomePage>
                             ),
                             child: Text('最近 ${recentHours.toStringAsFixed(1)}h', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
                           ),
-                        ],
                       ]),
                     ]),
                   ),
@@ -3430,9 +3428,10 @@ class _HomePageState extends State<HomePage>
   Widget _switchDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      child: Row(children: [
         Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 13)),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+        const SizedBox(width: 8),
+        Flexible(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500), textAlign: TextAlign.right, maxLines: 2, overflow: TextOverflow.ellipsis)),
       ]),
     );
   }

@@ -778,7 +778,17 @@ class _HomePageState extends State<HomePage>
     }
     for (final g in steamGamesRaw) {
       final game = Map<String, dynamic>.from(g as Map);
-      merged.add(_MergedGame(source: 'steam', data: game));
+      // 过滤 Steam 软件/工具类（Wallpaper Engine, RPG Maker, 桌面增强等）
+      final sName = (game['name'] ?? '').toString().toLowerCase();
+      const steamSoftware = [
+        'wallpaper engine', 'rpg maker', 'mydockfinder',
+        'lossless scaling', 'soundpad', '3dmark',
+        'wallpaper', 'desktop', 'benchmark',
+      ];
+      final isSoftware = steamSoftware.any((kw) => sName.contains(kw));
+      if (!isSoftware) {
+        merged.add(_MergedGame(source: 'steam', data: game));
+      }
     }
 
     // 应用 Steam 筛选（PSN 游戏不受影响）
@@ -904,6 +914,7 @@ class _HomePageState extends State<HomePage>
           return Padding(
             padding: EdgeInsets.only(right: 12, left: i == 0 ? 0 : 0),
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () {
                 if (isPsn) {
                   setState(() => _expandedGameId = _expandedGameId == appId ? null : appId);
@@ -1120,12 +1131,7 @@ class _HomePageState extends State<HomePage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Text('📊 成就总览', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-              const Spacer(),
-              // 汇总卡不显示 Steam 过滤
-            ]),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Row(
               children: [
                 _statTile('🏆', 'PSN 奖杯', '$psnTrophies', const Color(0xFF4ECDC4)),
@@ -1158,12 +1164,19 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildSummaryDetail(Map<String, dynamic>? psnData, Map<String, dynamic>? steamData) {
     final psnGames = (psnData?['games'] as List?) ?? [];
-    final steamGames = (_steamData != null && !_steamData!.containsKey('error'))
+    final steamGamesRaw = (_steamData != null && !_steamData!.containsKey('error'))
         ? (_steamData!['games'] as List? ?? []).cast<Map<String, dynamic>>()
         : <Map<String, dynamic>>[];
+    // 过滤 Steam 软件/工具类
+    final steamGames = steamGamesRaw.where((g) {
+      final sName = (g['name'] ?? '').toString().toLowerCase();
+      const sw = ['wallpaper engine', 'rpg maker', 'mydockfinder', 'lossless scaling', 'soundpad', '3dmark'];
+      return !sw.any((kw) => sName.contains(kw));
+    }).toList();
 
     // PSN 白金游戏
     final platinumGames = psnGames.where((g) => (g['platinum'] ?? 0) > 0).toList();
+    final psnPlatinumCount = psnData?['platinum'] ?? platinumGames.length;
     // Steam 全成就游戏
     final perfectGames = steamGames.where((g) {
       int t = (g['achievements_total'] ?? 0) as int;
@@ -1185,23 +1198,29 @@ class _HomePageState extends State<HomePage>
         Text('🏆 PSN 奖杯分布', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[300])),
         SizedBox(height: 6),
         Row(children: [
-          _miniStat('👑', '白金', totalGold, const Color(0xFFB8D8D8)),
+          _miniStat('👑', '白金', psnPlatinumCount, const Color(0xFFB8D8D8)),
           _miniStat('🥇', '金', totalGold, const Color(0xFFFFD700)),
           _miniStat('🥈', '银', totalSilver, const Color(0xFFC0C0C0)),
           _miniStat('🥉', '铜', totalBronze, const Color(0xFFCD7F32)),
         ]),
         if (platinumGames.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text('白金游戏 (${platinumGames.length})', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
-          const SizedBox(height: 4),
-          Wrap(spacing: 6, runSpacing: 4, children: platinumGames.take(6).map((g) {
-            final name = g['title'] ?? g['name'] ?? '?';
-            return Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.06), borderRadius: BorderRadius.circular(4)),
-              child: Text(name.toString(), style: TextStyle(fontSize: 10, color: Colors.grey[300])));
-          }).toList()),
-          if (platinumGames.length > 6)
-            Text('...还有 ${platinumGames.length - 6} 款', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+          GestureDetector(
+            onTap: () => _showAllGamesPopup('🏆 PSN 白金游戏', platinumGames.cast<Map<String, dynamic>>(), 'psn'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFB8D8D8).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFB8D8D8).withOpacity(0.2)),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text('👑 白金游戏 (${platinumGames.length})', style: TextStyle(fontSize: 12, color: const Color(0xFFB8D8D8).withOpacity(0.9))),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right, size: 14, color: const Color(0xFFB8D8D8).withOpacity(0.5)),
+              ]),
+            ),
+          ),
         ],
       ],
 
@@ -1212,22 +1231,78 @@ class _HomePageState extends State<HomePage>
         SizedBox(height: 6),
         if (perfectGames.isEmpty)
           Text('暂无全成就游戏', style: TextStyle(fontSize: 11, color: Colors.grey[600]))
-        else ...[
-          Wrap(spacing: 6, runSpacing: 4, children: perfectGames.take(6).map((g) {
-            final name = SteamClient.translateGameName(g['name'] ?? '???');
-            return Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: const Color(0xFFFFD700).withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+        else
+          GestureDetector(
+            onTap: () => _showAllGamesPopup('⭐ Steam 全成就游戏', perfectGames.cast<Map<String, dynamic>>(), 'steam'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.2)),
+              ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Text('⭐', style: TextStyle(fontSize: 10)),
-                const SizedBox(width: 2),
-                Text(name, style: TextStyle(fontSize: 10, color: const Color(0xFFFFD700))),
-              ]));
-          }).toList()),
-          if (perfectGames.length > 6)
-            Text('...还有 ${perfectGames.length - 6} 款', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-        ],
+                Text('⭐ 全成就游戏 (${perfectGames.length})', style: TextStyle(fontSize: 12, color: const Color(0xFFFFD700).withOpacity(0.9))),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right, size: 14, color: const Color(0xFFFFD700).withOpacity(0.5)),
+              ]),
+            ),
+          ),
       ],
     ]);
+  }
+
+  /// 🏆 弹出全部游戏列表（白金/全成就）
+  void _showAllGamesPopup(String title, List<Map<String, dynamic>> games, String source) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(children: [
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => Navigator.pop(ctx),
+            child: Icon(Icons.close, color: Colors.grey[500], size: 20),
+          ),
+        ]),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: games.length,
+            itemBuilder: (_, i) {
+              final g = games[i];
+              final name = source == 'psn'
+                  ? (g['title'] ?? g['name'] ?? '?').toString()
+                  : SteamClient.translateGameName((g['name'] ?? '???').toString());
+              final sub = source == 'psn'
+                  ? '👑 白金 | 🥇${g['gold'] ?? 0} 🥈${g['silver'] ?? 0} 🥉${g['bronze'] ?? 0}'
+                  : '⭐ ${g['achievements_unlocked'] ?? 0}/${g['achievements_total'] ?? 0} 成就';
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(children: [
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                      const SizedBox(height: 2),
+                      Text(sub, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                    ],
+                  )),
+                ]),
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _statTile(String icon, String label, String count, Color color) {

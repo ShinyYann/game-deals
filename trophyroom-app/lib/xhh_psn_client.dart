@@ -114,7 +114,7 @@ class XhhPsnClient {
       if (desc == '白金') platinum = val;
       if (desc == '黄金') gold = val;
       if (desc == '白银') silver = val;
-      if (desc == '青铜') bronze = val;
+      if (desc == '青铜' || desc == '黄铜') bronze = val;
     }
 
     final player = overview['player'] as Map<String, dynamic>? ?? {};

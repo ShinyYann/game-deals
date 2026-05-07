@@ -60,7 +60,7 @@ jobs:
           # RESTORE pubspec.yaml (flutter create overwrites it!)
           cp ${{ github.workspace }}/trophyroom-app/pubspec.yaml pubspec.yaml
           # Fix NDK 27 → 26 (source.properties missing in 27)
-          sed -i 's/ndkVersion = flutter\.ndkVersion/ndkVersion = "26.3.11579264"/' android/app/build.gradle.kts
+          sed -i 's/ndkVersion = flutter\.ndkVersion/ndkVersion = "27.0.12077973"/' android/app/build.gradle.kts
           # Aliyun Maven mirrors (Google blocked in China)
           sed -i 's|google()|maven { url = uri("https://maven.aliyun.com/repository/google") }\n        maven { url = uri("https://maven.aliyun.com/repository/public") }\n        google()|' android/settings.gradle.kts
           sed -i 's|google()|maven { url = uri("https://maven.aliyun.com/repository/google") }\n        maven { url = uri("https://maven.aliyun.com/repository/public") }\n        google()|' android/build.gradle.kts

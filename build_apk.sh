@@ -41,9 +41,17 @@ cp -r "$SRC"/assets/* assets/ 2>/dev/null || true
 echo "📦 Step 4: Restoring pubspec.yaml..."
 cp "$SRC"/pubspec.yaml pubspec.yaml
 
-# Step 5: Fix NDK version (27 source.properties missing, use 26)
+# Step 5: Fix NDK version (plugins require 27)
 echo "🔧 Step 5: Fixing NDK version..."
-perl -i -pe "s/ndkVersion = flutter\\.ndkVersion/ndkVersion = \"26.3.11579264\"/" android/app/build.gradle.kts
+# Create dummy NDK 27 source.properties (plugins check this file exists)
+ndk27="/tmp/flutter/ndk/27.0.12077973"
+mkdir -p "$ndk27"
+cat > "$ndk27/source.properties" << 'NDKEOF'
+Pkg.Desc = Android NDK
+Pkg.Revision = 27.0.12077973
+NDKEOF
+export ANDROID_NDK_HOME="$ndk27"
+perl -i -pe "s/ndkVersion = flutter\\.ndkVersion/ndkVersion = \"27.0.12077973\"/" android/app/build.gradle.kts
 
 # Step 6: Aliyun Maven mirrors (Google Maven blocked in China)
 echo "🔧 Step 6: Adding Aliyun Maven mirrors..."

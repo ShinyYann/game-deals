@@ -9,9 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'services/psnine_client.dart';
 import 'services/bookmark_service.dart';
 import 'services/steam_client.dart';
+import 'services/switch_client.dart';
+import 'xhh_psn_client.dart';
 import 'services/switch_service.dart';
 import 'models/switch_game.dart';
 import 'pages/browser_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'widgets/trophy_icon.dart';
 
 void main() {
@@ -302,7 +305,8 @@ class _MergedGame {
 /// 提取标准化的末次游玩时间戳（毫秒，越大越近）
 int _lastPlayedTimestamp(Map<String, dynamic> data, String source) {
   if (source == 'psn') {
-    final lp = data['last_played']?.toString() ?? '';
+    final lp = data['last_played']?.toString() ?? 
+              data['last_play_date']?.toString() ?? '';
     if (lp.isEmpty) return 0;
     try {
       return DateTime.parse(lp).millisecondsSinceEpoch;
@@ -335,6 +339,7 @@ class _HomePageState extends State<HomePage>
   String _error = '';
   Map<String, dynamic>? _cachedHomeData;
   Map<String, dynamic>? _steamData;
+  Map<String, dynamic>? _steamBadges;
   bool _steamLoading = false;
   List<SwitchGame> _switchGames = [];
   bool _switchLoaded = false;
@@ -353,6 +358,12 @@ class _HomePageState extends State<HomePage>
   bool _filter100pct = false;    // Steam 只看全成就的
   bool _summaryExpanded = false; // 汇总卡详情展开
   Map<String, dynamic>? _steamRecentGames;
+  // ── Switch 小黑盒 ──
+  List<String> _switchAccountIds = [];
+  int _switchActiveIndex = 0;
+  Map<String, dynamic>? _switchPlayData;
+  bool _switchPlayLoading = false;
+  String? _switchPlayError;
   // ── PageView 切换 ──
   int _platformTab = 0; // 0=汇总, 1=PSN, 2=Steam
   late final PageController _platformPageCtrl;
@@ -462,11 +473,18 @@ class _HomePageState extends State<HomePage>
     final prefs = await SharedPreferences.getInstance();
     final psn = prefs.getString('psn_id') ?? '';
     final steam = prefs.getString('steam_id') ?? '';
-    // 加载本地缓存的 PSN 数据（秒开）
+    final switchRaw = prefs.getString('switch_token') ?? '';
+    final switchIds = switchRaw.isNotEmpty ? switchRaw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList() : <String>[];
+    // 加载本地缓存的 PSN 数据（秒开，v2 格式来自小黑盒）
     final cachedPsn = prefs.getString('cache_psn_data');
     if (cachedPsn != null && psn.isNotEmpty) {
       try {
-        _cachedHomeData = json.decode(cachedPsn) as Map<String, dynamic>;
+        final parsed = json.decode(cachedPsn) as Map<String, dynamic>;
+        // 兼容性检查：v2 格式必须有 _v 字段
+        if (parsed['_v'] == 2) {
+          _cachedHomeData = parsed;
+        }
+        // 旧版本缓存自动丢弃，走全新拉取
       } catch (_) {}
     }
     // 加载本地缓存的 Steam 数据（秒开）
@@ -479,11 +497,22 @@ class _HomePageState extends State<HomePage>
     setState(() {
       _psnId = psn;
       _steamId = steam;
+      _switchAccountIds = switchIds;
       _accountsLoaded = true;
     });
-    // 如果有 Steam ID，自动拉取 Steam 数据（有缓存时后台刷新）
+    // 如果有 Steam ID，自动拉取 Steam 数据
     if (steam.isNotEmpty && _steamData == null) {
       _fetchSteamData();
+    }
+    // 如果有 PSN ID，自动拉取 PSN 数据
+    if (psn.isNotEmpty) {
+      _fetchFullPsnData().then((data) {
+        if (mounted) setState(() => _cachedHomeData = data);
+      });
+    }
+    // 如果有 Switch token，自动拉取游玩数据
+    if (_switchAccountIds.isNotEmpty) {
+      _fetchSwitchPlayData();
     }
   }
 
@@ -683,22 +712,49 @@ class _HomePageState extends State<HomePage>
 
     return Column(
       children: [
-        // ── 三页切换标签（双平台时显示）──
-        if (_psnId.isNotEmpty && _steamId.isNotEmpty)
-          _buildPlatformTabs(),
-        // ── 页面内容 ──
+        // ── 页面内容 + 粒子背景 ──
         Expanded(
-          child: (_psnId.isNotEmpty && _steamId.isNotEmpty)
-            ? PageView(
-                controller: _platformPageCtrl,
-                onPageChanged: (i) => setState(() => _platformTab = i),
-                children: [
-                  _buildSummaryPage(),
-                  _buildPsnPage(),
-                  _buildSteamPage(),
-                ],
-              )
-            : (_psnId.isNotEmpty ? _buildPsnPage() : _buildSteamPage()),
+          child: Builder(builder: (ctx) {
+            final hasBoth = _psnId.isNotEmpty && _steamId.isNotEmpty;
+            final hasSwitch = _switchAccountIds.isNotEmpty;
+            final pages = <Widget>[];
+            if (hasBoth) { pages.add(_buildSummaryPage()); pages.add(_buildPsnPage()); pages.add(_buildSteamPage()); }
+            else if (_psnId.isNotEmpty) pages.add(_buildPsnPage());
+            else if (_steamId.isNotEmpty) pages.add(_buildSteamPage());
+            if (hasSwitch) pages.add(_buildSwitchPlayPage());
+            final tabCount = pages.length;
+
+            return Stack(children: [
+              // 粒子背景
+              Builder(builder: (ctx) {
+                final both = _psnId.isNotEmpty && _steamId.isNotEmpty;
+                final tab = _platformTab;
+                final isPsn = both ? (tab == 1) : _psnId.isNotEmpty;
+                final isMixed = both && tab == 0;
+                final isSwitch = tab == (hasBoth ? 3 : hasSwitch ? (_psnId.isNotEmpty || _steamId.isNotEmpty ? 1 : 0) : 0);
+                if (isSwitch) {
+                  return const _ParticleBackground(colors: [Color(0xFFE60012), Color(0xFF00A0E9), Color(0xFFFFD700)], count: 50);
+                }
+                return isMixed
+                  ? const _ParticleBackground(colors: [Color(0xFF9B59B6), Color(0xFF3A7BD5), Color(0xFFE8D5FF), Color(0xFF8EC8F2)], count: 55)
+                  : isPsn
+                    ? const _ParticleBackground(colors: [Color(0xFF9B59B6), Color(0xFF6C3A9E), Color(0xFFD4A5FF)], count: 50)
+                    : const _ParticleBackground(colors: [Color(0xFF3A7BD5), Color(0xFF1A5276), Color(0xFF8EC8F2)], count: 50);
+              }),
+              // 深色渐变遮罩
+              IgnorePointer(child: Container(decoration: BoxDecoration(gradient: LinearGradient(
+                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                colors: [const Color(0xFF0A0A12).withOpacity(0.4), const Color(0xFF0A0A12).withOpacity(0.85)])))),
+              // 页面内容 — 纯滑动，无 Tab 栏
+              tabCount > 1
+                ? Positioned.fill(child: PageView(
+                      controller: _platformPageCtrl,
+                      onPageChanged: (i) => setState(() => _platformTab = i),
+                      children: pages,
+                    ))
+                : pages.first,
+            ]);
+          }),
         ),
       ],
     );
@@ -788,6 +844,22 @@ class _HomePageState extends State<HomePage>
           ]),
         ),
 
+        // ── 🏆 白金/全成就封面轮播 ──
+        Builder(builder: (_) {
+          final perfectGames = merged.where((m) {
+            if (m.source == 'psn') {
+              return (m.data['platinum'] ?? 0) as int > 0;
+            } else {
+              final total = (m.data['achievements_total'] ?? 0) as int;
+              final ul = (m.data['achievements_unlocked'] ?? 0) as int;
+              return total > 0 && ul >= total;
+            }
+          }).toList();
+          // 没白金/全成就时取最近 5 个兜底
+          final show = perfectGames.isNotEmpty ? perfectGames : merged.take(5).toList();
+          return _buildGameCoverRibbon(show);
+        }),
+
         // ── 全游戏列表（合并排序） ──
         if (merged.isNotEmpty) ...[
           Padding(
@@ -806,6 +878,113 @@ class _HomePageState extends State<HomePage>
           }),
         ],
       ],
+    );
+  }
+
+  /// 🎨 最近游戏封面横幅轮播（Netflix+Pulse 风格）
+  Widget _buildGameCoverRibbon(List<_MergedGame> games) {
+    if (games.isEmpty) return const SizedBox.shrink();
+    final topGames = games.take(10).toList();
+    return SizedBox(
+      height: 210,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: topGames.length,
+        itemBuilder: (ctx, i) {
+          final m = topGames[i];
+          final imgKey = m.source == 'psn' ? 'cover_url' : 'header_image';
+          final imgUrl = m.data[imgKey]?.toString() ?? m.data['img_icon_url']?.toString() ?? '';
+          final name = (m.data['name'] ?? m.data['title'] ?? '').toString();
+          final isPsn = m.source == 'psn';
+          final color = isPsn ? const Color(0xFF9B59B6) : const Color(0xFF3A7BD5);
+          final glowColor = isPsn ? const Color(0xFF9B59B6) : const Color(0xFF3A7BD5);
+          final appId = m.data['app_id']?.toString() ?? m.data['game_id']?.toString() ?? '';
+
+          return Padding(
+            padding: EdgeInsets.only(right: 12, left: i == 0 ? 0 : 0),
+            child: GestureDetector(
+              onTap: () {
+                if (isPsn) {
+                  setState(() => _expandedGameId = _expandedGameId == appId ? null : appId);
+                } else {
+                  _toggleSteamAchievements(appId);
+                }
+              },
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: Duration(milliseconds: 400 + i * 80),
+                curve: Curves.easeOutCubic,
+                builder: (ctx, val, _) => Transform.translate(
+                  offset: Offset(0, (1 - val) * 30),
+                  child: Opacity(
+                    opacity: val,
+                    child: Container(
+                      width: 148,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: isPsn ? const Color(0xFF1E1033) : const Color(0xFF0D1B33),
+                        boxShadow: [
+                          BoxShadow(color: glowColor.withOpacity(0.25), blurRadius: 16, spreadRadius: -2),
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(children: [
+                        // 封面图区域 — 不裁剪，完整显示
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          child: SizedBox(
+                            height: 125, width: 148,
+                            child: imgUrl.isNotEmpty
+                              ? Image.network(_proxyImage(imgUrl),
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_,__,___) => _emptyCover(isPsn),
+                                  loadingBuilder: (_, child, progress) {
+                                    if (progress == null) return child;
+                                    return Center(child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white24));
+                                  })
+                              : _emptyCover(isPsn),
+                          ),
+                        ),
+                        // 底部信息条
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [color.withOpacity(0.5), color.withOpacity(0.85)],
+                                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                              Text(name, style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              const SizedBox(height: 2),
+                              Text(isPsn ? 'PlayStation  ·  PSN' : 'PC  ·  Steam', style: TextStyle(fontSize: 9, color: Colors.white60)),
+                            ]),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _emptyCover(bool isPsn) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: isPsn ? [const Color(0xFF2D1B4E), const Color(0xFF1A0A2E)] : [const Color(0xFF1A3A5C), const Color(0xFF0D1B33)],
+        ),
+      ),
+      child: Center(child: Icon(Icons.sports_esports, size: 40, color: Colors.white10)),
     );
   }
 
@@ -1087,6 +1266,13 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildPlatformTabs() {
+    final hasBoth = _psnId.isNotEmpty && _steamId.isNotEmpty;
+    final tabs = <String>[];
+    if (hasBoth) { tabs.add('📊 汇总'); }
+    if (_psnId.isNotEmpty) { tabs.add('🏆 PSN'); }
+    if (_steamId.isNotEmpty) { tabs.add('🎮 Steam'); }
+    if (_switchAccountIds.isNotEmpty) { tabs.add('🎮 Switch'); }
+
     return Container(
       margin: const EdgeInsets.only(top: 8, left: 16, right: 16),
       padding: const EdgeInsets.all(4),
@@ -1095,11 +1281,7 @@ class _HomePageState extends State<HomePage>
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
-        children: [
-          _platformTabBtn('📊 汇总', 0),
-          _platformTabBtn('🏆 PSN', 1),
-          _platformTabBtn('🎮 Steam', 2),
-        ],
+        children: List.generate(tabs.length, (i) => _platformTabBtn(tabs[i], i)),
       ),
     );
   }
@@ -1155,19 +1337,22 @@ class _HomePageState extends State<HomePage>
         }
         final data = effectiveData!;
         final psnId = data['psn_id']?.toString() ?? '';
+        final nickname = data['nickname']?.toString() ?? psnId;
+        final avatar = data['avatar']?.toString() ?? '';
         final level = data['level']?.toString() ?? '?';
         final platinum = data['platinum'] ?? 0;
         final gold = data['gold'] ?? 0;
         final silver = data['silver'] ?? 0;
         final bronze = data['bronze'] ?? 0;
         final totalGames = data['total_games'] ?? 0;
-        final perfectGames = data['perfect_games'] ?? 0;
+        final totalHours = data['total_hours'] ?? 0;
+        final totalTrophies2 = data['total_trophies'] ?? 0;
         final completionRate = data['completion_rate'] ?? 0;
         final tPlatinum = (platinum as num).toInt();
         final tGold = (gold as num).toInt();
         final tSilver = (silver as num).toInt();
         final tBronze = (bronze as num).toInt();
-        final totalTrophies = tPlatinum + tGold + tSilver + tBronze;
+        final tTotalTrophies = (totalTrophies2 as num).toInt();
         final games = data['games'] as List<dynamic>? ?? [];
         final hasData = psnId.isNotEmpty;
 
@@ -1177,7 +1362,9 @@ class _HomePageState extends State<HomePage>
             _expandedGameId = null;
             _gameTrophies.clear();
             _expandedLoading.clear();
-            setState(() {});
+            _cachedHomeData = null;
+            final data = await _fetchFullPsnData();
+            setState(() => _cachedHomeData = data);
           },
           child: ListView(
             padding: const EdgeInsets.all(16),
@@ -1194,7 +1381,21 @@ class _HomePageState extends State<HomePage>
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
-                      Expanded(child: Text(psnId, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1))),
+                      // PSN 头像
+                      if (avatar.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(25),
+                            child: Image.network(avatar, width: 50, height: 50, fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(width: 50, height: 50, color: Colors.grey[800], child: const Icon(Icons.person, color: Colors.grey))),
+                          ),
+                        ),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(nickname, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                        if (nickname != psnId)
+                          Text(psnId, style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                      ])),
                       Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
                         child: Text('Lv $level', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white))),
@@ -1215,10 +1416,10 @@ class _HomePageState extends State<HomePage>
                     Container(padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                        _statItem('📊', '$totalGames', '游戏'),
-                        _statItem('🏅', '$perfectGames', '完美'),
-                        _statItem('🎯', '$completionRate%', '完成率'),
-                        _statItem('🏆', '$totalTrophies', '总数'),
+                        _statItem('🎮', '$totalGames', '游戏'),
+                        _statItem('⏱️', '${totalHours}h', '总时长'),
+                        _statItem('🏆', '$tTotalTrophies', '奖杯'),
+                        _statItem('📊', '$tPlatinum', '白金'),
                       ])),
                   ]),
                 ),
@@ -1313,6 +1514,8 @@ class _HomePageState extends State<HomePage>
     final gold = game['gold'] ?? 0;
     final silver = game['silver'] ?? 0;
     final bronze = game['bronze'] ?? 0;
+    final playtime = game['playtime_desc']?.toString() ?? '';
+    final lastPlay = game['last_play_date']?.toString() ?? '';
 
     return Card(
       color: const Color(0xFF1A1A2E),
@@ -1452,6 +1655,20 @@ class _HomePageState extends State<HomePage>
                             ],
                           ],
                         ),
+                        const SizedBox(height: 4),
+                        // Playtime
+                        if (playtime.isNotEmpty)
+                          Row(children: [
+                            Icon(Icons.timer_outlined, size: 12, color: Colors.grey[500]),
+                            const SizedBox(width: 4),
+                            Text(playtime, style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                            if (lastPlay.isNotEmpty) ...[
+                              const SizedBox(width: 10),
+                              Icon(Icons.history, size: 12, color: Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Expanded(child: Text(lastPlay, style: TextStyle(fontSize: 10, color: Colors.grey[600]), overflow: TextOverflow.ellipsis)),
+                            ],
+                          ]),
                         const SizedBox(height: 4),
                         // Progress bar
                         SizedBox(
@@ -1662,7 +1879,10 @@ class _HomePageState extends State<HomePage>
     final earnedDate = trophy['earned_date']?.toString() ?? '';
     final iconUrl = trophy['icon_url']?.toString() ?? '';
     final description = trophy['description']?.toString() ?? '';
-    final trophyId = trophy['id']?.toString() ?? '';
+    // 优先 psnine_id（心得查得到），否则用小黑盒 id
+    final trophyId = (trophy['psnine_id']?.toString().isNotEmpty == true
+        ? trophy['psnine_id']?.toString()
+        : trophy['id']?.toString()) ?? '';
 
     showDialog(
       context: context,
@@ -1701,122 +1921,159 @@ class _HomePageState extends State<HomePage>
     if (!_gameTrophies.containsKey(gameId)) {
       setState(() => _expandedLoading[gameId] = true);
 
-      // 1. 服务器优先（有翻译+缓存）
-      try {
-        final resp = await http
-            .get(Uri.parse(
-                'http://8.153.97.56/api/psn_game_detail?game_id=$gameId&uid=$_psnId'))
-            .timeout(const Duration(seconds: 8));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          final trophies = data['trophies'] as List<dynamic>? ?? [];
-          if (trophies.isNotEmpty) {
-            setState(() {
-              _gameTrophies[gameId] = trophies;
-              _expandedLoading[gameId] = false;
-            });
-            return;
+      // 从 psn_cid (NPWR50887_00) 提取数字 ID (50887) 给 psnine 用
+      final gameNum = RegExp(r'(\d+)').firstMatch(gameId)?.group(1);
+
+      // 小黑盒 + psnine 并行拉取，保证 psnine_id 在显示前就位
+      final xhhFuture = _fetchXhhTrophies(gameId);
+      final psnineFuture = (gameNum != null)
+          ? _fetchPsnineTrophies(gameNum)
+          : Future.value(<Map<String, dynamic>>[]);
+
+      final results = await Future.wait([xhhFuture, psnineFuture]);
+      var trophies = results[0] as List<Map<String, dynamic>>;
+      final psnineList = results[1] as List<Map<String, dynamic>>;
+
+      // 用 psnine 数据按名匹配，注入 psnine_id + 覆盖日文名
+      if (psnineList.isNotEmpty) {
+        final psnineByName = <String, Map<String, dynamic>>{};
+        for (final pt in psnineList) {
+          final name = (pt['name'] ?? '').toString().trim();
+          if (name.isNotEmpty) psnineByName[name] = pt;
+        }
+        int matched = 0;
+        for (final t in trophies) {
+          final xName = (t['name'] ?? '').toString().trim();
+          final matchedPsnine = psnineByName[xName];
+          if (matchedPsnine != null) {
+            t['psnine_id'] = matchedPsnine['id']?.toString() ?? '';
+            matched++;
           }
         }
-      } catch (e) {
-        print('[Trophies] server failed: $e');
-      }
-
-      // 2. psnine 兜底
-      if (_psnId.isNotEmpty) {
-        try {
-          final psnine = PsnineClient(_psnId);
-          final trophies = await psnine.fetchGameTrophies(gameId);
-          if (trophies.isNotEmpty) {
-            setState(() {
-              _gameTrophies[gameId] = trophies;
-              _expandedLoading[gameId] = false;
-            });
-            _cacheTrophiesToServer(gameId, trophies);
-            return;
+        // 未完全匹配时按序号兜底（不同语言的情况，如命运石之门）
+        if (matched < trophies.length && psnineList.length == trophies.length) {
+          for (int i = 0; i < trophies.length; i++) {
+            final t = trophies[i];
+            if (!t.containsKey('psnine_id') || (t['psnine_id'] ?? '').toString().isEmpty) {
+              final pt = psnineList[i];
+              t['psnine_id'] = pt['id']?.toString() ?? '';
+              matched++;
+            }
+            // 覆盖日文名为中文
+            final xName = (t['name'] ?? '').toString();
+            final pName = (psnineList[i]['name'] ?? '').toString();
+            if (_isJapaneseName(xName) && !_isJapaneseName(pName)) {
+              t['name'] = pName;
+              t['description'] = psnineList[i]['description']?.toString() ?? t['description'];
+            }
           }
-        } catch (e) {
-          print('[Trophies] psnine failed: $e');
+        }
+        print('[PsnineID] matched $matched/${trophies.length}');
+      } else {
+        // 小黑盒失败 → psnine 兜底（此时 psnineList 来自 _fetchPsnineTrophies 的错误捕获，为空）
+        // 兜底重试：直接调 psnine
+        if (trophies.isEmpty && gameNum != null) {
+          try {
+            final psnine = PsnineClient(_psnId);
+            trophies = await psnine
+                .fetchGameTrophies(gameNum)
+                .timeout(const Duration(seconds: 8));
+          } catch (_) {}
         }
       }
 
-      // 都没数据
-      setState(() => _expandedLoading[gameId] = false);
+      if (mounted) {
+        setState(() {
+          _gameTrophies[gameId] = trophies;
+          _expandedLoading[gameId] = false;
+        });
+      }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchXhhTrophies(String gameId) async {
+    try {
+      final xhh = XhhPsnClient(_psnId);
+      final raw = await xhh.fetchGameTrophies(gameId)
+          .timeout(const Duration(seconds: 8));
+      final rawList = (raw['list'] as List?) ?? [];
+      return rawList.map((t) {
+        final tMap = t as Map<String, dynamic>;
+        return {
+          'id': tMap['t_id']?.toString() ?? '',
+          'name': tMap['trophy_name']?.toString() ?? '',
+          'description': tMap['trophy_desc']?.toString() ?? '',
+          'type': tMap['type']?.toString() ?? 'bronze',
+          'icon_url': tMap['trophy_icon']?.toString() ?? '',
+          'earned': tMap['finish'] == 1,
+          'earned_date': tMap['earned_time']?.toString() ?? '',
+          'earned_timestamp': tMap['earned_timestamp'] ?? 0,
+          'earned_rate': (tMap['earned_rate'] ?? 0).toString(),
+        };
+      }).toList();
+    } catch (e) {
+      print('[XHH trophies] failed: $e');
+      return [];
+    }
+  }
+
+  /// 检测奖杯名是否含日文假名（不含中文汉字的纯日文）
+  bool _isJapaneseName(String s) {
+    return RegExp(r'[\u3040-\u309F\u30A0-\u30FF]').hasMatch(s);
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchPsnineTrophies(String gameNum) async {
+    try {
+      // 走服务器代理（国内手机直连 psnine 可能超时）
+      final url = 'http://8.153.97.56/api/psn_game_detail?game_id=$gameNum&uid=$_psnId';
+      final resp = await http.get(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final trophies = (data['trophies'] as List?) ?? [];
+        return trophies.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      print('[Psnine proxy] failed: $e');
+    }
+    // 兜底：直连 psnine
+    try {
+      final psnine = PsnineClient(_psnId);
+      return await psnine.fetchGameTrophies(gameNum)
+          .timeout(const Duration(seconds: 8));
+    } catch (e) {
+      print('[Psnine direct] failed: $e');
+      return [];
     }
   }
 
   Future<Map<String, dynamic>> _fetchFullPsnData() async {
-    // 仅 PSN 数据可用时
     if (_psnId.isEmpty || _accountsLoaded == false) {
       return {'psn_id': '', 'games': []};
     }
 
-    // 1. 先走服务器缓存（最快，~22ms 返回已缓存数据）
-    Map<String, dynamic>? serverData;
+    // 1. 小黑盒 PSN API 主力数据源
     try {
-      final apiBase = 'http://8.153.97.56';
-      final url = '$apiBase/api/psn?uid=$_psnId';
-      final resp = await http.get(Uri.parse(url))
-          .timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        if (data['psn_id'] != null && data['games'] is List && (data['games'] as List).isNotEmpty) {
-          serverData = data;
-          _cachedHomeData = data;
-          // 存本地缓存
-          _savePsnCache(data);
-          print('[Fetch] server cache OK: ${(data['games'] as List).length} games');
-          // 服务器有数据 → 立即返回，后台刷新 psnine
-          _backgroundRefreshPsnine();
-          return data;
-        }
-      }
-    } catch (e) {
-      print('[Fetch] server failed: $e');
-      _error = '$e';
-    }
-
-    // 2. 服务器没数据 → 手机直连 psnine
-    try {
-      final psnine = PsnineClient(_psnId);
-      final data = await psnine.fetchFullData();
+      final xhh = XhhPsnClient(_psnId);
+      final data = await xhh.fetchAll().timeout(const Duration(seconds: 12));
       if (data['games'] is List && (data['games'] as List).isNotEmpty) {
-        print('[Fetch] psnine OK: ${(data['games'] as List).length} games');
+        print('[PSN XHH] ✅ ${(data['games'] as List).length} games, ${data['total_hours']}h');
         _cachedHomeData = data;
-        // 存本地缓存
         _savePsnCache(data);
-        // 异步发送到服务器做缓存
-        _cacheToServer(data);
         return data;
       }
     } catch (e) {
-      print('[Fetch] psnine failed: $e');
+      print('[PSN XHH] failed: $e');
     }
 
     return {'psn_id': _psnId, 'error': '加载失败', 'games': []};
-  }
-
-  /// 后台刷新 psnine 数据
-  Future<void> _backgroundRefreshPsnine() async {
-    try {
-      final psnine = PsnineClient(_psnId);
-      final data = await psnine.fetchFullData();
-      if (data['games'] is List && (data['games'] as List).isNotEmpty) {
-        print('[BgRefresh] psnine OK: ${(data['games'] as List).length} games');
-        _cacheToServer(data);
-        if (mounted) {
-          setState(() => _cachedHomeData = data);
-        }
-      }
-    } catch (e) {
-      print('[BgRefresh] failed: $e');
-    }
   }
 
   /// 缓存数据到服务器
   Future<void> _savePsnCache(Map<String, dynamic> data) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      data['_v'] = 2;
       await prefs.setString('cache_psn_data', json.encode(data));
     } catch (_) {}
   }
@@ -2020,6 +2277,8 @@ class _HomePageState extends State<HomePage>
       _saveSteamCache(result);
       // 后台拉取最近游玩
       _loadSteamRecentOnly();
+      // 后台拉取徽章
+      _fetchSteamBadges();
       return result;
     } catch (e) {
       print('[Steam] fetch error: $e');
@@ -2028,6 +2287,22 @@ class _HomePageState extends State<HomePage>
         _steamLoading = false;
       });
       return {};
+    }
+  }
+
+  Future<void> _fetchSteamBadges() async {
+    if (_steamId.isEmpty) return;
+    try {
+      final url = '$_apiBase/api/steam/badges?steamid=$_steamId';
+      final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        if (data is Map<String, dynamic> && data['badges'] != null) {
+          setState(() => _steamBadges = data);
+        }
+      }
+    } catch (e) {
+      print('[Steam badges] fetch error: $e');
     }
   }
 
@@ -2086,6 +2361,12 @@ class _HomePageState extends State<HomePage>
         _buildSteamProfileCard(avatar, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
 
         const SizedBox(height: 16),
+
+        // ── Steam 徽章 ──
+        if (_steamBadges != null && (_steamBadges!['badges'] as List?)!.isNotEmpty)
+          _buildSteamBadgesCard(),
+
+        const SizedBox(height: 12),
 
         // ── Steam 最近游玩 ──
         _buildSteamRecentSection(),
@@ -2180,6 +2461,133 @@ class _HomePageState extends State<HomePage>
   }
 
   /// Steam 最近游玩
+  Widget _buildSteamBadgesCard() {
+    final badges = (_steamBadges!['badges'] as List).cast<Map<String, dynamic>>();
+    final level = _steamBadges!['level'] ?? '?';
+    final totalXp = _steamBadges!['total_xp'] ?? 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF1A3A5C), Color(0xFF0D1F35)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF66C0F4).withAlpha(60)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          child: Row(children: [
+            const Icon(Icons.workspace_premium, color: Color(0xFF66C0F4), size: 20),
+            const SizedBox(width: 8),
+            const Text('Steam 徽章', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+            const Spacer(),
+            Text('Lv.$level · ${_formatNumber(totalXp)} XP', style: TextStyle(fontSize: 12, color: Colors.blue[200])),
+          ]),
+        ),
+        // Badge grid - horizontal scroll
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+            itemCount: badges.length,
+            itemBuilder: (ctx, i) {
+              final b = badges[i];
+              final icon = (b['icon'] as String?) ?? '';
+              final name = (b['name'] as String?) ?? '';
+              final lv = b['level'] ?? 0;
+              final lvName = (b['level_name'] as String?) ?? '';
+              final isGame = b['type'] == 'game';
+              final playtime = (b['playtime'] as String?) ?? '';
+
+              return GestureDetector(
+                onTap: () => _showBadgeDetail(b),
+                child: Container(
+                  width: 80,
+                  margin: const EdgeInsets.only(right: 8),
+                  child: Column(children: [
+                    // Icon
+                    Container(
+                      width: 56, height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        gradient: isGame
+                            ? const LinearGradient(colors: [Color(0xFF2A3F5F), Color(0xFF1A2F4F)])
+                            : const LinearGradient(colors: [Color(0xFF3D5A3A), Color(0xFF2D4A2A)]),
+                        border: Border.all(color: (isGame ? const Color(0xFF66C0F4) : const Color(0xFF90EE90)).withAlpha(40)),
+                      ),
+                      child: icon.isNotEmpty
+                          ? Padding(padding: const EdgeInsets.all(4), child: Image.network(icon, fit: BoxFit.contain))
+                          : Icon(isGame ? Icons.sports_esports : Icons.emoji_events, color: Colors.grey[600], size: 28),
+                    ),
+                    const SizedBox(height: 4),
+                    // Name
+                    Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: Colors.grey[300])),
+                    // Level
+                    Text('Lv.$lv', style: TextStyle(fontSize: 9, color: Colors.blue[300], fontWeight: FontWeight.w600)),
+                  ]),
+                ),
+              );
+            },
+          ),
+        ),
+      ]),
+    );
+  }
+
+  void _showBadgeDetail(Map<String, dynamic> badge) {
+    final icon = (badge['icon'] as String?) ?? '';
+    final name = (badge['name'] as String?) ?? '';
+    final lv = badge['level'] ?? 0;
+    final lvName = (badge['level_name'] as String?) ?? '';
+    final xp = badge['xp'] ?? 0;
+    final unlocked = (badge['unlocked'] as String?) ?? '';
+    final playtime = (badge['playtime'] as String?) ?? '';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A2A3F),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(children: [
+          icon.isNotEmpty
+              ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(icon, width: 48, height: 48, fit: BoxFit.contain))
+              : const SizedBox(width: 48, height: 48),
+          const SizedBox(width: 12),
+          Expanded(child: Text(name, style: const TextStyle(fontSize: 16, color: Colors.white))),
+        ]),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _badgeInfoRow('等级', 'Lv.$lv — $lvName'),
+          _badgeInfoRow('XP', '$_formatNumber(xp)'),
+          if (unlocked.isNotEmpty) _badgeInfoRow('解锁', unlocked),
+          if (playtime.isNotEmpty) _badgeInfoRow('游玩', playtime),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('关闭', style: TextStyle(color: Colors.blue))),
+        ],
+      ),
+    );
+  }
+
+  Widget _badgeInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(children: [
+        SizedBox(width: 60, child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[400]))),
+        Expanded(child: Text(value, style: const TextStyle(fontSize: 13, color: Colors.white))),
+      ]),
+    );
+  }
+
+  String _formatNumber(int n) {
+    if (n >= 1000) {
+      return '${(n / 1000).toStringAsFixed(1).replaceAll(r'.0', '')}k';
+    }
+    return n.toString();
+  }
+
   Widget _buildSteamRecentSection() {
     if (_steamRecentGames == null) return const SizedBox.shrink();
     final recent = _steamRecentGames!['games'] as List? ?? [];
@@ -2445,7 +2853,228 @@ class _HomePageState extends State<HomePage>
     return SteamClient.translateGameName(name);
   }
 
-  /// 加载 Switch 游戏库
+  /// ───── Switch 家长控制 ─────
+
+  List<Map<String, dynamic>> _allSwitchAccounts = [];
+
+  Future<void> _fetchSwitchPlayData() async {
+    if (_switchAccountIds.isEmpty) return;
+    setState(() { _switchPlayLoading = true; _switchPlayError = null; });
+
+    // 从服务器拉取所有账号（含新发现的）并更新本地列表
+    try {
+      final mainId = _switchAccountIds.join(',');
+      final accounts = await SwitchClient.fetchAllAccounts(mainId);
+      if (accounts.isEmpty) throw Exception('未找到 Switch 数据');
+
+      // 更新本地 account_id 列表
+      final newIds = accounts.map((a) => a['account_id'] as String).toList();
+      if (newIds.join(',') != _switchAccountIds.join(',')) {
+        _switchAccountIds = newIds;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('switch_token', newIds.join(','));
+        if (_switchActiveIndex >= newIds.length) _switchActiveIndex = 0;
+      }
+
+      setState(() {
+        _allSwitchAccounts = accounts;
+        _switchPlayData = accounts[_switchActiveIndex.clamp(0, accounts.length - 1)];
+        _switchPlayLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _switchPlayLoading = false;
+        _switchPlayError = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  Widget _buildSwitchPlayPage() {
+    if (_switchPlayLoading && _switchPlayData == null) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFFE60012)));
+    }
+
+    if (_switchPlayError != null && _switchPlayData == null) {
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.error_outline, size: 48, color: Color(0xFFE60012)),
+          const SizedBox(height: 12),
+          Text('加载失败', style: const TextStyle(color: Colors.white70, fontSize: 16)),
+          const SizedBox(height: 4),
+          Text(_switchPlayError!, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _fetchSwitchPlayData,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('重试'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE60012), foregroundColor: Colors.white),
+          ),
+        ]),
+      ));
+    }
+
+    final data = _switchPlayData;
+    if (data == null) {
+      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.sports_esports, size: 64, color: Color(0xFFE60012)),
+        const SizedBox(height: 12),
+        const Text('Nintendo Switch', style: TextStyle(color: Colors.white70, fontSize: 18)),
+        const SizedBox(height: 8),
+        Text('请先在设置页填写小黑盒用户 ID', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+      ]));
+    }
+
+    final games = (data['games'] as List? ?? []).cast<Map<String, dynamic>>();
+    final totalHours = (data['total_hours'] as num?)?.toDouble() ?? 0;
+    final userName = data['user_name'] ?? 'Nintendo Switch';
+    final totalGamePrice = data['total_game_price'] ?? '0';
+    final lastUpdate = data['last_update'] ?? '';
+    final region = data['region'] ?? '';
+    final showSwitch = _allSwitchAccounts.length > 1;
+
+    return Column(children: [
+      // 多账号切换器
+      if (showSwitch)
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(12)),
+          child: Row(children: [
+            const Icon(Icons.swap_horiz, size: 18, color: Colors.white38),
+            const SizedBox(width: 4),
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: _switchActiveIndex.clamp(0, _allSwitchAccounts.length - 1),
+                  dropdownColor: Colors.grey[850],
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  items: List.generate(_allSwitchAccounts.length, (i) {
+                    final a = _allSwitchAccounts[i];
+                    return DropdownMenuItem(
+                      value: i,
+                      child: Text(a['user_name'] ?? '账号 ${i+1}', style: const TextStyle(fontSize: 13)),
+                    );
+                  }),
+                  onChanged: (i) {
+                    if (i != null && i < _allSwitchAccounts.length) {
+                      setState(() { _switchActiveIndex = i; _switchPlayData = _allSwitchAccounts[i]; });
+                    }
+                  },
+                ),
+              ),
+            ),
+          ]),
+        ),
+      // 主内容
+      Expanded(child: ListView(
+        padding: const EdgeInsets.all(16),
+      children: [
+        // 用户卡片
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFFE60012), Color(0xFF8B0000)]),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundImage: data['avatar'] != null ? NetworkImage(data['avatar'] as String) : null,
+              child: data['avatar'] == null ? const Icon(Icons.sports_esports, size: 28, color: Colors.white) : null,
+            ),
+            const SizedBox(width: 14),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(userName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
+              const SizedBox(height: 4),
+              Row(children: [
+                Text('${games.length} 款 · ${totalHours.toStringAsFixed(0)} 小时',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                  child: Text('¥$totalGamePrice', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                ),
+              ]),
+              if (lastUpdate.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text('更新于$lastUpdate', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11)),
+                ),
+            ])),
+          ]),
+        ),
+        const SizedBox(height: 16),
+        const Text('🎮 游戏时长排行', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+        const SizedBox(height: 10),
+        ...games.map((g) {
+          final name = g['name'] ?? '???';
+          final hours = (g['total_hours'] as num?)?.toDouble() ?? 0;
+          final recentHours = (g['recent_hours'] as num?)?.toDouble() ?? 0;
+          final lastPlayed = g['last_played'] ?? '';
+          final coverUrl = g['cover_url'] ?? '';
+          final maxHours = games.isNotEmpty ? ((games.first['total_hours'] as num?)?.toDouble() ?? 1) : 1;
+          final barRatio = hours / (maxHours > 0 ? maxHours : 1);
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(children: [
+              // 封面
+              if (coverUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(coverUrl, width: 40, height: 40, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(width: 40, height: 40, color: Colors.white.withOpacity(0.05))),
+                )
+              else
+                Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(8))),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Row(children: [
+                  Container(
+                    width: 60 + barRatio * 80,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFFE60012), Color(0xFF00A0E9)]),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('${hours.toStringAsFixed(1)}h', style: TextStyle(color: Colors.grey[400], fontSize: 12, fontWeight: FontWeight.w500)),
+                ]),
+                if (lastPlayed.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text('上次: $lastPlayed', style: TextStyle(color: Colors.grey[600], fontSize: 11)),
+                  ),
+              ])),
+              if (recentHours > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF00A0E9), Color(0xFF0080CC)]),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text('${recentHours.toStringAsFixed(1)}h', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                ),
+            ]),
+          );
+        }),
+      ],
+    )),
+  ]);
+  }
+
+  /// ───── 旧 Switch 游戏库（折扣页）─────
   Future<void> _loadSwitchGames() async {
     final games = await SwitchService.loadGames(_psnId);
     setState(() {
@@ -3233,8 +3862,22 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
     if (!mounted) return;
     setState(() => _tipsLoading = true);
     try {
-      final psnine = PsnineClient('');
-      final tips = await psnine.fetchTrophyTips(widget.trophyId);
+      List<Map<String, dynamic>> tips = [];
+      // 1. 服务器代理优先（国内手机直连 psnine 可能超时）
+      try {
+        final proxyUrl = 'http://8.153.97.56/api/psnine_tips?trophy_id=${widget.trophyId}';
+        final resp = await http.get(Uri.parse(proxyUrl))
+            .timeout(const Duration(seconds: 8));
+        if (resp.statusCode == 200) {
+          final data = json.decode(resp.body);
+          tips = (data['tips'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        }
+      } catch (_) {}
+      // 2. 服务器没返回则直连 psnine
+      if (tips.isEmpty) {
+        final psnine = PsnineClient('');
+        tips = await psnine.fetchTrophyTips(widget.trophyId);
+      }
       if (mounted) {
         setState(() {
           _tips = tips;
@@ -3470,8 +4113,10 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _psnCtrl = TextEditingController();
   final TextEditingController _steamCtrl = TextEditingController();
   final TextEditingController _steamKeyCtrl = TextEditingController();
+  final TextEditingController _switchCtrl = TextEditingController();
   String _savedPsnId = '';
   String _savedSteamId = '';
+  String _savedSwitchToken = '';
   bool _loaded = false;
   bool _steamKeyVerified = false;
 
@@ -3486,8 +4131,10 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _savedPsnId = prefs.getString('psn_id') ?? '';
       _savedSteamId = prefs.getString('steam_id') ?? '';
+      _savedSwitchToken = prefs.getString('switch_token') ?? '';
       _psnCtrl.text = _savedPsnId;
       _steamCtrl.text = _savedSteamId;
+      _switchCtrl.text = _savedSwitchToken;
       _loaded = true;
     });
   }
@@ -3520,6 +4167,20 @@ class _SettingsPageState extends State<SettingsPage> {
     widget.onSteamChanged?.call();
   }
 
+  Future<void> _bindSwitch() async {
+    final rawIds = _switchCtrl.text.trim();
+    if (rawIds.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('switch_token', rawIds);
+    setState(() => _savedSwitchToken = rawIds);
+    if (mounted) {
+      final count = rawIds.split(',').length;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已绑定 $count 个 Switch 账号')));
+    }
+    widget.onSteamChanged?.call();
+  }
+
   Future<void> _setSteamKey() async {
     final key = _steamKeyCtrl.text.trim();
     if (key.isEmpty) return;
@@ -3548,11 +4209,14 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('psn_id');
     await prefs.remove('steam_id');
+    await prefs.remove('switch_token');
     setState(() {
       _savedPsnId = '';
       _savedSteamId = '';
+      _savedSwitchToken = '';
       _psnCtrl.clear();
       _steamCtrl.clear();
+      _switchCtrl.clear();
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3566,6 +4230,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _psnCtrl.dispose();
     _steamCtrl.dispose();
     _steamKeyCtrl.dispose();
+    _switchCtrl.dispose();
     super.dispose();
   }
 
@@ -3682,6 +4347,60 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
+        SizedBox(height: 24),
+        Text('Nintendo Switch 🎮',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
+        ),
+        const SizedBox(height: 4),
+        Text('填入小黑盒账号 ID，多个用逗号分隔',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _switchCtrl,
+                decoration: InputDecoration(
+                  hintText: '如: abc123, xyz456',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[850],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ),
+            SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: _bindSwitch,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE60012),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('绑定'),
+            ),
+          ],
+        ),
+        if (_savedSwitchToken.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: 8, left: 4),
+            child: Row(children: [
+              Icon(Icons.check_circle, size: 16, color: Colors.green[400]),
+              SizedBox(width: 6),
+              Expanded(child: Text('已绑定 ${_savedSwitchToken.split(',').length} 个账号: $_savedSwitchToken',
+                style: TextStyle(fontSize: 13, color: Colors.green[400]),
+                maxLines: 2, overflow: TextOverflow.ellipsis)),
+            ]),
+          ),
+        const SizedBox(height: 4),
+        Text('获取方式：小黑盒 App→我的→右上角分享→复制链接里的 account_id',
+          style: TextStyle(fontSize: 11, color: Colors.grey[700])),
         SizedBox(height: 24),
         // ── Steam API Key (服务器配置，无需用户填写) ──
         Padding(
@@ -4059,6 +4778,109 @@ class _SteamAchievementSheetState extends State<_SteamAchievementSheet> {
       ],
     );
   }
+}
+
+// ============================================================
+// ⚛️ 动态粒子背景（CustomPainter）
+// ============================================================
+class _ParticleBackground extends StatefulWidget {
+  final List<Color> colors;
+  final int count;
+
+  const _ParticleBackground({
+    required this.colors,
+    this.count = 50,
+  });
+
+  @override
+  State<_ParticleBackground> createState() => _ParticleBackgroundState();
+}
+
+class _ParticleBackgroundState extends State<_ParticleBackground>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  final _rng = math.Random(7);
+  late final List<_Dot> _dots;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 30))
+      ..repeat();
+    _dots = List.generate(widget.count, (_) => _Dot(
+      x: _rng.nextDouble(), y: _rng.nextDouble(),
+      r: _rng.nextDouble() * 3.5 + 1,
+      vx: (_rng.nextDouble() - 0.5) * 0.18,
+      vy: (_rng.nextDouble() - 0.5) * 0.18,
+      phase: _rng.nextDouble() * 2 * math.pi,
+      speed: 0.2 + _rng.nextDouble() * 0.5,
+      colorIdx: _rng.nextInt(widget.colors.length),
+    ));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, __) => CustomPaint(
+          painter: _ParticlePainter(
+            dots: _dots,
+            colors: widget.colors,
+            t: _ctrl.value * 30,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Dot {
+  double x, y;
+  final double r, vx, vy, phase, speed;
+  final int colorIdx;
+  _Dot({required this.x, required this.y, required this.r,
+    required this.vx, required this.vy, required this.phase, required this.speed,
+    required this.colorIdx});
+}
+
+class _ParticlePainter extends CustomPainter {
+  final List<_Dot> dots;
+  final List<Color> colors;
+  final double t;
+
+  _ParticlePainter({required this.dots, required this.colors, required this.t});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final d in dots) {
+      // 环绕式移动 — 舒缓
+      d.x += d.vx * 0.018;
+      d.y += d.vy * 0.018;
+      if (d.x < 0) d.x += 1.0;
+      if (d.x > 1) d.x -= 1.0;
+      if (d.y < 0) d.y += 1.0;
+      if (d.y > 1) d.y -= 1.0;
+
+      final pulse = (math.sin(t * d.speed + d.phase) + 1) / 2;
+      final alpha = (0.12 + pulse * 0.28);
+      final color = colors[d.colorIdx % colors.length].withOpacity(alpha);
+
+      final paint = Paint()
+        ..color = color
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
+      canvas.drawCircle(Offset(d.x * size.width, d.y * size.height), d.r, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ParticlePainter old) => old.t != t;
 }
 
 // Trigger build Sun May  3 20:14:20 CST 2026

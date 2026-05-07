@@ -54,7 +54,7 @@ done
 # Step 7: Inject INTERNET permission + cleartext HTTP
 echo "🔧 Step 7: Injecting network permissions..."
 perl -i -pe 's{<manifest xmlns:android="http://schemas.android.com/apk/res/android">}{<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.INTERNET"/>}' android/app/src/main/AndroidManifest.xml
-perl -i -pe 's{android:label="trophyroom"}{android:label="trophyroom"\n        android:networkSecurityConfig="@xml/network_security_config"\n        android:usesCleartextTraffic="true"}' android/app/src/main/AndroidManifest.xml
+perl -i -pe 's{android:label="trophyroom"}{android:label="trophyroom"\n        android:networkSecurityConfig="\@xml/network_security_config"\n        android:usesCleartextTraffic="true"}' android/app/src/main/AndroidManifest.xml
 mkdir -p android/app/src/main/res/xml
 cp "$SRC"/android/app/src/main/res/xml/network_security_config.xml android/app/src/main/res/xml/
 

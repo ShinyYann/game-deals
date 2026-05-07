@@ -298,7 +298,7 @@ class HomePage extends StatefulWidget {
 
 /// 合并游戏辅助类
 class _MergedGame {
-  final String source; // 'psn' | 'steam'
+  final String source; // 'psn' | 'steam' | 'switch'
   final Map<String, dynamic> data;
   _MergedGame({required this.source, required this.data});
 }
@@ -314,9 +314,13 @@ int _lastPlayedTimestamp(Map<String, dynamic> data, String source) {
     } catch (_) {
       return 0;
     }
-  } else {
+  } else if (source == 'steam') {
     final rtime = (data['rtime_last_played'] ?? 0) as int;
     return rtime * 1000;
+  } else {
+    // Switch: last_played is relative string like "1天前", can't sort by it
+    // Use total_hours as tiebreaker
+    return (data['total_hours'] as num?)?.toDouble().toInt() ?? 0;
   }
 }
 
@@ -796,6 +800,11 @@ class _HomePageState extends State<HomePage>
         merged.add(_MergedGame(source: 'steam', data: game));
       }
     }
+    // 合并 Switch 游戏
+    final switchGamesForRibbon = (_switchPlayData?['games'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    for (final g in switchGamesForRibbon) {
+      merged.add(_MergedGame(source: 'switch', data: g));
+    }
 
     // 应用 Steam 筛选（PSN 游戏不受影响）
     if (_filterPlaytime || _filter100pct) {
@@ -909,13 +918,15 @@ class _HomePageState extends State<HomePage>
         itemCount: topGames.length,
         itemBuilder: (ctx, i) {
           final m = topGames[i];
-          final imgKey = m.source == 'psn' ? 'cover_url' : 'header_image';
+          final imgKey = m.source == 'psn' ? 'cover_url' : (m.source == 'switch' ? 'cover_url' : 'header_image');
           final imgUrl = m.data[imgKey]?.toString() ?? m.data['img_icon_url']?.toString() ?? '';
           final name = (m.data['name'] ?? m.data['title'] ?? '').toString();
           final isPsn = m.source == 'psn';
-          final color = isPsn ? const Color(0xFF9B59B6) : const Color(0xFF3A7BD5);
-          final glowColor = isPsn ? const Color(0xFF9B59B6) : const Color(0xFF3A7BD5);
-          final appId = m.data['app_id']?.toString() ?? m.data['game_id']?.toString() ?? '';
+          final isSwitch = m.source == 'switch';
+          final color = isPsn ? const Color(0xFF9B59B6) : (isSwitch ? const Color(0xFFE60012) : const Color(0xFF3A7BD5));
+          final glowColor = isPsn ? const Color(0xFF9B59B6) : (isSwitch ? const Color(0xFFE60012) : const Color(0xFF3A7BD5));
+          final appId = m.data['app_id']?.toString() ?? m.data['title_id']?.toString() ?? '';
+          final platformLabel = isPsn ? 'PlayStation  ·  PSN' : (isSwitch ? 'Nintendo  ·  Switch' : 'PC  ·  Steam');
 
           return Padding(
             padding: EdgeInsets.only(right: 12, left: i == 0 ? 0 : 0),
@@ -924,6 +935,8 @@ class _HomePageState extends State<HomePage>
               onTap: () {
                 if (isPsn) {
                   setState(() => _expandedGameId = _expandedGameId == appId ? null : appId);
+                } else if (isSwitch) {
+                  _showSwitchGameDetail(m.data);
                 } else {
                   _toggleSteamAchievements(appId);
                 }
@@ -940,7 +953,7 @@ class _HomePageState extends State<HomePage>
                       width: 148,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
-                        color: isPsn ? const Color(0xFF1E1033) : const Color(0xFF0D1B33),
+                        color: isPsn ? const Color(0xFF1E1033) : (isSwitch ? const Color(0xFF2B0A0A) : const Color(0xFF0D1B33)),
                         boxShadow: [
                           BoxShadow(color: glowColor.withOpacity(0.25), blurRadius: 16, spreadRadius: -2),
                         ],
@@ -955,12 +968,12 @@ class _HomePageState extends State<HomePage>
                             child: imgUrl.isNotEmpty
                               ? Image.network(_proxyImage(imgUrl),
                                   fit: BoxFit.contain,
-                                  errorBuilder: (_,__,___) => _emptyCover(isPsn),
+                                  errorBuilder: (_,__,___) => _emptyCover(isPsn || isSwitch),
                                   loadingBuilder: (_, child, progress) {
                                     if (progress == null) return child;
                                     return Center(child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white24));
                                   })
-                              : _emptyCover(isPsn),
+                              : _emptyCover(isPsn || isSwitch),
                           ),
                         ),
                         // 底部信息条
@@ -977,7 +990,7 @@ class _HomePageState extends State<HomePage>
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
                               Text(name, style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
                               const SizedBox(height: 2),
-                              Text(isPsn ? 'PlayStation  ·  PSN' : 'PC  ·  Steam', style: TextStyle(fontSize: 9, color: Colors.white60)),
+                              Text(platformLabel, style: TextStyle(fontSize: 9, color: Colors.white60)),
                             ]),
                           ),
                         ),
@@ -1122,6 +1135,17 @@ class _HomePageState extends State<HomePage>
       }
     }
 
+    // Switch 统计
+    final switchData = _switchPlayData;
+    int switchGames = 0;
+    double switchHours = 0;
+    String switchPrice = '0';
+    if (switchData != null && !switchData.containsKey('error')) {
+      switchGames = switchData['total_games'] ?? (switchData['games'] as List?)?.length ?? 0;
+      switchHours = (switchData['total_hours'] as num?)?.toDouble() ?? 0;
+      switchPrice = (switchData['total_price'] ?? '0').toString();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
@@ -1146,6 +1170,15 @@ class _HomePageState extends State<HomePage>
                 _statTile('🏅', 'Steam 成就', '$steamAchUnlocked / $steamAchTotal', const Color(0xFFFFD700)),
               ],
             ),
+            if (switchGames > 0) ...[
+              const SizedBox(height: 8),
+              Row(children: [
+                _statTile('🕹️', 'Switch 游戏', '$switchGames', const Color(0xFFE60012)),
+                _statTile('⏱️', 'Switch 时长', '${switchHours.toStringAsFixed(0)}h', const Color(0xFF00A0E9)),
+                _statTile('💰', '游戏价值', '¥$switchPrice', const Color(0xFFFFD700)),
+                const Expanded(child: SizedBox()),
+              ]),
+            ],
             const SizedBox(height: 4),
             // 展开/收起按钮
             GestureDetector(
@@ -1160,7 +1193,7 @@ class _HomePageState extends State<HomePage>
               const SizedBox(height: 10),
               const Divider(color: Colors.white10, height: 1),
               const SizedBox(height: 8),
-              _buildSummaryDetail(psnData, _steamData),
+              _buildSummaryDetail(psnData, _steamData, _switchPlayData),
             ],
           ],
         ),
@@ -1168,7 +1201,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildSummaryDetail(Map<String, dynamic>? psnData, Map<String, dynamic>? steamData) {
+  Widget _buildSummaryDetail(Map<String, dynamic>? psnData, Map<String, dynamic>? steamData, Map<String, dynamic>? switchData) {
     final psnGames = (psnData?['games'] as List?) ?? [];
     final steamGamesRaw = (_steamData != null && !_steamData!.containsKey('error'))
         ? (_steamData!['games'] as List? ?? []).cast<Map<String, dynamic>>()
@@ -1179,6 +1212,10 @@ class _HomePageState extends State<HomePage>
       const sw = ['wallpaper engine', 'rpg maker', 'mydockfinder', 'lossless scaling', 'soundpad', '3dmark'];
       return !sw.any((kw) => sName.contains(kw));
     }).toList();
+
+    final switchGames = (switchData?['games'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final switchTotalHours = (switchData?['total_hours'] as num?)?.toDouble() ?? 0;
+    final switchTotalPrice = switchData?['total_price'] ?? '0';
 
     // PSN 白金游戏
     final platinumGames = psnGames.where((g) => (g['platinum'] ?? 0) > 0).toList();
@@ -1254,6 +1291,18 @@ class _HomePageState extends State<HomePage>
               ]),
             ),
           ),
+      ],
+
+      // ── Switch 游玩概览 ──
+      if (switchGames.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Text('🕹️ Switch 游玩概览', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[300])),
+        const SizedBox(height: 6),
+        Row(children: [
+          _miniStat('🎮', '游戏', switchGames.length, const Color(0xFFE60012)),
+          _miniStat('⏱️', '总时长', switchTotalHours.toInt(), const Color(0xFF00A0E9)),
+          _miniStat('💰', '价值 ¥', int.tryParse(switchTotalPrice.toString()) ?? 0, const Color(0xFFFFD700)),
+        ]),
       ],
     ]);
   }
@@ -3170,9 +3219,7 @@ class _HomePageState extends State<HomePage>
 
     final games = (data['games'] as List? ?? []).cast<Map<String, dynamic>>();
     final totalHours = (data['total_hours'] as num?)?.toDouble() ?? 0;
-    // 名字修复: 小黑盒未绑定时返回「玩家None」
-    var rawName = (data['user_name'] ?? '').toString();
-    final userName = (rawName.isEmpty || rawName == '玩家None') ? 'Nintendo Switch' : rawName;
+    final userName = (data['user_name'] ?? 'Nintendo Switch').toString();
     final totalGamePrice = (data['total_price'] ?? '0').toString();
     final lastUpdate = (data['last_update'] ?? '').toString();
     final region = (data['region'] ?? '').toString();

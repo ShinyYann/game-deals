@@ -1,0 +1,206 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.trophyroom.trophyroom"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:2:5-66
+11-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:2:22-64
+12    <!--
+13         Required to query activities that can process text, see:
+14         https://developer.android.com/training/package-visibility and
+15         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+16
+17         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+18    -->
+19    <queries>
+19-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:41:5-51:15
+20        <intent>
+20-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:42:9-45:18
+21            <action android:name="android.intent.action.PROCESS_TEXT" />
+21-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:43:13-72
+21-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:43:21-70
+22
+23            <data android:mimeType="text/plain" />
+23-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:44:13-50
+23-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:44:19-48
+24        </intent>
+25        <!-- Steam App deep link -->
+26        <intent>
+26-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:47:9-50:18
+27            <action android:name="android.intent.action.VIEW" />
+27-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:48:13-64
+27-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:48:21-62
+28
+29            <data android:scheme="steam" />
+29-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:44:13-50
+29-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:49:19-41
+30        </intent>
+31    </queries>
+32
+33    <permission
+33-->[androidx.core:core:1.13.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+34        android:name="com.trophyroom.trophyroom.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+34-->[androidx.core:core:1.13.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+35        android:protectionLevel="signature" />
+35-->[androidx.core:core:1.13.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+36
+37    <uses-permission android:name="com.trophyroom.trophyroom.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+37-->[androidx.core:core:1.13.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+37-->[androidx.core:core:1.13.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+38
+39    <application
+40        android:name="android.app.Application"
+40-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:5:9-42
+41        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+41-->[androidx.core:core:1.13.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+42        android:extractNativeLibs="true"
+43        android:icon="@mipmap/ic_launcher"
+43-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:6:9-43
+44        android:label="trophyroom"
+44-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:4:9-35
+45        android:usesCleartextTraffic="true" >
+45-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:7:9-44
+46        <activity
+46-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:8:9-29:20
+47            android:name="com.trophyroom.trophyroom.MainActivity"
+47-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:9:13-41
+48            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+48-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:14:13-163
+49            android:exported="true"
+49-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:10:13-36
+50            android:hardwareAccelerated="true"
+50-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:15:13-47
+51            android:launchMode="singleTop"
+51-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:11:13-43
+52            android:taskAffinity=""
+52-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:12:13-36
+53            android:theme="@style/LaunchTheme"
+53-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:13:13-47
+54            android:windowSoftInputMode="adjustResize" >
+54-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:16:13-55
+55
+56            <!--
+57                 Specifies an Android theme to apply to this Activity as soon as
+58                 the Android process has started. This theme is visible to the user
+59                 while the Flutter UI initializes. After that, this theme continues
+60                 to determine the Window background behind the Flutter UI.
+61            -->
+62            <meta-data
+62-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:21:13-24:17
+63                android:name="io.flutter.embedding.android.NormalTheme"
+63-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:22:15-70
+64                android:resource="@style/NormalTheme" />
+64-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:23:15-52
+65
+66            <intent-filter>
+66-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:25:13-28:29
+67                <action android:name="android.intent.action.MAIN" />
+67-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:26:17-68
+67-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:26:25-66
+68
+69                <category android:name="android.intent.category.LAUNCHER" />
+69-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:27:17-76
+69-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:27:27-74
+70            </intent-filter>
+71        </activity>
+72        <!--
+73             Don't delete the meta-data below.
+74             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+75        -->
+76        <meta-data
+76-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:32:9-34:33
+77            android:name="flutterEmbedding"
+77-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:33:13-44
+78            android:value="2" />
+78-->/Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/android/app/src/main/AndroidManifest.xml:34:13-30
+79
+80        <activity
+80-->[:url_launcher_android] /Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/build/url_launcher_android/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:8:9-11:74
+81            android:name="io.flutter.plugins.urllauncher.WebViewActivity"
+81-->[:url_launcher_android] /Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/build/url_launcher_android/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:13-74
+82            android:exported="false"
+82-->[:url_launcher_android] /Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/build/url_launcher_android/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:13-37
+83            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+83-->[:url_launcher_android] /Users/shinyyann/.openclaw/workspace/game-deals/trophyroom-app/build/url_launcher_android/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:13-71
+84
+85        <uses-library
+85-->[androidx.window:window:1.2.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5093ab42d2307deb2d7ac0b7f5718c38/transformed/jetified-window-1.2.0/AndroidManifest.xml:23:9-25:40
+86            android:name="androidx.window.extensions"
+86-->[androidx.window:window:1.2.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5093ab42d2307deb2d7ac0b7f5718c38/transformed/jetified-window-1.2.0/AndroidManifest.xml:24:13-54
+87            android:required="false" />
+87-->[androidx.window:window:1.2.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5093ab42d2307deb2d7ac0b7f5718c38/transformed/jetified-window-1.2.0/AndroidManifest.xml:25:13-37
+88        <uses-library
+88-->[androidx.window:window:1.2.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5093ab42d2307deb2d7ac0b7f5718c38/transformed/jetified-window-1.2.0/AndroidManifest.xml:26:9-28:40
+89            android:name="androidx.window.sidecar"
+89-->[androidx.window:window:1.2.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5093ab42d2307deb2d7ac0b7f5718c38/transformed/jetified-window-1.2.0/AndroidManifest.xml:27:13-51
+90            android:required="false" />
+90-->[androidx.window:window:1.2.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5093ab42d2307deb2d7ac0b7f5718c38/transformed/jetified-window-1.2.0/AndroidManifest.xml:28:13-37
+91
+92        <provider
+92-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
+93            android:name="androidx.startup.InitializationProvider"
+93-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:25:13-67
+94            android:authorities="com.trophyroom.trophyroom.androidx-startup"
+94-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:26:13-68
+95            android:exported="false" >
+95-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:27:13-37
+96            <meta-data
+96-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+97                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+97-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+98                android:value="androidx.startup" />
+98-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/shinyyann/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+99            <meta-data
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+100                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+101                android:value="androidx.startup" />
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+102        </provider>
+103
+104        <receiver
+104-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+105            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+105-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+106            android:directBootAware="false"
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+107            android:enabled="true"
+107-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+108            android:exported="true"
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+109            android:permission="android.permission.DUMP" >
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+110            <intent-filter>
+110-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+111                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+112            </intent-filter>
+113            <intent-filter>
+113-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+114                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+115            </intent-filter>
+116            <intent-filter>
+116-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+117                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+117-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+117-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+118            </intent-filter>
+119            <intent-filter>
+119-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+120                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+120-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+120-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/shinyyann/.gradle/caches/8.10.2/transforms/5f7dcf6815bacc3ae7f099ba801348de/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+121            </intent-filter>
+122        </receiver>
+123    </application>
+124
+125</manifest>

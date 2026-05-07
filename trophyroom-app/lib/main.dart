@@ -15,6 +15,7 @@ import 'services/switch_service.dart';
 import 'models/switch_game.dart';
 import 'pages/browser_page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 import 'widgets/trophy_icon.dart';
 
 void main() {
@@ -327,6 +328,7 @@ class _HomePageState extends State<HomePage>
   late AnimationController _animCtrl;
   late Animation<double> _titleSlide;
   late AnimationController _scanCtrl;
+  late AnimationController _frameSpinCtrl;  // Steam 头像框旋转
   bool _animDone = false;
   List<Map<String, dynamic>> _deals = [];
   String _dealsStatus = '';
@@ -383,6 +385,10 @@ class _HomePageState extends State<HomePage>
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
+    _frameSpinCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat();
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) _animCtrl.forward().then((_) => setState(() => _animDone = true));
     });
@@ -398,6 +404,7 @@ class _HomePageState extends State<HomePage>
   void dispose() {
     _animCtrl.dispose();
     _scanCtrl.dispose();
+    _frameSpinCtrl.dispose();
     _platformPageCtrl.dispose();
     super.dispose();
   }
@@ -2405,6 +2412,7 @@ class _HomePageState extends State<HomePage>
     final avatarFrameUrl = avatarFrame['image']?.toString() ?? '';
     final profileBg = (data['profile_background'] as Map<String, dynamic>?) ?? {};
     final profileBgUrl = profileBg['image']?.toString() ?? '';
+    final profileBgMovie = profileBg['movie_mp4_small']?.toString() ?? '';
     final level = data['level'] ?? 0;
     final gameCount = data['game_count'] ?? 0;
     final games = data['games'] as List? ?? [];
@@ -2423,7 +2431,7 @@ class _HomePageState extends State<HomePage>
       },
       child: ListView(padding: const EdgeInsets.all(16), children: [
         // Steam 档案卡
-        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
+        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime, _frameSpinCtrl),
 
         const SizedBox(height: 16),
 
@@ -2481,12 +2489,26 @@ class _HomePageState extends State<HomePage>
     return [const Color(0xFF5D5D5D), const Color(0xFF8A8A8A), const Color(0xFF3D3D3D)];
   }
 
-  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
+  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String profileBgMovie, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime, AnimationController frameSpinCtrl) {
     final avatarSize = 56.0;
     final hasFrame = avatarFrameUrl.isNotEmpty;
     final hasBg = profileBgUrl.isNotEmpty;
     final framePadding = hasFrame ? 14.0 : 6.0;
     final containerSize = avatarSize + framePadding + 4;
+    // 头像框旋转动画（Steam 客户端效果）
+    final frameSpin = AnimatedBuilder(
+      animation: frameSpinCtrl,
+      builder: (context, _) => Transform.rotate(
+        angle: frameSpinCtrl.value * 2 * math.pi,
+        child: Image.network(
+          _proxyImage(avatarFrameUrl),
+          width: containerSize,
+          height: containerSize,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        ),
+      ),
+    );
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.blueGrey.withOpacity(0.3)),
@@ -2494,7 +2516,7 @@ class _HomePageState extends State<HomePage>
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // ── Steam 个人资料背景（静态图 + 模糊 + 渐变遮罩） ──
+          // ── Steam 个人资料背景（视频动画 + 静态兜底） ──
           if (hasBg)
             Positioned.fill(
               child: ShaderMask(
@@ -2508,11 +2530,10 @@ class _HomePageState extends State<HomePage>
                   end: Alignment.bottomCenter,
                 ).createShader(rect),
                 blendMode: BlendMode.darken,
-                child: Image.network(
-                  profileBgUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
+                child: profileBgMovie.isNotEmpty
+                    ? _SteamBgVideo(videoUrl: profileBgMovie, fallbackImageUrl: profileBgUrl)
+                    : Image.network(profileBgUrl, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink()),
               ),
             ),
           // 无背景时的默认渐变
@@ -2549,15 +2570,8 @@ class _HomePageState extends State<HomePage>
                         child: const Icon(Icons.person, size: 28, color: Colors.grey)),
                     ),
                   ),
-                  // 点数商店头像框（叠在头像上面，比头像大一圈露出装饰边）
-                  if (hasFrame)
-                    Image.network(
-                      avatarFrameUrl,
-                      width: containerSize,
-                      height: containerSize,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    ),
+                  // 点数商店头像框（叠在头像上面，旋转动画匹配 Steam 客户端效果）
+                  if (hasFrame) frameSpin,
                 ],
               ),
             ),
@@ -4337,6 +4351,65 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
           ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+}
+
+/// Steam 背景视频播放器（点数商店动态背景） 
+class _SteamBgVideo extends StatefulWidget {
+  final String videoUrl;
+  final String fallbackImageUrl;
+  const _SteamBgVideo({required this.videoUrl, required this.fallbackImageUrl});
+
+  @override
+  State<_SteamBgVideo> createState() => _SteamBgVideoState();
+}
+
+class _SteamBgVideoState extends State<_SteamBgVideo> {
+  late VideoPlayerController _ctrl;
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() => _ready = true);
+          _ctrl.setLooping(true);
+          _ctrl.setVolume(0);
+          _ctrl.play();
+        }
+      }).catchError((_) {
+        if (mounted) setState(() => _ready = true); // will show fallback
+      });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_ready) {
+      // 视频未准备好时显示静态图
+      return Image.network(widget.fallbackImageUrl, fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink());
+    }
+    if (!_ctrl.value.isInitialized) {
+      // 初始化失败 → 显示静态图兜底
+      return Image.network(widget.fallbackImageUrl, fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink());
+    }
+    return FittedBox(
+      fit: BoxFit.cover,
+      child: SizedBox(
+        width: _ctrl.value.size.width,
+        height: _ctrl.value.size.height,
+        child: VideoPlayer(_ctrl),
+      ),
     );
   }
 }

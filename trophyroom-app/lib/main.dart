@@ -1232,6 +1232,26 @@ class _HomePageState extends State<HomePage>
       switchPrice = (switchData['total_price'] ?? '0').toString();
     }
 
+    // 全平台总时长（PSN + Steam + Switch）
+    double totalAllHours = steamPlaytime / 60.0 + switchHours;
+    if (psnData != null) {
+      final psnGamesForTime = (psnData['games'] as List?) ?? [];
+      for (final g in psnGamesForTime) {
+        final pd = g['play_duration'];
+        if (pd == null) continue;
+        if (pd is num) {
+          totalAllHours += pd.toDouble() / 60.0;
+        } else {
+          // ISO 8601: PT23H30M15S → 23.5h
+          final s = pd.toString();
+          final h = RegExp(r'(\d+)H').firstMatch(s);
+          final m = RegExp(r'(\d+)M').firstMatch(s);
+          if (h != null) totalAllHours += double.tryParse(h.group(1)!) ?? 0;
+          if (m != null) totalAllHours += (double.tryParse(m.group(1)!) ?? 0) / 60.0;
+        }
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
@@ -1260,7 +1280,7 @@ class _HomePageState extends State<HomePage>
               const SizedBox(height: 8),
               Row(children: [
                 _statTile('🕹️', 'Switch 游戏', '$switchGames', const Color(0xFFE60012)),
-                _statTile('⏱️', 'Switch 时长', '${switchHours.toStringAsFixed(0)}h', const Color(0xFF00A0E9)),
+                _statTile('⏱️', '总时长', '${totalAllHours.toStringAsFixed(0)}h', const Color(0xFF00A0E9)),
                 _statTile('💰', '游戏价值', '¥$switchPrice', const Color(0xFFFFD700)),
                 const Expanded(child: SizedBox()),
               ]),

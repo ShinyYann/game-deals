@@ -829,17 +829,20 @@ class _HomePageState extends State<HomePage>
       merged.add(_MergedGame(source: 'switch', data: g));
     }
 
-    // 应用 Steam 筛选（PSN 游戏不受影响）
+    // 应用 Steam 筛选（PSN 游戏不受影响，Switch 在全成就模式下需排除）
     if (_filterPlaytime || _filter100pct) {
       merged.removeWhere((m) {
-        if (m.source != 'steam') return false;
-        if (_filterPlaytime) {
-          return (m.data['playtime_forever'] ?? 0) == 0;
-        }
         if (_filter100pct) {
+          // 全成就模式：只保留 Steam 且达成全成就的；Switch/PSN 没有成就，全部移除
+          if (m.source != 'steam') return true;
           final total = (m.data['achievements_total'] ?? 0) as int;
           final unlocked = (m.data['achievements_unlocked'] ?? 0) as int;
           return total == 0 || unlocked < total;
+        }
+        if (_filterPlaytime) {
+          // 有游玩数据模式：只过滤 Steam 无时长的
+          if (m.source != 'steam') return false;
+          return (m.data['playtime_forever'] ?? 0) == 0;
         }
         return false;
       });

@@ -2403,6 +2403,8 @@ class _HomePageState extends State<HomePage>
     final avatar = data['avatar'] ?? '';
     final avatarFrame = (data['avatar_frame'] as Map<String, dynamic>?) ?? {};
     final avatarFrameUrl = avatarFrame['image']?.toString() ?? '';
+    final profileBg = (data['profile_background'] as Map<String, dynamic>?) ?? {};
+    final profileBgUrl = profileBg['image']?.toString() ?? '';
     final level = data['level'] ?? 0;
     final gameCount = data['game_count'] ?? 0;
     final games = data['games'] as List? ?? [];
@@ -2421,7 +2423,7 @@ class _HomePageState extends State<HomePage>
       },
       child: ListView(padding: const EdgeInsets.all(16), children: [
         // Steam 档案卡
-        _buildSteamProfileCard(avatar, avatarFrameUrl, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
+        _buildSteamProfileCard(avatar, avatarFrameUrl, profileBgUrl, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
 
         const SizedBox(height: 16),
 
@@ -2479,17 +2481,47 @@ class _HomePageState extends State<HomePage>
     return [const Color(0xFF5D5D5D), const Color(0xFF8A8A8A), const Color(0xFF3D3D3D)];
   }
 
-  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
+  Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String profileBgUrl, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
     final avatarSize = 56.0;
     final hasFrame = avatarFrameUrl.isNotEmpty;
+    final hasBg = profileBgUrl.isNotEmpty;
     final framePadding = hasFrame ? 14.0 : 6.0;
     final containerSize = avatarSize + framePadding + 4;
-    return Container(padding: const EdgeInsets.all(20),
+    return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(colors: [Color(0xFF1A3A5C), Color(0xFF0D1B2A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         border: Border.all(color: Colors.blueGrey.withOpacity(0.3)),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))]),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // ── Steam 个人资料背景（带动画 MP4 的图） ──
+          if (hasBg)
+            Positioned.fill(
+              child: Image.network(
+                profileBgUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          // 深色遮罩
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF0D1B2A).withOpacity(hasBg ? 0.75 : 0.9),
+                    const Color(0xFF1A3A5C).withOpacity(hasBg ? 0.65 : 0.85),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+          ),
+          // 内容
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           if (avatar.isNotEmpty)
             // ── Steam 头像 + 点数商店头像框 ──
@@ -2548,7 +2580,12 @@ class _HomePageState extends State<HomePage>
             _statItem('⏱️', '${(totalPlaytime / 60).toStringAsFixed(1)} h', '时长'),
             _statItem('✅', '$gamesWithTime', '玩过'),
           ])),
-      ]));
+      ],
+    ), // Padding
+    ), // dark overlay
+  ], // Stack children
+), // Stack
+); // Container
   }
 
   /// Steam 最近游玩

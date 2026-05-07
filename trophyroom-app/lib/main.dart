@@ -2482,6 +2482,8 @@ class _HomePageState extends State<HomePage>
   Widget _buildSteamProfileCard(String avatar, String avatarFrameUrl, String name, int level, String steamId, int gameCount, int totalPlaytime, int gamesWithTime) {
     final avatarSize = 56.0;
     final hasFrame = avatarFrameUrl.isNotEmpty;
+    final framePadding = hasFrame ? 14.0 : 6.0;
+    final containerSize = avatarSize + framePadding + 4;
     return Container(padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(colors: [Color(0xFF1A3A5C), Color(0xFF0D1B2A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
@@ -2492,12 +2494,12 @@ class _HomePageState extends State<HomePage>
           if (avatar.isNotEmpty)
             // ── Steam 头像 + 点数商店头像框 ──
             SizedBox(
-              width: avatarSize + 12,
-              height: avatarSize + 12,
+              width: containerSize,
+              height: containerSize,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // 头像
+                  // 头像（圆形裁切）
                   ClipOval(
                     child: Image.network(_proxyImage(avatar), width: avatarSize, height: avatarSize,
                       fit: BoxFit.cover,
@@ -2506,17 +2508,13 @@ class _HomePageState extends State<HomePage>
                         child: const Icon(Icons.person, size: 28, color: Colors.grey)),
                     ),
                   ),
-                  // 点数商店头像框（叠在头像上面）
+                  // 点数商店头像框（叠在头像上面，比头像大一圈露出装饰边）
                   if (hasFrame)
                     Image.network(
                       avatarFrameUrl,
-                      width: avatarSize + 12,
-                      height: avatarSize + 12,
+                      width: containerSize,
+                      height: containerSize,
                       fit: BoxFit.contain,
-                      loadingBuilder: (_, child, progress) {
-                        if (progress == null) return child;
-                        return const SizedBox.shrink();
-                      },
                       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                     ),
                 ],

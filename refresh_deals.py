@@ -17,7 +17,9 @@ def make_cards(deals, top=False):
     """Generate game-card HTML blocks matching existing page format"""
     cards = []
     for i, d in enumerate(deals):
-        name = d.get("name","?").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+        raw = d.get("name","?")
+        name_cn = d.get("name_cn","")
+        name = (name_cn if name_cn and name_cn != raw else raw).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
         cp = d.get("current_price","")
         di = d.get("discount","")
         img = d.get("image","")

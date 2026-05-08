@@ -14,7 +14,7 @@
       "level_name": "Pillar of Community",
       "level": 1,
       "xp": 100,
-      "unlocked": "2018年6月4日 06:18",
+      "unlocked": "Unlocked Jun 4, 2018 @ 6:18am",
       "name_zh": "社区栋梁",
       "desc_zh": "参与社区活动获得的徽章"
     },
@@ -26,7 +26,7 @@
       "level_name": "Power Player",
       "level": 1,
       "xp": 343,
-      "unlocked": "1月10日 20:46",
+      "unlocked": "Unlocked Jan 10 @ 8:46pm",
       "name_zh": "强力玩家",
       "desc_zh": "拥有大量游戏的玩家徽章"
     },
@@ -38,7 +38,7 @@
       "level_name": "Steam Replay 2025",
       "level": 1,
       "xp": 50,
-      "unlocked": "2025年12月20日 16:23",
+      "unlocked": "Unlocked Dec 20, 2025 @ 4:23pm",
       "name_zh": "Steam 年度回顾 2025",
       "desc_zh": "2025 年度游戏回顾徽章"
     },
@@ -50,7 +50,7 @@
       "level_name": "Years of Service",
       "level": 1,
       "xp": 500,
-      "unlocked": "2025年7月13日 08:47",
+      "unlocked": "Unlocked Jul 13, 2025 @ 8:47am",
       "name_zh": "服役年数",
       "desc_zh": "Steam 账号注册周年纪念徽章"
     },
@@ -62,7 +62,7 @@
       "level_name": "Steam Replay 2022",
       "level": 1,
       "xp": 50,
-      "unlocked": "2023年2月14日 23:43",
+      "unlocked": "Unlocked Feb 14, 2023 @ 11:43pm",
       "name_zh": "Steam 年度回顾 2022",
       "desc_zh": "2022 年度游戏回顾徽章"
     },
@@ -74,7 +74,7 @@
       "level_name": "Steam Grand Prix 2019",
       "level": 1,
       "xp": 155600,
-      "unlocked": "2019年7月20日 05:01",
+      "unlocked": "Unlocked Jul 20, 2019 @ 5:01am",
       "name_zh": "Steam 大奖赛 2019",
       "desc_zh": "2019 年 Steam 夏季大奖赛活动徽章"
     },
@@ -86,12 +86,13 @@
       "level_name": "Career Criminal",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年6月16日 05:50",
+      "unlocked": "Unlocked Jun 16, 2019 @ 5:50am",
       "playtime": "40 小时",
-      "name_zh": "收获日 2",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/218620/ebd4b6d3abff558a43bef45a99684cf33f7bd09c.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClPZOxifsLLwQL-_LfVHyKvOmPCfHiPGgs-GOYNPW-I9zv2sbiUFmufRbt5RgkELKNW8mdXfZfeKUBiltNeuVqxmkV6G0sqIJNFdFzozC0WZLl0kHgUcc9WkSKhcJ3b1wtrbUU7D-7nX-_KOoKsjm96CgwhEqLbTLZLyQ",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClObeRlNtiAyQj6pufQSC2kOG-RLiWPSgg7ROJcN2_Y92eh4u6RFzHKSLp_SlwHfKsHpmAcPNfJYUUrhthJr2CqqE1wHxEtL8cUJgy_mScVaLhwzHBKfM1WzSD4IMWPjF0wPE9vWemyALzLPInwkyY6HUQwCeYXZgL1Z7r4",
@@ -102,7 +103,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClZavdic_vHxwCwruTGCHzyIxDRJiXcV1FuVsEPbDbPp270sriZSj3KFL4pEFxVL6oC92caNciMbBI614IN-j3hzxUlGkJ8dsYUIQrtyDoDP7pjyi4AIc4Q9n2td8OMiA1gbhU-WbuxX-nHO4CtmXkgCR5vGfFMbYnH7Czp-8akPPePfvBiZ_gp78uAkUBPHQZLQO35",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClbaeRofsLLwQL-_LvaSyT0PmHGenOOT1g6GbtfY2ra92Hws-SQFjrMEOkuFg0NKfRQ-21XfZfeKUBiltNeuVqxmkV6G0sqIJNFdFzozC0WZLl0kHgUcc9WkSKhcJ3b1wtrbUU7D-7nX-_KOoKsjm96CgwhEqLa5yL-tA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsOzHUOmChCIzb02ClaaulqfsLLwQL-_LuMRXWkMGKVf3OPSgc4TOALNT2K-mfx4O6cQTuYFekuQl8HL6dS-mVXfZfeKUBiltNeuVqxmkV6G0sqIJNFdFzozC0WZLl0kHgUcc9WkSKhcJ3b1wtrbUU7D-7nX-_KOoKsjm96CgwhEqJf-MFNVw"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "收获日 2"
     },
     {
       "type": "game",
@@ -112,12 +117,13 @@
       "level_name": "Riot Gear",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年6月13日 04:59",
+      "unlocked": "Unlocked Jun 13, 2019 @ 4:59am",
       "playtime": "23 小时",
-      "name_zh": "逃脱者 2",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/641990/8b89f43e93d157d025d59b0c568c54c6afe26495.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClOYOt4Ks6N8ADpqvHGTjqnLj7JLibcQV1pReZfZGmP-zqit-mSRG3BFb4rRgBQLqID9mRAOMmMP0c6h4UCrzP2h0p6WBQnYMFDYjCyx3UUNOAmkSURcpNTynajd8LbgAxibk8-Wr3uVu_AbdSnxSogWhplGaFLZIvGpmWyr4G3Z_VM8p3m1Q",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClfZPF4NM7VzgTwpKm-DGb-ZjDXaSjUHVltQLMNPWHR-Dql5O2QF2nBFeB6QQAFfPAF8TdNPMvYNhFp0YdaqGS6zkAzDhgvNMdJYgu-2EsaPLwizXwRfM8BnizxdcaK1AlgbRVqXLGzVrnLb9KnknomCB9jGKAYYorEuCW_5tevPeHAIPr-Cou9lA",
@@ -126,7 +132,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClFSNUnF83A0w30s-fLFXn2bzKZeXOLHwhpHLteZG3Q-zek4L6QSmnLROkkRF8MKKZX-jVIOcncP0M11JlLpWL-lUtvGhM6TcxLcQi-l3dKNb5ykHARJ8gDzyb1dZTfjAtibU9qCbrlA76XaoWikC0iXEtnH_MEJNXCrmPh-nKdGCdM",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClGRNVDD43PzQT8pL_YGSSvOWXAfyONS1tpSLANNmGM-jus7OmSQ2zBRet6QlwHdKsH-jdAI4nXaARvi8VfrneHnkl8GRN1cZxCc1jjm3cRMrwjmnQRdZ1bzST1L5SKh103ahNvXr_nVLrDPoGlwzFkA01xWa0YynnUHT8",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N8LxXoFmChCIzb02ClYVtYnGcXJzQT3uKSEEXXwbWrHeieATggxHuFdMGDd-zL0sezAQT7BEup_SgoNLKEGoTFLO5qPahdsysdVrCO6mFZ5GwQXe8hHdwrmyS0XMup9mSIQJsoEmyGjJpLQ0V9nYUY5WLqyVOnHa4alkiklDBpnTL5aOtyD_ijumh0GaHg"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "逃脱者 2"
     },
     {
       "type": "game",
@@ -136,12 +146,13 @@
       "level_name": "Saviour",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年6月13日 04:53",
+      "unlocked": "Unlocked Jun 13, 2019 @ 4:53am",
       "playtime": "243 小时",
-      "name_zh": "战锤：末日鼠疫 2",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/552500/8081c2ecda811bc593d26b314821ab05dcf47a2d.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02ClYa-ZkOcLIxQG9qO-MG3GqOGSQeSCMRFs5HLtaNWHdqzegt-STSzqYRO4lEV9SK_MA-zFAOc-ANgx9itAdqWqqk0FvIR8lc8JDLVvpy3BCMOV2mCRGJpNTmCXyJMKLgltjakI4Xru0Vb2RPtOhlyklWUx5X_5Ncs2Yuh4kPpcC",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02ClebeRoPY3PzQT8pL_aHnX0OzPBKXaPSF9rHOIMMDnR-2fz4OjHQm7JROkkFg9XKKQC82NKI4nXaARvi8VfrneHnkl8GRN1JpdHdF66kidDNOkmkHBDdJlQz3b3IpXbgQ1maxVpW-u2BLjFaYChxjFkA01xWa0YVtUZJDg",
@@ -158,7 +169,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02CldfPdjNcrIwwDp5-uAHXPyNWaUfCCJGghsRLpePWiMqGCn4bmSSj6dEuEvEApWfKEMpjdLPJzaNxcjlNlc7We3hUB4DCkhf8RBdVLvmHUXYLx9m3EXcchamCXxJJaP11hmaURuCLzkBb_DPND3lCgiXB4xAeBEM53TtSeCg_1o4w",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02ClLaup4c-DIyQLztaSEEXXwbWqRf3OITA1uSuAPMGjR-TPxse6dRj_NQ-klRwhQfKJW-zdNbpqNPUE5ysdVrCO6mFZ5GwQXe8hHdwrmniYSNewkkHJCIJ8BkSXxJ5bb0w1lbEdoXurjVe_BbtL0wisjWxtjSb5aOtyD_iju_MJNVGY",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxnYMmChCIzb02ClFcOt4K8bHzkPyrOOKGSmlOGHHKXaNSwcxTOdaMmCI_WKm4OzGS2yaFOsrR1wDK6RS8mwabp_cIVJjg5FZpHe8klZCFxspdcAbJF26ziUSae51zXURfZpTmCbycMbegV5gbBRuWevkV--TPYWili4gCwQnQfcMIoaX7nxBdFk"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "战锤：末日鼠疫 2"
     },
     {
       "type": "game",
@@ -168,11 +183,12 @@
       "level_name": "Killer Croc",
       "level": 2,
       "xp": 200,
-      "unlocked": "2019年5月28日 19:29",
-      "name_zh": "蝙蝠侠：阿卡姆起源",
+      "unlocked": "Unlocked May 28, 2019 @ 7:29pm",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/209000/3735460d74ae569efb96b70432c8fdb86fdb5c07.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02ClPZOtpfsLLwQL-_LXVHSKlMTHCfnTaSwcwReAMNTnZ-TSmt-6TSznMEuwrQV9VdKMB9jZXfZfeKUBiltNeuVqxmkV6G0t-K5wVJQziziRCae8nmnVHJJsDnyLyJMaLh1prbkVpDrq2Xr7BbNP0jm96CgwhEqITqqWq5w",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02ClPZPFhOcWAyQj6pufQHyChbGTHLHjYRVxqTeVcZm_Q_TX04--QRmzMRLolQFgEfqMN8TZLbNfJYUUrhthJr2CqqE1wHxEtL5MfKVzuyS0XYex9miNAcZ4DmXX2IJbb1w1gbU9sWbuzVO3KbYKmwn46HUQwCeYXZgTqIPpX",
@@ -183,7 +199,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02ClGbOlgPdmN4xf0oqSEEXXwbWrHLHGOH19pTroINzqPrzWisOSSRWqcQbp4Rl0CfPRQ9DVMaMyJPhVsysdVrCO6mFZ5GwQXe8hHdwrmnC1KYugmkSVCdJNQyyb0I8XZ1FlkakQ4CLriX7rBbNWnwScmXhk1Tr5aOtyD_ijuEjRXjUY",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02ClLbPdpPsffhgz2oOWIQSykbDWWdnaBSQc6HrQNNGDbrGCm57vFF2mcEuokSgsHL6UE8TVANcGXf0xqwtVUuWG9hXt0Excvd5gQKVbon3dKNe10kHMQd59XyCShIJLbhw0wakNjXLvkAr6TZ4Omk311Q1o5SLZcaYkcfvRSgA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXMMmChCIzb02Clebex6OY3PzQT8pL-LGiDxP2eRdnOBHQhrTuAMMDmL9zqt5L6SFDHPErspFw0ELvRVpmAbI4nXaARvi8VfrneHnkl8GRN1JJwfI1q4k3BDYOV3ynNGcMpSyCL2JJaL111nYUBpWezlB7TAbIL3wTFkA01xWa0YBvuJI-s"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "蝙蝠侠：阿卡姆起源"
     },
     {
       "type": "game",
@@ -193,11 +213,12 @@
       "level_name": "Oswald Chesterfield Cobblepot",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 19:07",
-      "name_zh": "蝙蝠侠：阿卡姆之城 年度版",
+      "unlocked": "Unlocked May 28, 2019 @ 7:07pm",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/200260/14829e136ce41446af576c2cd4d92a9ba9af04b9.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClPZPFhOcWAyQj6pufQSSKgOjGRdnaIRF85GbENNWGKq2Wj5rjHQW6cR-ErRwEMKPZQ-2QYPdfTf0UrhthJr2CqqE1wHxEtL8QSJQ3pySBDNL5ykHRBfZJRzyTydZCMhFtrYUJvWrqzVO2XZ4Whwy86HUQwCeYXZq5dCQCq",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClOZPF7N8bHzkPyrOOKGSmhOmXGdyffHV9qSOALZGyN-DHw7eXBFzDJROp-RwoNL_ED82BIOc3YIUh9g5FZpHe8klZCFxspdcAbcVvuyCYQZe0gy3ZKcJhakCemJpaKgQpjbE9jXr3nVOjAPtStlCt3XQQnQfcMIoaXv8GqE1I",
@@ -206,7 +227,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClAd6snHtnDxR_-5-uAHXPyNTXCdyCJSw0-SrdbZmHaqjqstuzHQDHBQbwtRA0BdPcB92BMP53fNkQjjsdc7We3hUB4DCkhf8RBdVK6niERY75xmCQRcpNXmiz5JcLZhwxmPUduU7HjU7zAO4P0xScgWUlnAeBEM53TtScDMqwspA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClfbOFoNM7Uhgz2oOWIQSGhbWfCe3WLHwcxTrZfZzzZ_2H35L_CE2udQuAvSwsMf6UF9jJLa8GXZVJqwtVUuWG9hXt0Excvd5hHJFq5mHdHYbgmn3lHdpNbmnLwJMfd0F5mYU9uX7jlAr6TOomhlHwkQ1o5SLZcaYm1h7YigQ",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPxHEKmChCIzb02ClZcuohHsrFxUPyrOOKGSmhPDWQLiXbRQoxH7MIPDre-TKnt-iQEW3PFe59FQ4EdPEHp2Eaa5rfIUh9g5FZpHe8klZCFxspdcAbcVvuyCYQZe0gy3ZKcJhakCemJpaKgQpjbE9jXr3nVOjAPtStlCt3XQQnQfcMIoaX6Rgc4CI"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "蝙蝠侠：阿卡姆之城 年度版"
     },
     {
       "type": "game",
@@ -216,11 +241,12 @@
       "level_name": "Companionsheep",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 10:02",
-      "name_zh": "凯瑟琳 经典版",
+      "unlocked": "Unlocked May 28, 2019 @ 10:02am",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/893180/8046a80cdae90f72eb5acdb3a52db6c93ab6cb5e.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClOZPFkPdnPzgC9qO-MG3GqPDTGKXWPRV0xSeIKM2GP9zWk7bzARTzKR-8sEA9VePRR9TZIP5-KOwx9itAdqWqqk0FvIR8lc8JDLVu6nyNEZO5wynEWJMgHmiakJsaLg15qaU9uXbyyUOmWPIGjxSx2C0x5X_5Ncs2YuvlVhJet",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClGZPFkPdnPzgC9qO-MG3GqaW_HKSLbSA5rTuVcMW_Rr2ettOidRT_KSL16QA5ReqcC-jAaPsrbOQx9itAdqWqqk0FvIR8lc8JDLVu6nyNEZO5wynEWJMgHmiakJsaLg15qaU9uXbyyUOmWPIGjxSx2C0x5X_5Ncs2Yun2Bofnc",
@@ -231,7 +257,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClCd-ltNs_Jhgz2oOWIQXL0bGCUeHaLRQ4_TuFfZjrd_mH24e7FEDjNR-h6QQ5RefNX8mFKaMqXf0xqwtVUuWG9hXt0Excvd5gScVrsnSFAZL91zCARIJhQzSSidJLYjV5rbEFuD76yAu_CadSmwnlyQ1o5SLZcaYl_Vj804A",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClZaud1fsLLwQL-_LHaTHKgPTXCLHjdGFo-TLVXPG2I92XzsemRRTGaEL4tQgsHdKcB92NXfZfeKUBiltNeuVqxmkV6G0t8c5ARJ1ron3ZDNbwmzXJAIZsAyyLxLpXQgVhmPUA_DuvnUOnBPdfzjm96CgwhEqLBcE2fFA",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NEGx3IEmChCIzb02ClZd-x_MMqAyQj6pufQGHGuPWTHKSKPHl85RLsPY2CP-mKlt-WRS2qfROwvFVsDfaNX9mEYOdfJYUUrhthJr2CqqE1wHxEtL5FHJVjsnydGM-0hySIXdpkGmXaiIJXRhFZmb0I_XO2zBbzEOoL3xnk6HUQwCeYXZtLgqV6q"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "凯瑟琳 经典版"
     },
     {
       "type": "game",
@@ -241,18 +271,23 @@
       "level_name": "World's Greatest Detective",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 09:58",
-      "name_zh": "蝙蝠侠：阿卡姆疯人院 年度版",
+      "unlocked": "Unlocked May 28, 2019 @ 9:58am",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/35140/d946aaf6fb4aa3ab1bcd3422698be1b7bcbc7ef5.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gF1jceBiK8LQxU7Ps-eMCHnyZiOCJizYG1s1S7YNPG-Iq2Ki5-WWSmnJRe8rRQxVffBS9GBNa8iINhI10IMI_TW-zwp3DhFucMpUdAqp9X0eMLoglSUUJ54EzCKiJpXY0FdgYBNqX7rkVu_EatSgkidyWBk2GPVIY4KVuSTyuMmmfLGLL3hrFFTY",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gFBoZPFkfZmR007IoueDCDL-ZTbDKnzcH1g_HOZcN2GMrDbws-iVEz-aFeB9QFsAfKUN9DJJOpzaaxs71NMC5W-okAJ_EQQsd9d5eQK6zXFONbsnnScXc8lSmCWlLpbR0F9nakVqCb7iA7nAZ9egk34jCEhgFqAbZZXV5nL6vprz1qSL9S8",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gEV4bOt2PceAyQj6pufQSS2gODLCKnDaHV05RbdYNz7b_Df04eSdRTDJF-h9RFwBKPQC8WwbNNfTf0UrhthJr2CqqE1wHxEtL8FAclq9zyIRYex0zXlAfc5SnCbzJsffgApnak48X7u2UemQaIilkS46HUQwCeYXZnH05pDi",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gEBlYPdpc-LViyv06sGfHXryLj7JLibcQQ9uTrpXNGnbq2Dz4u3AFD-YFOktEglWeaUCpjZLOZ3aPBM8hdVZqjz2nVR6WBQnYMFDYjCyx3UUNOAhziNHI85UyyTxJ8HRh1c3aENoWbi0ULmXaoOtxionDB0yTacTZIqUpmWyr4G3Z_WzBeawHg",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKxXcMjnpfPi79gFZiceRiMdjSiyzoreeUWn36aTDBcifaTF86T7cPYW_fqjakt7jGRj3JSLstRAFSeqsH9zVMbJuKORE63IAVoXW_0UZyDBItYPpPfQ68zykXN79wziREJ5tTmHH4JJyMhVpga0Y5XL2yU77KOYSmwShxDx1uH6EbesvL7zOq9ZUeAugZxg"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "蝙蝠侠：阿卡姆疯人院 年度版"
     },
     {
       "type": "game",
@@ -262,12 +297,13 @@
       "level_name": "A whirlwind of rage and steel",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 09:53",
+      "unlocked": "Unlocked May 28, 2019 @ 9:53am",
       "playtime": "0.2 小时",
-      "name_zh": "巫师 2：国王刺客 增强版",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/20920/28008397a813d1a22162083bb1c4520421ae5d4e.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gF1id_JpLMOAyQj6pufQGifyOzOTfyLdGQc-H-cNZmuL-mGss7uXRD7BQ71_RQ8CdPcA9WYdb9fJYUUrhthJr2CqqE1wHxEtL5YUJwq_niZEabxzznJLcZIEn3KkdJfYh10xYUVvXL_lV7jHPIn0lH46HUQwCeYXZtNIyre9",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gEJod-tjNoD0zwbzpKSEEXXwbWqTKyONGlowHuVZNmiKrDb04biXEGudF-0oQQwEfvcN9WFKac2NaUQ-ysdVrCO6mFZ5GwQXe8hHdwrmmSZENLlxmnZKJJ0Emi30L8Lf0wswa0doWOvuVbnEaIOklCp3VUtjTr5aOtyD_iju01FHAak",
@@ -277,7 +313,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gFhoce1jfsLLwQL-_ObUHXCvbmScLCfYRQ06S7VWYTze_jal4ejFRDudELt5Sg5SevED8GVXfZfeKUBiltNeuVqxmkV6G0t7IJJDdFvpnSwSZ7t2kXVLI50EzXbzJ5bb1lZhbUBtWLnjU-_KPoX0jm96CgwhEqLv0QLpRg",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gE5iafFtNo3PzQT8pL-LSXb2ajOUfCKKHQ46T7dWPW7Q9jqjtOuWQW2bQul6QAgEeKcH92EbI4nXaARvi8VfrneHnkl8GRN1IZcRdQvvmCNLMOsjm3hGfM1Uz3CiJZXbhwxra0NsXbrmUrmRZ9ChwTFkA01xWa0YN_ZXAdo",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPzXEMjnpfPi79gFNod-RgLIDJxk7JqPSEHTL-ZTbDKnzdRQpsReBdPDnQ-ment--dF2ydQOwlSwwBevYE8TVJNJ2JPRA00dJe5XW2kAJ_EQQsd9d5eQK6zXFOYu9yzSVGd5xayCKmJZ3djAlkPhI4WbnlVO_LbISjly0lWR80F_EeNZXV5nL6vprzESFTDUQ"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "巫师 2：国王刺客 增强版"
     },
     {
       "type": "game",
@@ -287,12 +327,13 @@
       "level_name": "Mystery Badge",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 09:48",
+      "unlocked": "Unlocked May 28, 2019 @ 9:48am",
       "playtime": "13.7 小时",
-      "name_zh": "英雄传说：空之轨迹 the 3rd",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/436670/e89b9d64467a3c354db90604884411d923869ea3.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClZbeAnH8rIx07LreOUDz_AYSPMZAfQDlsuFO4PYj3U-mansOSUEW3OEr5_EA9SfKMF-zIYP8zaPUM11dVZr2HrlRR8HER_dotWfgj9yHsBNbg39ygfJMwHlCz5JMWMhQljPkFoD7yyBLjHa4StwXwgWE5mGaIZYoLAsSXv8MOib_SYbaZgcrc6rSDzI_c3",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClZbeAnC87H0wr16u2LV0T-ZjyCJizYG1s1S7UPMTnRqmL24O6WEWrLSOkoFgEMfvBW8G1AOMnfbhBv0IcOr2PqwgptEBFucMpUdAqp9X0eMLoglXlLd8oHmXLxcJPb0Fs3OkJvXr3vB-_GatWkli0nWxMyFqAZbN_GvSbyuMmmfLGLL9GTev_3",
@@ -309,7 +350,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClObexgNMLIhVes5-uAHXPyNWCUe3OAHlhrRLtaMWzerzKh4-TAFGudRL4pEVhQeaEH-2IbOJuLNxsjlNlc7We3hUB4DCkhf8RBdVLjkyYSNO0jmSdFd85WzHb0I5DcjQ4xbEM-W77lVbrLOoilkydwDh9kAeBEM53TtSfjgWx99Q",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClZbeAnC8DPxRawgOCCCnGxYTrFKCSESF9pGbMKNWDbqjGl5O6VEDqfRegtFQkDLKMB9mIdbs-BbBNu3YNerSuomUM7HBk6dsBUTwa2y3MWbOV8miAXdc1TzyPyc5CM11tnbENiC-vjU-jDaYOmliZxVBpkF_RJYYiL-Hu77tH8aFhw-eDT",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwnULmChCIzb02ClPYK5fOc3DhVeq5-uAHXPyNWDBenmPRQw9S7EPMWnaqjOts-rAET7IRL0vElsDfaUC8zcbNM_YbEcjlNlc7We3hUB4DCkhf8RBdVLjkyYSNO0jmSdFd85WzHb0I5DcjQ4xbEM-W77lVbrLOoilkydwDh9kAeBEM53TtScdKkpPRw"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "英雄传说：空之轨迹 the 3rd"
     },
     {
       "type": "game",
@@ -319,12 +364,13 @@
       "level_name": "Divine",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 09:37",
+      "unlocked": "Unlocked May 28, 2019 @ 9:37am",
       "playtime": "0.5 小时",
-      "name_zh": "神界：原罪 2",
       "cards": [
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/b0f9932b7fae85d2ad8d733828c984183ccf87e4.png",
-        "https://shared.fastly.steamstatic.com/community_assets/images/items/1492660/06bb85cd5f39a963a39ae9327ea4eb7da5cd30d4.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/3f9705462c40b98cdfcd86f3e03d4938ba8006ee.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/3099240/b3646c59c6a05ce8cdd1b879c691e1b95fd79bf0.png",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/c1a98d98f32ae4bd73e6b354796c0bb92f543fda.jpg",
+        "https://shared.fastly.steamstatic.com/community_assets/images/items/2598440/5bdec92696b30d8b1a7dd8e00e1af4ec4ddc9013.gif",
         "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/435150/0469d0a5867da50286e3b0ecab2da2c58dda0258.png",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClZbeAnHNzH0hP-r6m_HXfyLj7JLibcQV88G-dfY2jfqmKk4OyRS27AR-x5QQ4HL6cBozcdOsuBbENvgIIMqWH2h0p6WBQnYMFDYjCyx3UUNOAgkCBFcZNamyP0dJKM11tgbxVjCbDmUe7AOdSkxXlyW0hjHfJJYd-QpmWyr4G3Z_XAAR301w",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClZbeAnHcfQxQuwk-OOGTL-ZTbDKnyJRQw6SrtdMzmM_DH07bvFEzzOQuh4FggDe_EC8zdOOsjYbkM1gtRY5XW2kAJ_EQQsd9d5eQK6zXFONOUkn3VKfZlVnXb2c8bdh1gxYRViW7-1VOqXbtTzxil2WRg1TKVOYZXV5nL6vprzU_IHYtE",
@@ -334,7 +380,11 @@
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClebeR8PdjOyQPvpPDIT1W8RD7eLjPdWldlHOQLOGrd_TLx7OSURWzOQeF9RFhXeqYGp2ZLaM7cNhs_ho8NrTPrkxAsTkVmYstBNg202HAWI4IsxSAVIJYHkXX3IpzRh1hmOkA_CLzlUe_LPImkl30mC09mSvZMYtmRune__cP0dLfYeu5xafMFpaqK5Q",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClebeR8PdjOyQPvpPDIT1W8TCDFPSefFVNpGuZTZGjRrGCstrzCFjnOEOwkSw0GdKNRoGBLPpvfORA_1oACqmG5lBF8G1g4fMIAcgCpznEBDrQoySYXeM5ayCP0LpzbglswbhM4XrrgBbWRZ4Ciwi1yCBsySfYcNo-X6nbprJLvKqnRO746ZpPYIo4k",
         "https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2N0MwXIJmChCIzb02ClebeR8PdjOyQPvpPDIT1W8QCLJLi-fFVNpGuZTMW7e-DLx7O3HQm6dSe4rQA8GfqMB82RBOsuANxs10YZd-j3hw0ckH1g4fMIAcgCpznEBDrQoySYXeM5ayCP0LpzbglswbhM4XrrgBbWRZ4Ciwi1yCBsySfYcNo-X6nbprJLvKqnRO746ZoNjhVZ7"
-      ]
+      ],
+      "foil_icon": null,
+      "foil_name": null,
+      "earn_text": "",
+      "name_zh": "神界：原罪 2"
     },
     {
       "type": "game",
@@ -344,7 +394,7 @@
       "level_name": "The Seer",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 09:33",
+      "unlocked": "Unlocked May 28, 2019 @ 9:33am",
       "playtime": "0.8 小时",
       "name_zh": "RPG 制作大师 MV"
     },
@@ -356,7 +406,7 @@
       "level_name": "Platinum",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 09:28",
+      "unlocked": "Unlocked May 28, 2019 @ 9:28am",
       "playtime": "0.4 小时",
       "name_zh": "海贼王 寻秘世界"
     },
@@ -368,7 +418,7 @@
       "level_name": "(＊^_^＊)ゞ",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 09:19",
+      "unlocked": "Unlocked May 28, 2019 @ 9:19am",
       "playtime": "0.5 小时",
       "name_zh": "超次元游戏 海王星 重生 1"
     },
@@ -380,7 +430,7 @@
       "level_name": "Champion",
       "level": 1,
       "xp": 100,
-      "unlocked": "2019年5月28日 08:56",
+      "unlocked": "Unlocked May 28, 2019 @ 8:56am",
       "playtime": "2.7 小时",
       "name_zh": "全面战争：三国"
     },
@@ -392,7 +442,7 @@
       "level_name": "Warmonger",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 08:45",
+      "unlocked": "Unlocked May 28, 2019 @ 8:45am",
       "playtime": "163 小时",
       "name_zh": "壁纸引擎"
     },
@@ -404,7 +454,7 @@
       "level_name": "Odette",
       "level": 2,
       "xp": 200,
-      "unlocked": "2019年5月28日 08:37",
+      "unlocked": "Unlocked May 28, 2019 @ 8:37am",
       "playtime": "5.6 小时",
       "name_zh": "猎天使魔女"
     },
@@ -416,7 +466,7 @@
       "level_name": "Rathalos",
       "level": 5,
       "xp": 500,
-      "unlocked": "2019年5月28日 08:36",
+      "unlocked": "Unlocked May 28, 2019 @ 8:36am",
       "playtime": "167 小时",
       "name_zh": "怪物猎人：世界"
     },
@@ -428,7 +478,7 @@
       "level_name": "Copper Batarang",
       "level": 2,
       "xp": 200,
-      "unlocked": "2019年5月28日 08:27",
+      "unlocked": "Unlocked May 28, 2019 @ 8:27am",
       "playtime": "3.0 小时",
       "name_zh": "蝙蝠侠：阿卡姆骑士"
     },
@@ -440,7 +490,7 @@
       "level_name": "Chicken",
       "level": 1,
       "xp": 100,
-      "unlocked": "2019年5月28日 08:26",
+      "unlocked": "Unlocked May 28, 2019 @ 8:26am",
       "playtime": "6.0 小时",
       "name_zh": "星露谷物语"
     },
@@ -452,7 +502,7 @@
       "level_name": "Hero Class",
       "level": 2,
       "xp": 200,
-      "unlocked": "2019年5月28日 08:24",
+      "unlocked": "Unlocked May 28, 2019 @ 8:24am",
       "playtime": "3.8 小时",
       "name_zh": "弹丸论破 绝对绝望少女"
     },
@@ -464,7 +514,7 @@
       "level_name": "Silver",
       "level": 3,
       "xp": 300,
-      "unlocked": "2019年5月28日 08:20",
+      "unlocked": "Unlocked May 28, 2019 @ 8:20am",
       "playtime": "22 小时",
       "name_zh": "铁拳 7"
     },
@@ -476,7 +526,7 @@
       "level_name": "Private Zombie Punisher",
       "level": 2,
       "xp": 200,
-      "unlocked": "2019年5月28日 08:12",
+      "unlocked": "Unlocked May 28, 2019 @ 8:12am",
       "playtime": "1.6 小时",
       "name_zh": "僵尸部队三部曲"
     },
@@ -488,7 +538,7 @@
       "level_name": "Sophomore",
       "level": 2,
       "xp": 200,
-      "unlocked": "2019年5月28日 05:59",
+      "unlocked": "Unlocked May 28, 2019 @ 5:59am",
       "playtime": "42 小时",
       "name_zh": "弹丸论破：希望的学园与绝望高中生"
     },
@@ -500,7 +550,7 @@
       "level_name": "Something to Hope For",
       "level": 1,
       "xp": 100,
-      "unlocked": "2019年5月28日 05:52",
+      "unlocked": "Unlocked May 28, 2019 @ 5:52am",
       "playtime": "55 小时",
       "name_zh": "超级弹丸论破 2：再见绝望学园"
     },
@@ -512,7 +562,7 @@
       "level_name": "LEVEL1",
       "level": 1,
       "xp": 100,
-      "unlocked": "2019年5月28日 05:47",
+      "unlocked": "Unlocked May 28, 2019 @ 5:47am",
       "playtime": "13.2 小时",
       "name_zh": "命运石之门"
     },
@@ -524,7 +574,7 @@
       "level_name": "Gem Maker",
       "level": 1,
       "xp": 100,
-      "unlocked": "2017年10月31日 07:26",
+      "unlocked": "Unlocked Oct 31, 2017 @ 7:26am",
       "name_zh": "宝石工匠",
       "desc_zh": "通过合成宝石获得的徽章"
     }

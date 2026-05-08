@@ -11,7 +11,7 @@ import 'services/bookmark_service.dart';
 import 'services/steam_client.dart';
 import 'services/switch_client.dart';
 import 'xhh_psn_client.dart';
-import 'services/switch_service.dart';
+import 'services/deals_service.dart';
 import 'models/switch_game.dart';
 import 'pages/browser_page.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -444,6 +444,21 @@ class _HomePageState extends State<HomePage>
 
   /// 遍历多个数据源，只要有数据就用在线数据
   Future<void> _checkNetwork() async {
+    // 1. 优先从服务器拉取实时数据
+    try {
+      final serverData = await DealsService.fetchAll();
+      if (serverData.isNotEmpty) {
+        setState(() {
+          _deals = serverData;
+          _netStatus = '✅ 在线（服务器）';
+          _dealsStatus = '${serverData.length} 款折扣游戏';
+          _netChecked = true;
+        });
+        return;
+      }
+    } catch (_) {}
+
+    // 2. 备选: 旧数据源
     final urls = [
       'https://gitee.com/yann8888/game-deals/raw/main/docs/data/deals.txt',
       'https://shinyyann.github.io/trophyroom/data/deals.json',

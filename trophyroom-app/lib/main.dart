@@ -518,6 +518,11 @@ class _HomePageState extends State<HomePage>
   Map<String, dynamic>? _switchPlayData;
   bool _switchPlayLoading = false;
   String? _switchPlayError;
+  // 🏆 已完成游戏统计
+  int _psnCompletedCount = 0;
+  int _steamCompletedCount = 0;
+  List<Map<String, dynamic>> _psnPlatinumGames = [];
+  List<Map<String, dynamic>> _steamPerfectGames = [];
   // ── PageView 切换 ──
   int _platformTab = 0; // 0=汇总, 1=PSN, 2=Steam
   late final PageController _platformPageCtrl;
@@ -750,12 +755,7 @@ class _HomePageState extends State<HomePage>
     await _checkNetwork();
   }
 
-  static const _appVersion = 'v99';
-  // 🏆 已完成游戏统计（用于庆祝排名 + 白金殿堂）
-  int _psnCompletedCount = 0;
-  int _steamCompletedCount = 0;
-  List<Map<String, dynamic>> _psnPlatinumGames = [];
-  List<Map<String, dynamic>> _steamPerfectGames = [];
+  static const _appVersion = 'v101';
 
   Future<void> _checkChangelog(SharedPreferences prefs, String steam) async {
     final seen = prefs.getString('changelog_seen') ?? '';
@@ -1043,12 +1043,21 @@ class _HomePageState extends State<HomePage>
         title: AnimatedBuilder(
           animation: Listenable.merge([_titleSlide, _scanCtrl]),
           builder: (ctx, _) {
-            // RGB 流光位置
-            final scan = _scanCtrl.value;
-            final r = (scan * 1.0).clamp(0.0, 1.0);
-            final g = ((scan + 0.33) % 1.0);
-            final b = ((scan + 0.66) % 1.0);
-            final glow = (scan * 1.5).clamp(0.0, 1.0);
+            // 流光 — 平滑淡入淡出，不跳变
+            final t = _scanCtrl.value; // 0→1, repeat
+            // 位置从 -0.1 到 1.1（稍超边界让淡入/淡出完整）
+            final pos = -0.1 + t * 1.2;
+            // 淡入：光从左边进入 (pos -0.1→0.15)
+            final fadeIn = ((pos + 0.1) / 0.25).clamp(0.0, 1.0);
+            // 淡出：光从右边离开 (pos 0.85→1.1)
+            final fadeOut = ((1.1 - pos) / 0.25).clamp(0.0, 1.0);
+            // 总强度 = 平滑钟形（左右都不跳变）
+            final intensity = fadeIn * fadeOut;
+            // 颜色随位置渐变（暖金色 → 白金色）
+            final hue = 45.0 - t * 15.0; // 从金黄微偏到亮白
+            final lightColor = HSLColor.fromAHSL(
+              0.5 * intensity, hue, 0.7, 0.5 + 0.2 * intensity,
+            ).toColor();
 
             return Transform.translate(
               offset: Offset(0, 30 * (1 - _titleSlide.value)),
@@ -1083,24 +1092,26 @@ class _HomePageState extends State<HomePage>
                             child: ShaderMask(
                               shaderCallback: (bounds) {
                                 final w = bounds.width;
-                                final lightStart = glow * w;
-                                final lightEnd = lightStart + w * 0.3;
+                                final lightWidth = w * 0.4;
+                                final lightCenter = pos * w;
+                                final lightStart = lightCenter - lightWidth / 2;
+                                final lightEnd = lightCenter + lightWidth / 2;
                                 return LinearGradient(
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                   colors: [
                                     Colors.transparent,
                                     Colors.transparent,
-                                    HSLColor.fromAHSL(0.8, ((r * 360) % 360).toDouble(), 0.8, 0.6).toColor(),
-                                    HSLColor.fromAHSL(0.8, ((r * 360) % 360).toDouble(), 0.8, 0.6).toColor(),
+                                    lightColor,
+                                    lightColor.withAlpha((0.4 * intensity * 255).toInt()),
                                     Colors.transparent,
                                     Colors.transparent,
                                   ],
                                   stops: [
                                     0.0,
                                     (lightStart / w).clamp(0.0, 1.0),
-                                    ((lightStart + 10) / w).clamp(0.0, 1.0),
-                                    ((lightEnd - 10) / w).clamp(0.0, 1.0),
+                                    ((lightStart + 20) / w).clamp(0.0, 1.0),
+                                    ((lightEnd - 20) / w).clamp(0.0, 1.0),
                                     (lightEnd / w).clamp(0.0, 1.0),
                                     1.0,
                                   ],
@@ -1190,6 +1201,7 @@ class _HomePageState extends State<HomePage>
                   });
                 }
               },
+              onShowPlatinumHall: _showPlatinumHall,
             ),
           ][_currentTab],
         ],
@@ -1750,6 +1762,12 @@ class _HomePageState extends State<HomePage>
       return t > 0 && u >= t;
     }).toList();
 
+    // 更新状态变量（用于庆祝排名 + 白金殿堂）
+    _psnPlatinumGames = platinumGames.cast<Map<String, dynamic>>();
+    _steamPerfectGames = perfectGames.cast<Map<String, dynamic>>();
+    _psnCompletedCount = platinumGames.length;
+    _steamCompletedCount = perfectGames.length;
+
     // PSN 金银铜统计
     int totalGold = 0, totalSilver = 0, totalBronze = 0;
     for (final g in psnGames) {
@@ -1895,6 +1913,184 @@ class _HomePageState extends State<HomePage>
                 ]),
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 🏆 白金殿堂 - 显示所有已完成游戏的封面墙
+  void _showPlatinumHall() {
+    final allCompleted = <Map<String, dynamic>>[
+      for (final g in _psnPlatinumGames) {
+        ...g,
+        'source': 'psn',
+        'display_name': (g['title'] ?? g['name'] ?? '?').toString(),
+        'cover': g['cover_url']?.toString() ?? '',
+        'date': g['platinum_earned']?.toString() ?? '',
+      },
+      for (final g in _steamPerfectGames) {
+        ...g,
+        'source': 'steam',
+        'display_name': SteamClient.translateGameName((g['name'] ?? '???').toString()),
+        'cover': g['header_image']?.toString() ?? '',
+        'date': '',
+      },
+    ];
+
+    if (allCompleted.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('还没有完成的游戏哦~'), duration: Duration(seconds: 2)),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: const Color(0xFF0F0F23),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        insetPadding: const EdgeInsets.all(8),
+        child: Container(
+          width: double.maxFinite,
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              // Header
+              Row(children: [
+                const Text('🏆', style: TextStyle(fontSize: 20)),
+                const SizedBox(width: 8),
+                const Text('白金殿堂', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                const Spacer(),
+                Text('${allCompleted.length} 款', style: TextStyle(color: Colors.amberAccent[200], fontSize: 13)),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: Icon(Icons.close, color: Colors.grey[500], size: 22),
+                ),
+              ]),
+              const SizedBox(height: 12),
+              // Grid
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.75,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: allCompleted.length,
+                  itemBuilder: (_, i) {
+                    final g = allCompleted[i];
+                    final isPsn = g['source'] == 'psn';
+                    final name = g['display_name'] as String? ?? '?';
+                    final cover = g['cover'] as String? ?? '';
+                    final date = g['date'] as String? ?? '';
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: const Color(0xFF1E1E35),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Cover image as background
+                          if (cover.isNotEmpty)
+                            Image.network(
+                              cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF2A2A3E)),
+                            )
+                          else
+                            Container(color: const Color(0xFF2A2A3E)),
+                          // Gradient overlay
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    Colors.black.withAlpha(220),
+                                    Colors.black.withAlpha(120),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Content
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    // Platform badge
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: isPsn
+                                            ? const Color(0xFF003087).withAlpha(200)
+                                            : const Color(0xFF171a21).withAlpha(200),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        isPsn ? 'PSN' : 'Steam',
+                                        style: TextStyle(fontSize: 9, color: isPsn ? const Color(0xFFB8D8D8) : const Color(0xFF66C0F4), fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    if (isPsn)
+                                      TrophyIcon(type: 'platinum', size: 14, earned: true)
+                                    else
+                                      SteamAchievementIcon(isPerfect: true, size: 14),
+                                  ]),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    name,
+                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (date.isNotEmpty && date != '0')
+                                    Text(
+                                      date.length > 10 ? date.substring(0, 10) : date,
+                                      style: TextStyle(color: Colors.grey[400], fontSize: 10),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Rank badge
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withAlpha(160),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text('#${i + 1}', style: TextStyle(fontSize: 10, color: Colors.amberAccent[200], fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -2802,6 +2998,8 @@ class _HomePageState extends State<HomePage>
     String coverUrl = '',
     int count = 0,
     String completedDate = '',
+    int rank = 0,
+    int totalCompleted = 0,
   }) async {
     if (!mounted) return;
     try {
@@ -2817,6 +3015,8 @@ class _HomePageState extends State<HomePage>
             coverUrl: coverUrl,
             trophyCount: count,
             completedDate: completedDate,
+            rank: rank,
+            totalCompleted: totalCompleted,
           ),
         );
       }
@@ -2922,6 +3122,8 @@ class _HomePageState extends State<HomePage>
             coverUrl: game['cover_url']?.toString() ?? '',
             count: trophies.length,
             completedDate: lastDate,
+            rank: _psnPlatinumGames.indexWhere((g) => g['id']?.toString() == gameId || g['title']?.toString() == game['name']?.toString()),
+            totalCompleted: _psnCompletedCount,
           );
         }
       }
@@ -3994,6 +4196,8 @@ class _HomePageState extends State<HomePage>
         coverUrl: coverUrl.isNotEmpty ? 'https://media.steampowered.com/steamcommunity/public/images/apps/$appId/${coverUrl.replaceAll(RegExp(r'^https?://[^/]+/'), '')}' : '',
         count: achTotal,
         completedDate: '',
+        rank: _steamPerfectGames.indexWhere((g) => g['appid']?.toString() == appId.toString()),
+        totalCompleted: _steamCompletedCount,
       );
     }
 
@@ -5548,8 +5752,9 @@ class SettingsPage extends StatefulWidget {
   final VoidCallback? onNpssoChanged;
   final VoidCallback? onSteamChanged;
   final VoidCallback? onSyncCompleted;
+  final VoidCallback? onShowPlatinumHall;
 
-  const SettingsPage({super.key, this.onNpssoChanged, this.onSteamChanged, this.onSyncCompleted});
+  const SettingsPage({super.key, this.onNpssoChanged, this.onSteamChanged, this.onSyncCompleted, this.onShowPlatinumHall});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -6283,6 +6488,25 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         ],  // closes _accountsExpanded
 
+        const SizedBox(height: 16),
+        // ── 🏆 白金殿堂 ──
+        InkWell(
+          onTap: () => widget.onShowPlatinumHall?.call(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.amberAccent.withAlpha(80)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(children: [
+              const Text('🏆', style: TextStyle(fontSize: 18)),
+              const SizedBox(width: 10),
+              Text('白金殿堂', style: TextStyle(fontSize: 14, color: Colors.amberAccent[200], fontWeight: FontWeight.w600)),
+              const Spacer(),
+              Icon(Icons.arrow_forward_ios, color: Colors.amberAccent[200], size: 14),
+            ]),
+          ),
+        ),
         const SizedBox(height: 16),
         // ── 全成就特效 ──
         InkWell(

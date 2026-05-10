@@ -1,9 +1,6 @@
 /// 🐉 宝可梦攻略入口 — 卡片导航页
 import 'package:flutter/material.dart';
 import 'pokedex_grid_page.dart';
-import 'pokemon_news_page.dart';
-import 'pokemon_events_page.dart';
-import 'pokemon_gifts_page.dart';
 import 'pokemon_shiny_page.dart';
 
 class PokemonHomePage extends StatelessWidget {
@@ -11,9 +8,6 @@ class PokemonHomePage extends StatelessWidget {
 
   static const _cards = <_MenuCard>[
     _MenuCard(title: '全图鉴', subtitle: '搜索/筛选/详情', icon: Icons.menu_book, color: Color(0xFFE53935)),
-    _MenuCard(title: '宝可梦新闻', subtitle: '52Pokemon 最新资讯', icon: Icons.newspaper, color: Color(0xFF2196F3)),
-    _MenuCard(title: '近期活动', subtitle: '即将到来的活动', icon: Icons.event, color: Color(0xFF9C27B0)),
-    _MenuCard(title: '活动赠送', subtitle: '神秘礼物信息', icon: Icons.card_giftcard, color: Color(0xFFFF9800)),
     _MenuCard(title: '我的闪光', subtitle: '已拥有的异色宝可梦', icon: Icons.auto_awesome, color: Color(0xFF00BCD4)),
   ];
 
@@ -49,7 +43,7 @@ class PokemonHomePage extends StatelessWidget {
                     Text('宝可梦攻略站',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                     SizedBox(height: 4),
-                    Text('图鉴 · 新闻 · 活动 · 闪光收集',
+                    Text('图鉴 · 闪光收集',
                         style: TextStyle(fontSize: 11, color: Colors.white70)),
                   ],
                 )),
@@ -80,9 +74,6 @@ class PokemonHomePage extends StatelessWidget {
       onTap: () {
         final pages = <Widget>[
           const PokedexGridPage(),
-          const PokemonNewsPage(),
-          const PokemonEventsPage(),
-          const PokemonGiftsPage(),
           const PokemonShinyPage(),
         ];
         Navigator.of(context).push(

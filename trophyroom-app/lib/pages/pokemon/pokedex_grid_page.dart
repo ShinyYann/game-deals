@@ -240,7 +240,7 @@ class _PokedexGridPageState extends State<PokedexGridPage> {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => EnhancedPokemonDetailPage(pokemon: p, normalSprite: sprite),
+          builder: (_) => EnhancedPokemonDetailPage(ndex: p['ndex'] as int, initialShiny: false),
         ),
       ),
       child: Container(

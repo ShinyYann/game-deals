@@ -274,7 +274,7 @@ class _CelebrationCardState extends State<_CelebrationCard>
                     child: Image.network(
                       widget.coverUrl!,
                       height: 90, width: 90,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const SizedBox(height: 90, width: 90),
                     ),
                   ),

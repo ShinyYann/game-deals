@@ -1934,9 +1934,19 @@ class _HomePageState extends State<HomePage>
         'source': 'steam',
         'display_name': SteamClient.translateGameName((g['name'] ?? '???').toString()),
         'cover': g['header_image']?.toString() ?? '',
-        'date': '',
+        'date': g['achievement_earned']?.toString() ?? '',
       },
     ];
+
+    // 按获得时间排序：最早获得的排第一个，最新在最后
+    allCompleted.sort((a, b) {
+      final da = a['date']?.toString() ?? '';
+      final db = b['date']?.toString() ?? '';
+      if (da.isEmpty && db.isEmpty) return 0;
+      if (da.isEmpty) return 1; // 无日期排到最后
+      if (db.isEmpty) return -1;
+      return da.compareTo(db); // 获得时间字符串格式可自然排序
+    });
 
     if (allCompleted.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

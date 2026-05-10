@@ -44,6 +44,11 @@ import 'services/proxy_service.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+import 'theme/app_theme.dart';
+import 'theme/app_colors.dart';
+import 'theme/app_spacing.dart';
+import 'theme/app_text_styles.dart';
+
 void main() {
   runApp(const TrophyRoomApp());
   // 初始化桌面小组件（不阻塞 UI）
@@ -58,12 +63,7 @@ class TrophyRoomApp extends StatelessWidget {
     return MaterialApp(
       title: 'TrophyRoom',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFA855F7),
-          brightness: Brightness.dark,
-        ),
-      ),
+      theme: AppTheme.darkTheme,
       home: const SplashScreen(),
     );
   }
@@ -125,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
                     FadeTransition(
                       opacity: Tween<double>(begin: 1, end: 0).animate(anim),
                       child: const Scaffold(
-                        backgroundColor: Color(0xFF0A0A12),
+                        backgroundColor: AppColors.background,
                         body: SizedBox.shrink(),
                       ),
                     ),
@@ -160,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen>
     final t = _ctrl.value;
     final fadeIn = (t / 0.2).clamp(0.0, 1.0);
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A12),
+      backgroundColor: AppColors.background,
       body: Center(
         child: Opacity(
           opacity: fadeIn,
@@ -180,7 +180,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              AppSpacing.hLg,
               // ── Logo 图片 + 轮廓流光 ──
           AnimatedBuilder(
             animation: _ctrl,
@@ -578,20 +578,20 @@ class _HomePageState extends State<HomePage>
         String status = '发现新版本 ${update.versionName}';
         return StatefulBuilder(
           builder: (ctx2, setDialogState) => AlertDialog(
-            backgroundColor: const Color(0xFF1A1A2E),
+            backgroundColor: AppColors.surface,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(children: [
               const PhosphorIcon(PhosphorIconsFill.rocketLaunch, color: Colors.white, size: 24),
-              const SizedBox(width: 8),
+              AppSpacing.wSm,
               const Text('发现新版本', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ]),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('v${update.versionName}', style: const TextStyle(color: Color(0xFF66C0F4), fontSize: 16)),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               if (update.changelog.isNotEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: AppSpacing.padMd,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(8),
@@ -599,7 +599,7 @@ class _HomePageState extends State<HomePage>
                   child: Text(update.changelog,
                     style: TextStyle(fontSize: 13, color: Colors.grey[300], height: 1.5)),
                 ),
-              const SizedBox(height: 16),
+              AppSpacing.hLg,
               if (downloading) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
@@ -610,7 +610,7 @@ class _HomePageState extends State<HomePage>
                     minHeight: 6,
                   ),
                 ),
-                const SizedBox(height: 8),
+                AppSpacing.hSm,
                 Text(status,
                   style: TextStyle(fontSize: 12, color: Colors.grey[500])),
               ],
@@ -765,7 +765,7 @@ class _HomePageState extends State<HomePage>
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1A2E),
+          backgroundColor: AppColors.surface,
           title: Row(children: [
             const Text('🆕 ', style: TextStyle(fontSize: 22)),
             Text(_appVersion, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
@@ -922,7 +922,7 @@ class _HomePageState extends State<HomePage>
   /// 🌈 全局极光背景（让毛玻璃面板透出颜色）
   Widget _buildGlobalBackground() {
     return const AuroraOverlay(
-      colors: [Color(0xFF9B59B6), Color(0xFF536DFE), Color(0xFF7C4DFF), Color(0xFF1A1A2E)],
+      colors: [Color(0xFF9B59B6), Color(0xFF536DFE), Color(0xFF7C4DFF), AppColors.surface],
       speed: 0,
       static: true,
     );
@@ -945,7 +945,7 @@ class _HomePageState extends State<HomePage>
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF0A0A12).withOpacity(0.55),
+            color: AppColors.background.withOpacity(0.55),
             border: Border(
               top: BorderSide(
                 color: Colors.white.withOpacity(0.15),
@@ -1223,10 +1223,10 @@ class _HomePageState extends State<HomePage>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.person_outline, size: 64, color: Colors.grey[600]),
-            const SizedBox(height: 16),
+            AppSpacing.hLg,
             Text('请先去设置页绑定账号',
               style: TextStyle(fontSize: 16, color: Colors.grey[400])),
-            const SizedBox(height: 24),
+            AppSpacing.hXxl,
             GradientButton.primary(
               label: '前往设置',
               icon: Icons.settings,
@@ -1297,7 +1297,7 @@ class _HomePageState extends State<HomePage>
               // 浅色渐变遮罩（让背后极光微微透出）
               IgnorePointer(child: Container(decoration: BoxDecoration(gradient: LinearGradient(
                 begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                colors: [const Color(0xFF0A0A12).withOpacity(0.15), const Color(0xFF0A0A12).withOpacity(0.3)])))),
+                colors: [AppColors.background.withOpacity(0.15), AppColors.background.withOpacity(0.3)])))),
               // 页面内容 — 纯滑动，无 Tab 栏
               tabCount > 1
                 ? Positioned.fill(child: PageView(
@@ -1466,7 +1466,7 @@ class _HomePageState extends State<HomePage>
     return Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         clipBehavior: Clip.antiAlias,
@@ -1476,7 +1476,7 @@ class _HomePageState extends State<HomePage>
             _toggleSteamAchievements(appId);
           } : null,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: AppSpacing.padMd,
             child: Row(children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -1489,25 +1489,25 @@ class _HomePageState extends State<HomePage>
                       : _steamPlaceholderIcon(),
                 ),
               ),
-              const SizedBox(width: 12),
+              AppSpacing.wMd,
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(SteamClient.translateGameName(name),
                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-                  const SizedBox(height: 4),
+                  AppSpacing.hXs,
                   Row(children: [
                     const PhosphorIcon(PhosphorIconsFill.clock, size: 13, color: Colors.grey),
                     const SizedBox(width: 3),
                     Text('${playtime ~/ 60}h', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
                     if (achTotal > 0) ...[
-                      const SizedBox(width: 12),
+                      AppSpacing.wMd,
                       SteamAchievementIcon(isPerfect: isPerfect, size: 16),
                       const SizedBox(width: 3),
                       Text('$achUnlocked/$achTotal', style: const TextStyle(fontSize: 12, color: Color(0xFF66C0F4))),
                   ],
                 ]),
                 if (achTotal > 0) ...[
-                  const SizedBox(height: 4),
+                  AppSpacing.hXs,
                   ClipRRect(
                     borderRadius: BorderRadius.circular(2),
                     child: LinearProgressIndicator(
@@ -1549,7 +1549,7 @@ class _HomePageState extends State<HomePage>
     return Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         clipBehavior: Clip.antiAlias,
@@ -1559,7 +1559,7 @@ class _HomePageState extends State<HomePage>
             _showSwitchGameDetail(game);
           },
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: AppSpacing.padMd,
             child: Row(children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -1571,17 +1571,17 @@ class _HomePageState extends State<HomePage>
                       : _steamPlaceholderIcon(),
                 ),
               ),
-              const SizedBox(width: 12),
+              AppSpacing.wMd,
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 4),
+                  AppSpacing.hXs,
                   Row(children: [
                     const PhosphorIcon(PhosphorIconsFill.clock, size: 13, color: Colors.grey),
                     const SizedBox(width: 3),
                     Text('${hours.toStringAsFixed(1)}h', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
                     if (lastPlayed.isNotEmpty) ...[
-                      const SizedBox(width: 12),
+                      AppSpacing.wMd,
                       Icon(Icons.history, size: 13, color: Colors.grey),
                       const SizedBox(width: 3),
                       Flexible(child: Text(lastPlayed.toString(), style: TextStyle(fontSize: 11, color: Colors.grey[500]), maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -1684,7 +1684,7 @@ class _HomePageState extends State<HomePage>
               borderRadius: BorderRadius.circular(14),
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF1A1A2E).withOpacity(0.35),
+                  AppColors.surface.withOpacity(0.35),
                   const Color(0xFF16213E).withOpacity(0.25),
                 ],
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
@@ -1694,7 +1694,7 @@ class _HomePageState extends State<HomePage>
             child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            AppSpacing.hXs,
             Row(
               children: [
                 _statTile(const PhosphorIcon(PhosphorIconsFill.trophy, color: Color(0xFF4ECDC4), size: 20), 'PSN 奖杯', '$psnTrophies', const Color(0xFF4ECDC4)),
@@ -1704,7 +1704,7 @@ class _HomePageState extends State<HomePage>
               ],
             ),
             if (switchGames > 0) ...[
-              const SizedBox(height: 8),
+              AppSpacing.hSm,
               Row(children: [
                 _statTile(const PhosphorIcon(PhosphorIconsFill.joystick, color: Color(0xFFE60012), size: 20), 'Switch 游戏', '$switchGames', const Color(0xFFE60012)),
                 _statTile(const PhosphorIcon(PhosphorIconsFill.clock, color: Color(0xFF00A0E9), size: 20), '总时长', '${totalAllHours.toStringAsFixed(0)}h', const Color(0xFF00A0E9)),
@@ -1712,7 +1712,7 @@ class _HomePageState extends State<HomePage>
                 const Expanded(child: SizedBox()),
               ]),
             ],
-            const SizedBox(height: 4),
+            AppSpacing.hXs,
             // 展开/收起按钮
             GestureDetector(
               onTap: () => setState(() => _summaryExpanded = !_summaryExpanded),
@@ -1725,7 +1725,7 @@ class _HomePageState extends State<HomePage>
             if (_summaryExpanded) ...[
               const SizedBox(height: 10),
               const Divider(color: Colors.white10, height: 1),
-              const SizedBox(height: 8),
+              AppSpacing.hSm,
               _buildSummaryDetail(psnData, _steamData, _switchPlayData),
             ],
           ],
@@ -1784,14 +1784,14 @@ class _HomePageState extends State<HomePage>
           const PhosphorIcon(PhosphorIconsFill.crown, color: Color(0xFFFFD700), size: 16),
           const SizedBox(width: 6),
           Text('已完成', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey[200])),
-          const SizedBox(width: 8),
+          AppSpacing.wSm,
           if (platinumGames.isNotEmpty)
             _completedBadge('PSN', platinumGames.length, const Color(0xFFB8D8D8)),
           if (platinumGames.isNotEmpty && perfectGames.isNotEmpty) const SizedBox(width: 6),
           if (perfectGames.isNotEmpty)
             _completedBadge('Steam', perfectGames.length, const Color(0xFFFFD700)),
         ]),
-        const SizedBox(height: 8),
+        AppSpacing.hSm,
         // 预览小卡片
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -1804,7 +1804,7 @@ class _HomePageState extends State<HomePage>
               ),
           ]),
         ),
-        const SizedBox(height: 8),
+        AppSpacing.hSm,
       ],
 
       // ── PSN 奖杯分布 ──
@@ -1840,7 +1840,7 @@ class _HomePageState extends State<HomePage>
 
       // ── Switch 游玩概览 ──
       if (switchGames.isNotEmpty) ...[
-        const SizedBox(height: 12),
+        AppSpacing.hMd,
         Row(mainAxisSize: MainAxisSize.min, children: [
           const PhosphorIcon(PhosphorIconsFill.joystick, color: Color(0xFFE60012), size: 14),
           const SizedBox(width: 6),
@@ -1861,7 +1861,7 @@ class _HomePageState extends State<HomePage>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(children: [
           Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -1964,23 +1964,23 @@ class _HomePageState extends State<HomePage>
         child: Container(
           width: double.maxFinite,
           height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(12),
+          padding: AppSpacing.padMd,
           child: Column(
             children: [
               // Header
               Row(children: [
                 const Text('🏆', style: TextStyle(fontSize: 20)),
-                const SizedBox(width: 8),
+                AppSpacing.wSm,
                 const Text('白金殿堂', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 const Spacer(),
                 Text('${allCompleted.length} 款', style: TextStyle(color: Colors.amberAccent[200], fontSize: 13)),
-                const SizedBox(width: 8),
+                AppSpacing.wSm,
                 GestureDetector(
                   onTap: () => Navigator.pop(ctx),
                   child: Icon(Icons.close, color: Colors.grey[500], size: 22),
                 ),
               ]),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               // Grid
               Expanded(
                 child: GridView.builder(
@@ -2250,7 +2250,7 @@ class _HomePageState extends State<HomePage>
     combined.sort((a, b) => a.platform.compareTo(b.platform));
 
     return AlertDialog(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(children: [
         const Text('🏆 已完成游戏', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -2401,7 +2401,7 @@ class _HomePageState extends State<HomePage>
             return Center(
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                const SizedBox(height: 12),
+                AppSpacing.hMd,
                 Text('加载失败: ${snapshot.error ?? "未知错误"}',
                   style: TextStyle(color: Colors.grey[500], fontSize: 13)),
               ]),
@@ -2440,7 +2440,7 @@ class _HomePageState extends State<HomePage>
             setState(() => _cachedHomeData = data);
           },
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: AppSpacing.padLg,
             children: [
               if (hasData) ...[
                 Container(
@@ -2450,7 +2450,7 @@ class _HomePageState extends State<HomePage>
                     gradient: const LinearGradient(
                       colors: [Color(0xFF7C3AED), Color(0xFF2D1B69)],
                       begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))],
+                    boxShadow: [BoxShadow(color: AppColors.shadow(AppColors.primary), blurRadius: 20, offset: const Offset(0, 8))],
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
@@ -2477,20 +2477,20 @@ class _HomePageState extends State<HomePage>
                         decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
                         child: Text('Lv $level', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white))),
                     ]),
-                    const SizedBox(height: 16),
+                    AppSpacing.hLg,
                     ClipRRect(borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(value: 0.75, minHeight: 8,
                         backgroundColor: Colors.white.withOpacity(0.15),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFA855F7)))),
-                    const SizedBox(height: 16),
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary))),
+                    AppSpacing.hLg,
                     Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
                       _trophyStat(const PhosphorIcon(PhosphorIconsFill.trophy, color: Color(0xFFB8D8D8), size: 24), '$tPlatinum', '白金', Colors.cyan[300]!),
                       _trophyStat(const PhosphorIcon(PhosphorIconsFill.medal, color: Color(0xFFFFD700), size: 24), '$tGold', '金', Colors.amber[400]!),
                       _trophyStat(const PhosphorIcon(PhosphorIconsFill.medal, color: Color(0xFF9CA4AC), size: 24), '$tSilver', '银', Colors.grey[400]!),
                       _trophyStat(const PhosphorIcon(PhosphorIconsFill.medal, color: Color(0xFFCD7F32), size: 24), '$tBronze', '铜', Colors.orange[400]!),
                     ]),
-                    const SizedBox(height: 16),
-                    Container(padding: const EdgeInsets.all(12),
+                    AppSpacing.hLg,
+                    Container(padding: AppSpacing.padMd,
                       decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
                         _statItem(const PhosphorIcon(PhosphorIconsFill.gameController, color: Colors.white, size: 18), '$totalGames', '游戏'),
@@ -2500,7 +2500,7 @@ class _HomePageState extends State<HomePage>
                       ])),
                   ]),
                 ),
-                const SizedBox(height: 20),
+                AppSpacing.hXl,
               ],
               if (hasData)
                 Padding(padding: const EdgeInsets.only(bottom: 8),
@@ -2513,11 +2513,11 @@ class _HomePageState extends State<HomePage>
               if (!hasData)
                 Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 40), child: Column(children: [
                   Icon(Icons.cloud_off, size: 48, color: Colors.grey[600]),
-                  const SizedBox(height: 12),
+                  AppSpacing.hMd,
                   Text("数据加载失败", style: TextStyle(fontSize: 18, color: Colors.grey[400], fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
+                  AppSpacing.hSm,
                   Text("请检查网络连接，在「设置」页绑定 PSN 账号", style: TextStyle(fontSize: 14, color: Colors.grey[500])),
-                  const SizedBox(height: 16),
+                  AppSpacing.hLg,
                   TextButton.icon(
                     onPressed: () => setState(() => _currentTab = 3),
                     icon: Icon(Icons.settings, size: 18, color: Colors.purple[300]),
@@ -2530,7 +2530,7 @@ class _HomePageState extends State<HomePage>
                     child: Column(
                       children: [
                         Icon(Icons.games_outlined, size: 48, color: Colors.grey[600]),
-                        const SizedBox(height: 12),
+                        AppSpacing.hMd,
                         Text(_error.isNotEmpty ? _error : '暂无游戏数据', style: TextStyle(color: Colors.grey[500])),
                       ],
                     ),
@@ -2617,7 +2617,7 @@ class _HomePageState extends State<HomePage>
           InkWell(
             onTap: () => _toggleGame(gameId),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: AppSpacing.padMd,
               child: Row(
                 children: [
                   // Cover image
@@ -2662,7 +2662,7 @@ class _HomePageState extends State<HomePage>
                             ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  AppSpacing.wMd,
                   // Name + Trophy counts (vertical layout)
                   Expanded(
                     child: Column(
@@ -2739,7 +2739,7 @@ class _HomePageState extends State<HomePage>
                             ],
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        AppSpacing.hXs,
                         // Playtime
                         if (playtime.isNotEmpty)
                           Row(children: [
@@ -2753,7 +2753,7 @@ class _HomePageState extends State<HomePage>
                               Expanded(child: Text(lastPlay, style: TextStyle(fontSize: 10, color: Colors.grey[600]), overflow: TextOverflow.ellipsis)),
                             ],
                           ]),
-                        const SizedBox(height: 4),
+                        AppSpacing.hXs,
                         // Progress bar
                         SizedBox(
                           width: double.infinity,
@@ -2769,7 +2769,7 @@ class _HomePageState extends State<HomePage>
                                       : Colors.purple[300],
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              AppSpacing.wSm,
                               Text(
                                 '${cr.toStringAsFixed(0)}%',
                                 style: TextStyle(
@@ -2782,7 +2782,7 @@ class _HomePageState extends State<HomePage>
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  AppSpacing.wSm,
                   Icon(
                     isExpanded
                         ? Icons.expand_less
@@ -2828,7 +2828,7 @@ class _HomePageState extends State<HomePage>
         effects: _activeEffects,
         intensity: _effectIntensity,
         child: Card(
-          color: const Color(0xFF1A1A2E),
+          color: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -2840,7 +2840,7 @@ class _HomePageState extends State<HomePage>
     }
 
     return Card(
-      color: const Color(0xFF1A1A2E),
+      color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -2897,7 +2897,7 @@ class _HomePageState extends State<HomePage>
               size: 28,
               earned: earned,
             ),
-          const SizedBox(width: 12),
+          AppSpacing.wMd,
           // Trophy name
           Expanded(
             child: Column(
@@ -2981,7 +2981,7 @@ class _HomePageState extends State<HomePage>
       barrierDismissible: true,
       barrierColor: Colors.black87,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: Colors.grey[800]!, width: 1),
@@ -3463,11 +3463,11 @@ class _HomePageState extends State<HomePage>
     if (_steamId.isEmpty) {
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.sports_esports, size: 64, color: Colors.grey[700]),
-        const SizedBox(height: 16),
+        AppSpacing.hLg,
         Text('未绑定 Steam 账号', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[400])),
-        const SizedBox(height: 8),
+        AppSpacing.hSm,
         Text('去设置页输入你的 Steam ID', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-        const SizedBox(height: 16),
+        AppSpacing.hLg,
         TextButton.icon(
           onPressed: () => setState(() => _currentTab = 3),
           icon: Icon(Icons.settings, size: 18, color: Colors.blue[300]),
@@ -3484,9 +3484,9 @@ class _HomePageState extends State<HomePage>
     if (_steamData!.containsKey('error')) {
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.warning_amber, size: 48, color: Colors.orange[300]),
-        const SizedBox(height: 12),
+        AppSpacing.hMd,
         Text('Steam 数据加载失败', style: TextStyle(fontSize: 16, color: Colors.grey[400])),
-        const SizedBox(height: 8),
+        AppSpacing.hSm,
         Text('请确保服务器已配置 Steam API Key', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ]));
     }
@@ -3517,22 +3517,22 @@ class _HomePageState extends State<HomePage>
         setState(() { _steamData = null; _steamAchievements.clear(); _steamRecentGames = null; });
         await _fetchSteamData();
       },
-      child: ListView(padding: const EdgeInsets.all(16), children: [
+      child: ListView(padding: AppSpacing.padLg, children: [
         // Steam 档案卡
         _buildSteamProfileCard(avatar, avatarFrameUrl, animatedAvatarUrl, profileBgUrl, profileBgMovie, name, level, _steamId, gameCount, totalPlaytime, gamesWithTime),
 
-        const SizedBox(height: 16),
+        AppSpacing.hLg,
 
         // ── Steam 徽章 ──
         if (_steamBadges != null && (_steamBadges!['badges'] as List?)!.isNotEmpty)
           _buildSteamBadgesCard(),
 
-        const SizedBox(height: 12),
+        AppSpacing.hMd,
 
         // ── Steam 最近游玩 ──
         _buildSteamRecentSection(),
 
-        const SizedBox(height: 16),
+        AppSpacing.hLg,
 
         // 筛选条
         Padding(
@@ -3590,7 +3590,7 @@ class _HomePageState extends State<HomePage>
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.blueGrey.withOpacity(0.3)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))]),
+        boxShadow: [BoxShadow(color: AppColors.shadow(AppColors.primary), blurRadius: 20, offset: const Offset(0, 8))]),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
@@ -3667,7 +3667,7 @@ class _HomePageState extends State<HomePage>
             Row(children: [
               Flexible(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis)),
               if (level > 0) ...[
-                const SizedBox(width: 8),
+                AppSpacing.wSm,
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
@@ -3678,12 +3678,12 @@ class _HomePageState extends State<HomePage>
                 ),
               ],
             ]),
-            const SizedBox(height: 4),
+            AppSpacing.hXs,
             Text('Steam ID: $steamId', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
           ])),
         ]),
-        const SizedBox(height: 20),
-        Container(padding: const EdgeInsets.all(12),
+        AppSpacing.hXl,
+        Container(padding: AppSpacing.padMd,
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
           child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             _statItem(const PhosphorIcon(PhosphorIconsFill.gameController, color: Colors.white, size: 18), '$gameCount', '游戏'),
@@ -3717,7 +3717,7 @@ class _HomePageState extends State<HomePage>
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           child: Row(children: [
             const Icon(Icons.workspace_premium, color: Color(0xFF66C0F4), size: 20),
-            const SizedBox(width: 8),
+            AppSpacing.wSm,
             const Text('Steam 徽章', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             const Spacer(),
             Text('Lv.$level · ${_formatNumber(totalXp)} XP', style: TextStyle(fontSize: 12, color: Colors.blue[200])),
@@ -3757,7 +3757,7 @@ class _HomePageState extends State<HomePage>
                           ? Padding(padding: const EdgeInsets.all(4), child: Image.network(icon, fit: BoxFit.contain))
                           : Icon(isGame ? Icons.sports_esports : Icons.emoji_events, color: Colors.grey[600], size: 28),
                     ),
-                    const SizedBox(height: 4),
+                    AppSpacing.hXs,
                     // Name (Chinese)
                     Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 10, color: Colors.grey[300])),
@@ -3819,7 +3819,7 @@ class _HomePageState extends State<HomePage>
                     ? Padding(padding: const EdgeInsets.all(6), child: Image.network(icon, fit: BoxFit.contain))
                     : Icon(isGame ? Icons.sports_esports : Icons.emoji_events, size: 32, color: Colors.grey[500]),
               ),
-              const SizedBox(width: 16),
+              AppSpacing.wLg,
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 // Chinese name
                 Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -3832,10 +3832,10 @@ class _HomePageState extends State<HomePage>
               ])),
             ]),
 
-            const SizedBox(height: 16),
+            AppSpacing.hLg,
             // Divider
             Container(height: 1, color: Colors.white.withAlpha(15)),
-            const SizedBox(height: 12),
+            AppSpacing.hMd,
 
             // Badge info grid
             Row(children: [
@@ -3845,9 +3845,9 @@ class _HomePageState extends State<HomePage>
             ]),
 
             if (unlocked.isNotEmpty || playtime.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               Container(height: 1, color: Colors.white.withAlpha(15)),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               if (unlocked.isNotEmpty)
                 _detailRow(Icons.lock_open, '解锁时间', unlocked),
               if (playtime.isNotEmpty)
@@ -3856,15 +3856,15 @@ class _HomePageState extends State<HomePage>
 
             // Card images
             if (cards.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              AppSpacing.hLg,
               Container(height: 1, color: Colors.white.withAlpha(15)),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               Row(children: [
                 Icon(Icons.style, size: 16, color: Colors.blue[300]),
                 const SizedBox(width: 6),
                 Text('卡牌 (${cards.length}张)', style: TextStyle(fontSize: 13, color: Colors.blue[200])),
               ]),
-              const SizedBox(height: 8),
+              AppSpacing.hSm,
               SizedBox(
                 height: 120,
                 child: ListView.builder(
@@ -3887,7 +3887,7 @@ class _HomePageState extends State<HomePage>
               ),
             ],
 
-            const SizedBox(height: 16),
+            AppSpacing.hLg,
             // Close button
             Align(
               alignment: Alignment.centerRight,
@@ -3906,7 +3906,7 @@ class _HomePageState extends State<HomePage>
   Widget _badgeStatCol(String label, String value, Color color) {
     return Expanded(child: Column(children: [
       Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[500])),
-      const SizedBox(height: 4),
+      AppSpacing.hXs,
       Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color)),
     ]));
@@ -3917,7 +3917,7 @@ class _HomePageState extends State<HomePage>
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
         Icon(icon, size: 16, color: Colors.grey[400]),
-        const SizedBox(width: 8),
+        AppSpacing.wSm,
         SizedBox(width: 60, child: Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[500]))),
         Expanded(child: Text(value, style: TextStyle(fontSize: 13, color: Colors.grey[300]))),
       ]),
@@ -3937,7 +3937,7 @@ class _HomePageState extends State<HomePage>
     if (recent.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppSpacing.padLg,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: const LinearGradient(
@@ -4060,17 +4060,17 @@ class _HomePageState extends State<HomePage>
                     child: Center(child: Icon(Icons.sports_esports, size: 32, color: Colors.grey[700])))),
               ),
             ),
-          Padding(padding: const EdgeInsets.all(12), child: Row(children: [
-            const SizedBox(width: 12),
+          Padding(padding: AppSpacing.padMd, child: Row(children: [
+            AppSpacing.wMd,
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(SteamClient.translateGameName(name),
                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-              const SizedBox(height: 4),
+              AppSpacing.hXs,
               Row(children: [
                 Icon(Icons.access_time, size: 13, color: Colors.grey[500]), const SizedBox(width: 4),
                 Text('${playtime ~/ 60}h', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
                 if (achTotal > 0) ...[
-                  const SizedBox(width: 12),
+                  AppSpacing.wMd,
                   Icon(Icons.emoji_events, size: 13, color: const Color(0xFF66C0F4)), const SizedBox(width: 4),
                   Text('$achUnlocked/$achTotal', style: TextStyle(fontSize: 12, color: const Color(0xFF66C0F4))),
                 ],
@@ -4113,7 +4113,7 @@ class _HomePageState extends State<HomePage>
       ClipRRect(borderRadius: BorderRadius.circular(2),
         child: LinearProgressIndicator(value: unlocked / achievements.length, minHeight: 4,
           backgroundColor: Colors.white.withOpacity(0.1), valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF66C0F4)))),
-      const SizedBox(height: 8),
+      AppSpacing.hSm,
       ...achievements.map((ach) {
         final achieved = ach['achieved'] == true;
         final displayName = SteamClient.translateAchievement(ach['display_name'] ?? ach['api_name'] ?? '');
@@ -4276,11 +4276,11 @@ class _HomePageState extends State<HomePage>
         padding: const EdgeInsets.all(24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.error_outline, size: 48, color: Color(0xFFE60012)),
-          const SizedBox(height: 12),
+          AppSpacing.hMd,
           Text('加载失败', style: const TextStyle(color: Colors.white70, fontSize: 16)),
-          const SizedBox(height: 4),
+          AppSpacing.hXs,
           Text(_switchPlayError!, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-          const SizedBox(height: 16),
+          AppSpacing.hLg,
           ElevatedButton.icon(
             onPressed: _fetchSwitchPlayData,
             icon: const Icon(Icons.refresh, size: 18),
@@ -4295,9 +4295,9 @@ class _HomePageState extends State<HomePage>
     if (data == null) {
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         const Icon(Icons.sports_esports, size: 64, color: Color(0xFFE60012)),
-        const SizedBox(height: 12),
+        AppSpacing.hMd,
         const Text('Nintendo Switch', style: TextStyle(color: Colors.white70, fontSize: 18)),
-        const SizedBox(height: 8),
+        AppSpacing.hSm,
         Text('请先在设置页填写小黑盒用户 ID', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
       ]));
     }
@@ -4349,7 +4349,7 @@ class _HomePageState extends State<HomePage>
         ),
       // 主内容
       Expanded(child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: AppSpacing.padLg,
         children: [
           // ── 头图卡片 ──
           Container(
@@ -4378,16 +4378,16 @@ class _HomePageState extends State<HomePage>
                 Text(lastUpdate, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
             ]),
           ),
-          const SizedBox(height: 12),
+          AppSpacing.hMd,
           // ── 统计卡片 ──
           Row(children: [
             _switchStatCard(const PhosphorIcon(PhosphorIconsFill.gameController, color: Color(0xFFE60012), size: 20), '${games.length}', '游戏数量'),
-            const SizedBox(width: 8),
+            AppSpacing.wSm,
             _switchStatCard(const PhosphorIcon(PhosphorIconsFill.clock, color: Color(0xFF00A0E9), size: 20), '${totalHours.toStringAsFixed(0)}h', '总时长'),
-            const SizedBox(width: 8),
+            AppSpacing.wSm,
             _switchStatCard(const PhosphorIcon(PhosphorIconsFill.currencyCircleDollar, color: Color(0xFFFFD700), size: 20), '¥$totalGamePrice', '游戏价值'),
           ]),
-          const SizedBox(height: 16),
+          AppSpacing.hLg,
           // ── 游戏封面网格 ──
           if (games.isNotEmpty) ...[
             Row(mainAxisSize: MainAxisSize.min, children: [const PhosphorIcon(PhosphorIconsFill.gameController, color: Color(0xFFE60012), size: 18), const SizedBox(width: 6), const Text(' 游戏库', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15))]),
@@ -4459,7 +4459,7 @@ class _HomePageState extends State<HomePage>
         ),
         child: Column(children: [
           iconWidget,
-          const SizedBox(height: 4),
+          AppSpacing.hXs,
           Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
@@ -4518,12 +4518,12 @@ class _HomePageState extends State<HomePage>
                       child: Text(name, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
                     ),
                   ]),
-                  const SizedBox(height: 8),
+                  AppSpacing.hSm,
                 ],
                 // 游戏名（Switch 无 banner 时）
                 if (!hasBanner)
                   Text(name, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 8),
+                AppSpacing.hSm,
                 // 时长标签
                 Wrap(spacing: 6, runSpacing: 6, children: [
                   Container(
@@ -4544,7 +4544,7 @@ class _HomePageState extends State<HomePage>
                       child: Text('最近 ${recentHours.toStringAsFixed(1)}h', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
                     ),
                 ]),
-                const SizedBox(height: 20),
+                AppSpacing.hXl,
                 // 详细数据
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -4558,7 +4558,7 @@ class _HomePageState extends State<HomePage>
                     if (lastPlayed.isNotEmpty) _switchDetailRow('最后游玩', lastPlayed),
                   ]),
                 ),
-                const SizedBox(height: 16),
+                AppSpacing.hLg,
                 // 关闭按钮
                 SizedBox(
                   width: double.infinity,
@@ -4581,7 +4581,7 @@ class _HomePageState extends State<HomePage>
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(children: [
         Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 13)),
-        const SizedBox(width: 8),
+        AppSpacing.wSm,
         Flexible(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500), textAlign: TextAlign.right, maxLines: 2, overflow: TextOverflow.ellipsis)),
       ]),
     );
@@ -4602,7 +4602,7 @@ class _HomePageState extends State<HomePage>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.surface,
         title: const Text('添加 Switch 游戏', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: nameCtrl,
@@ -4611,7 +4611,7 @@ class _HomePageState extends State<HomePage>
             hintText: '输入游戏名称',
             hintStyle: TextStyle(color: Colors.grey[600]),
             filled: true,
-            fillColor: const Color(0xFF0A0A12),
+            fillColor: AppColors.background,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
@@ -4651,7 +4651,7 @@ class _HomePageState extends State<HomePage>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.surface,
         title: Text(game.name,
           style: const TextStyle(color: Colors.white, fontSize: 18)),
         content: Column(
@@ -4667,7 +4667,7 @@ class _HomePageState extends State<HomePage>
                       labelText: '小时',
                       labelStyle: TextStyle(color: Colors.grey[500]),
                       filled: true,
-                      fillColor: const Color(0xFF0A0A12),
+                      fillColor: AppColors.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -4676,7 +4676,7 @@ class _HomePageState extends State<HomePage>
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
-                const SizedBox(width: 12),
+                AppSpacing.wMd,
                 Expanded(
                   child: TextField(
                     controller: minCtrl,
@@ -4685,7 +4685,7 @@ class _HomePageState extends State<HomePage>
                       labelText: '分钟',
                       labelStyle: TextStyle(color: Colors.grey[500]),
                       filled: true,
-                      fillColor: const Color(0xFF0A0A12),
+                      fillColor: AppColors.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -4724,7 +4724,7 @@ class _HomePageState extends State<HomePage>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.surface,
         title: const Text('删除游戏',
           style: TextStyle(color: Colors.white)),
         content: Text('确定删除「${_switchGames[index].name}」？',
@@ -4823,7 +4823,7 @@ class _HomePageState extends State<HomePage>
             ),
           ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: AppSpacing.hPadLg,
           child: Row(
             children: [
               Text(
@@ -4850,7 +4850,7 @@ class _HomePageState extends State<HomePage>
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        AppSpacing.hXs,
         Expanded(
           child: filtered.isEmpty
               ? Center(
@@ -4890,7 +4890,7 @@ class _HomePageState extends State<HomePage>
                                     : _placeholderIcon(),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            AppSpacing.wMd,
                             // 游戏信息
                             Expanded(
                               child: Column(
@@ -4909,7 +4909,7 @@ class _HomePageState extends State<HomePage>
                                         style: TextStyle(
                                             fontSize: 11,
                                             color: Colors.grey[500])),
-                                  const SizedBox(height: 4),
+                                  AppSpacing.hXs,
                                   Row(
                                     children: [
                                       _tag(plat),
@@ -4923,7 +4923,7 @@ class _HomePageState extends State<HomePage>
                                                     .lineThrough)),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  AppSpacing.hXs,
                                   Row(
                                     children: [
                                       Text(price,
@@ -4932,7 +4932,7 @@ class _HomePageState extends State<HomePage>
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white)),
                                       if (disc.isNotEmpty && disc != '-') ...[
-                                        const SizedBox(width: 8),
+                                        AppSpacing.wSm,
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 6, vertical: 2),
@@ -5003,7 +5003,7 @@ class _HomePageState extends State<HomePage>
   /// 攻略入口页面
   Widget _buildGuide() {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: AppSpacing.padLg,
       children: [
         // ── ★ 收藏夹（可点击展开/收起） ──
         FutureBuilder<List<Bookmark>>(
@@ -5075,7 +5075,7 @@ class _HomePageState extends State<HomePage>
                               showDialog(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
-                                  backgroundColor: const Color(0xFF1A1A2E),
+                                  backgroundColor: AppColors.surface,
                                   title: const Text('删除收藏？',
                                       style: TextStyle(color: Colors.white)),
                                   content: Text(bm.title,
@@ -5170,7 +5170,7 @@ class _HomePageState extends State<HomePage>
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: AppSpacing.padLg,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [color.withOpacity(0.2), Colors.grey[900]!],
@@ -5187,13 +5187,13 @@ class _HomePageState extends State<HomePage>
                     errorBuilder: (_, __, ___) =>
                         Icon(Icons.videogame_asset, color: Colors.grey[600], size: 30))
                 : Text(icon, style: const TextStyle(fontSize: 32)),
-            const SizedBox(width: 16),
+            AppSpacing.wLg,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
+                  AppSpacing.hXs,
                   Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
                 ],
               ),
@@ -5226,7 +5226,7 @@ class _HomePageState extends State<HomePage>
             width: MediaQuery.of(context).size.width * 0.9,
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A2E),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.purple[800]!),
             ),
@@ -5549,7 +5549,7 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
                   ),
                   child: Icon(Icons.emoji_events, size: 32, color: typeColor),
                 ),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               // Name
               Text(
                 widget.name,
@@ -5618,7 +5618,7 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               // ═══ 心得 ═══
               if (_tipsLoading)
                 const Padding(
@@ -5644,7 +5644,7 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
                     const SizedBox(width: 6),
                     const Text('心得', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                   ]),
-                  const SizedBox(height: 8),
+                  AppSpacing.hSm,
                   Flexible(
                     child: ListView(
                       shrinkWrap: true,
@@ -5684,7 +5684,7 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
                                     style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                               ],
                             ),
-                            const SizedBox(height: 4),
+                            AppSpacing.hXs,
                             Text.rich(
                               _parseHtmlLinks(tip['content'] ?? '', context),
                               style: TextStyle(fontSize: 13, color: Colors.grey[300]),
@@ -5698,7 +5698,7 @@ class _TrophyDetailDialogState extends State<_TrophyDetailDialog> {
               ),
             ),
           ),
-        const SizedBox(height: 16),
+        AppSpacing.hLg,
       ],
     );
   }
@@ -5875,7 +5875,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 onChanged: (_) => _toggleEffect(key),
                 activeColor: Colors.amber,
               ),
-              const SizedBox(width: 8),
+              AppSpacing.wSm,
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(title, style: TextStyle(fontSize: 13, color: isOn ? Colors.amber[200] : Colors.grey[400])),
@@ -6011,12 +6011,12 @@ class _SettingsPageState extends State<SettingsPage> {
         return Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: AppSpacing.padLg,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isLoggedIn
                       ? [const Color(0xFF1A1A3E), const Color(0xFF0F0C29)]
-                      : [const Color(0xFF2A1A1A), const Color(0xFF1A1A2E)],
+                      : [const Color(0xFF2A1A1A), AppColors.surface],
                 ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
@@ -6050,7 +6050,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              AppSpacing.wMd,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -6122,7 +6122,7 @@ class _SettingsPageState extends State<SettingsPage> {
         if (admin == null) {
           return Container(
             margin: const EdgeInsets.only(top: 12),
-            padding: const EdgeInsets.all(12),
+            padding: AppSpacing.padMd,
             decoration: BoxDecoration(
               color: Colors.amber.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
@@ -6133,7 +6133,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 SizedBox(width: 16, height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amber[300])),
-                const SizedBox(width: 8),
+                AppSpacing.wSm,
                 Text('加载服务器统计...',
                   style: TextStyle(fontSize: 12, color: Colors.amber[300])),
               ],
@@ -6145,7 +6145,7 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+              colors: [AppColors.surface, Color(0xFF16213E)],
             ),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.amber.withOpacity(0.3)),
@@ -6156,7 +6156,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Row(
                 children: [
                   const Text('👑', style: TextStyle(fontSize: 18)),
-                  const SizedBox(width: 8),
+                  AppSpacing.wSm,
                   const Text('服务器统计',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.amber)),
                   const Spacer(),
@@ -6164,17 +6164,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                 ],
               ),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               Row(
                 children: [
                   _adminStat('总用户', '${admin['total_users'] ?? '?'}', Icons.people),
-                  const SizedBox(width: 16),
+                  AppSpacing.wLg,
                   _adminStat('在线', '${admin['online_users'] ?? '?'}', Icons.wifi_tethering),
-                  const SizedBox(width: 16),
+                  AppSpacing.wLg,
                   _adminStat('已同步', '${admin['total_data_count'] ?? '?'}', Icons.cloud_done),
                 ],
               ),
-              const SizedBox(height: 12),
+              AppSpacing.hMd,
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -6215,7 +6215,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: [
             Icon(icon, size: 20, color: Colors.amber[300]),
-            const SizedBox(height: 4),
+            AppSpacing.hXs,
             Text(value,
               style: const TextStyle(
                 fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -6290,17 +6290,17 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: AppSpacing.padLg,
       children: [
         // ── 👤 我的账号 ──
         _buildAccountStatus(),
-        const SizedBox(height: 24),
+        AppSpacing.hXxl,
 
         // ── 🔑 账号设置（可点击展开/收起） ──
         InkWell(
           onTap: () => setState(() => _accountsExpanded = !_accountsExpanded),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: AppSpacing.padLg,
             decoration: BoxDecoration(
               color: const Color(0xFF1E1E30),
               borderRadius: BorderRadius.circular(12),
@@ -6321,11 +6321,11 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
 
         if (_accountsExpanded) ...[
-          const SizedBox(height: 24),
+          AppSpacing.hXxl,
           Text('PSN 🎮',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
         ),
-        const SizedBox(height: 8),
+        AppSpacing.hSm,
         Row(
           children: [
             Expanded(
@@ -6425,7 +6425,7 @@ class _SettingsPageState extends State<SettingsPage> {
         Text('Nintendo Switch 🎮',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[300]),
         ),
-        const SizedBox(height: 4),
+        AppSpacing.hXs,
         Text('填入小黑盒账号 ID，多个用逗号分隔',
           style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         SizedBox(height: 8),
@@ -6472,7 +6472,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 maxLines: 2, overflow: TextOverflow.ellipsis)),
             ]),
           ),
-        const SizedBox(height: 4),
+        AppSpacing.hXs,
         Text('获取方式：小黑盒 App→我的→右上角分享→复制链接里的 account_id',
           style: TextStyle(fontSize: 11, color: Colors.grey[700])),
         SizedBox(height: 24),
@@ -6495,7 +6495,7 @@ class _SettingsPageState extends State<SettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[800],
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: AppSpacing.vPadLg,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: _logout,
@@ -6503,7 +6503,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         ],  // closes _accountsExpanded
 
-        const SizedBox(height: 16),
+        AppSpacing.hLg,
         // ── 🏆 白金殿堂 ──
         InkWell(
           onTap: () => widget.onShowPlatinumHall?.call(),
@@ -6522,7 +6522,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ]),
           ),
         ),
-        const SizedBox(height: 16),
+        AppSpacing.hLg,
         // ── 全成就特效 ──
         InkWell(
           onTap: () => setState(() => _effectsExpanded = !_effectsExpanded),
@@ -6542,14 +6542,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 _activeEffects.isEmpty ? '关闭' : '${_activeEffects.length}个启用',
                 style: TextStyle(fontSize: 12, color: _activeEffects.isEmpty ? Colors.grey[600] : Colors.amber[300]),
               ),
-              const SizedBox(width: 8),
+              AppSpacing.wSm,
               Icon(_effectsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                   size: 20, color: Colors.grey[500]),
             ]),
           ),
         ),
         if (_effectsExpanded) ...[
-          const SizedBox(height: 8),
+          AppSpacing.hSm,
           _buildEffectTile('shimmer', '✨ 星辉闪烁', '金色微光粒子在卡片中漂浮'),
           _buildEffectTile('sweep', '🌊 流光扫描', '对角线光条周期性扫过'),
           _buildEffectTile('prism', '💎 钻石棱光', '8色追光边框互相追逐'),
@@ -6646,9 +6646,9 @@ class _GameDetailCard extends StatelessWidget {
                   ),
                 // 官方介绍
                 if (description.isNotEmpty) ...[
-                  const SizedBox(height: 12),
+                  AppSpacing.hMd,
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: AppSpacing.padMd,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(10),
@@ -6658,12 +6658,12 @@ class _GameDetailCard extends StatelessWidget {
                             height: 1.5)),
                   ),
                 ],
-                const SizedBox(height: 12),
+                AppSpacing.hMd,
                 // 信息行
                 _infoRow(Icons.smartphone, plat),
                 if (rating.isNotEmpty)
                   _infoRow(Icons.star, '评分: $rating'),
-                const SizedBox(height: 12),
+                AppSpacing.hMd,
                 // 价格
                 Row(
                   children: [
@@ -6671,13 +6671,13 @@ class _GameDetailCard extends StatelessWidget {
                         fontSize: 24, fontWeight: FontWeight.bold,
                         color: Colors.green[400])),
                     if (original.isNotEmpty) ...[
-                      const SizedBox(width: 12),
+                      AppSpacing.wMd,
                       Text(original, style: TextStyle(
                           fontSize: 14, color: Colors.grey[500],
                           decoration: TextDecoration.lineThrough)),
                     ],
                     if (disc.isNotEmpty && disc != '-') ...[
-                      const SizedBox(width: 12),
+                      AppSpacing.wMd,
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
@@ -6691,7 +6691,7 @@ class _GameDetailCard extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 20),
+                AppSpacing.hXl,
                 // 关闭按钮
                 SizedBox(
                   width: double.infinity,
@@ -6705,9 +6705,9 @@ class _GameDetailCard extends StatelessWidget {
                     child: const Text('关闭', style: TextStyle(fontSize: 16)),
                   ),
                 ),
-                const SizedBox(height: 8),
+                AppSpacing.hSm,
                 // 底部留白
-                const SizedBox(height: 16),
+                AppSpacing.hLg,
               ],
             ),
           ),
@@ -6722,7 +6722,7 @@ class _GameDetailCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 16, color: Colors.grey[400]),
-          const SizedBox(width: 8),
+          AppSpacing.wSm,
           Text(text, style: TextStyle(color: Colors.grey[300], fontSize: 14)),
         ],
       ),
@@ -6836,7 +6836,7 @@ class _SteamAchievementSheetState extends State<_SteamAchievementSheet> {
             padding: const EdgeInsets.fromLTRB(20, 16, 12, 4),
             child: Row(children: [
               const Icon(Icons.emoji_events, color: Color(0xFF66C0F4), size: 20),
-              const SizedBox(width: 8),
+              AppSpacing.wSm,
               Expanded(child: Text(widget.gameName,
                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis)),
@@ -6861,10 +6861,10 @@ class _SteamAchievementSheetState extends State<_SteamAchievementSheet> {
   Widget _buildErrorView(ScrollController scrollController) {
     return ListView(controller: scrollController, padding: const EdgeInsets.all(20), children: [
       Icon(Icons.warning_amber_rounded, size: 48, color: Colors.grey[600]),
-      const SizedBox(height: 16),
+      AppSpacing.hLg,
       Text(_friendlyError(_error!), textAlign: TextAlign.center,
         style: const TextStyle(color: Color(0xFFFFB74D), fontSize: 14)),
-      const SizedBox(height: 16),
+      AppSpacing.hLg,
       Center(child: ElevatedButton.icon(
         icon: const Icon(Icons.refresh, size: 18),
         label: const Text('重试'),
@@ -6881,7 +6881,7 @@ class _SteamAchievementSheetState extends State<_SteamAchievementSheet> {
     if (_achievements.isEmpty) {
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.info_outline, size: 48, color: Colors.grey[600]),
-        const SizedBox(height: 12),
+        AppSpacing.hMd,
         Text('暂无成就数据', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
       ]));
     }
@@ -6889,7 +6889,7 @@ class _SteamAchievementSheetState extends State<_SteamAchievementSheet> {
     final cr = total > 0 ? _unlocked / total : 0.0;
     return ListView(
       controller: scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: AppSpacing.hPadLg,
       children: [
         // 统计条
         Container(
@@ -6901,7 +6901,7 @@ class _SteamAchievementSheetState extends State<_SteamAchievementSheet> {
           ),
           child: Row(children: [
             Text('$_unlocked / $total', style: TextStyle(fontSize: 13, color: Colors.grey[400])),
-            const SizedBox(width: 8),
+            AppSpacing.wSm,
             Text('${(cr * 100).toStringAsFixed(0)}%', style: const TextStyle(fontSize: 13, color: Color(0xFF66C0F4), fontWeight: FontWeight.bold)),
             const Spacer(),
             Expanded(child: ClipRRect(
@@ -6961,7 +6961,7 @@ class _SteamAchievementSheetState extends State<_SteamAchievementSheet> {
             ]),
           );
         }),
-        const SizedBox(height: 24),
+        AppSpacing.hXxl,
       ],
     );
   }

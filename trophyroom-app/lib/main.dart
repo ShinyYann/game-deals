@@ -1969,14 +1969,15 @@ class _HomePageState extends State<HomePage>
         'source': 'psn',
         'display_name': (g['title'] ?? g['name'] ?? '?').toString(),
         'cover': g['cover_url']?.toString() ?? '',
-        'date': g['platinum_earned']?.toString() ?? '',
+        'date': g['last_play_date']?.toString() ?? '',  // 最后游玩时间 ≈ 完成时间
       },
       for (final g in _steamPerfectGames) {
         ...g,
         'source': 'steam',
         'display_name': SteamClient.translateGameName((g['name'] ?? '???').toString()),
         'cover': g['header_image']?.toString() ?? '',
-        'date': g['achievement_earned']?.toString() ?? '',
+        // rtime_last_played 是 Unix 时间戳，精确到秒
+        'date': _timestampToDate(g['rtime_last_played']),
       },
     ];
 
@@ -4056,6 +4057,15 @@ class _HomePageState extends State<HomePage>
     if (val is String) return int.tryParse(val) ?? 0;
     if (val is num) return val.toInt();
     return 0;
+  }
+
+  /// 将 Unix 时间戳（秒）转为日期字符串 "YYYY-MM-DD"
+  static String _timestampToDate(dynamic ts) {
+    final secs = _safeInt(ts);
+    if (secs <= 0) return '';
+    return DateTime.fromMillisecondsSinceEpoch(secs * 1000)
+        .toIso8601String()
+        .substring(0, 10);
   }
 
   List<dynamic> _filteredGames(List<dynamic> games) {

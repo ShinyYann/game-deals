@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5D76E"/>
+      <stop offset="30%" stop-color="#FFD700"/>
+      <stop offset="60%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+  </defs>
+  <!-- 透明背景（Flutter 用） -->
+  <!-- 极简奖杯 - Apple 级别线条 -->
+  <!-- 杯子主体：顶部宽口 -->
+  <path d="
+    M 140 100
+    Q 140 60, 256 55
+    Q 372 60, 372 100
+    L 372 200
+    Q 372 250, 330 270
+    L 310 270
+    Q 310 270, 305 285
+    L 305 320
+    L 207 320
+    L 207 285
+    Q 202 270, 202 270
+    L 182 270
+    Q 140 250, 140 200
+    Z
+  " fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 把手左 -->
+  <path d="
+    M 142 175
+    Q 90 180, 75 230
+    Q 65 270, 100 285
+  " fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+  <!-- 把手右 -->
+  <path d="
+    M 370 175
+    Q 422 180, 437 230
+    Q 447 270, 412 285
+  " fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+  <!-- 底部横线 -->
+  <line x1="195" y1="335" x2="317" y2="335" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/>
+  <!-- 底座 -->
+  <line x1="145" y1="370" x2="367" y2="370" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/>
+  <!-- T 字母（杯体内部） -->
+  <text x="256" y="220" text-anchor="middle" fill="#D4AF37" font-size="80" font-family="Helvetica, Arial, sans-serif" font-weight="200">T</text>
+</svg>

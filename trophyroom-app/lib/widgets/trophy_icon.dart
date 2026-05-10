@@ -1,193 +1,256 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// PSN 风格奖杯图标
-/// 用 Canvas 手绘，模拟 PS App 的奖杯样式
+/// PSN Trophy Icon — 高级感奖杯图标
+/// 白金：六边形 #A6B9CB + 蓝色渐变星 + 高光
+/// 金：圆形 #F5C444 + 渐变高光 + 皇冠
+/// 银：圆形 #B4BBC2 冷银
+/// 铜：圆形 #CD7F32 经典铜
+/// 未获得：灰度 + 0.3 opacity
 class TrophyIcon extends StatelessWidget {
   final String type; // platinum | gold | silver | bronze
+  final bool earned;
   final double size;
-  final double opacity; // 0-1, for unearned trophies
 
-  const TrophyIcon({super.key, required this.type, this.size = 28, this.opacity = 1.0});
-
-  /// Creates a widget with custom color overlay (for Image.network errorBuilder compatibility)
-  Widget builder(Color? color, BlendMode? blendMode) {
-    return ColorFiltered(
-      colorFilter: ColorFilter.mode(color ?? Colors.transparent, blendMode ?? BlendMode.srcIn),
-      child: TrophyIcon(type: type, size: size),
-    );
-  }
+  const TrophyIcon({
+    super.key,
+    required this.type,
+    this.earned = true,
+    this.size = 24,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isPlatinum = type == 'platinum';
+    final isGold = type == 'gold';
+    final isSilver = type == 'silver';
+    final isBronze = type == 'bronze';
+
+    Color baseColor;
+    Color highlightColor;
+    Color starColor;
+
+    if (isPlatinum) {
+      baseColor = const Color(0xFFA6B9CB);
+      highlightColor = const Color(0xFF87CEEB);
+      starColor = const Color(0xFF4A90D9);
+    } else if (isGold) {
+      baseColor = const Color(0xFFF5C444);
+      highlightColor = const Color(0xFFFFE082);
+      starColor = const Color(0xFFFFD700);
+    } else if (isSilver) {
+      baseColor = const Color(0xFFB4BBC2);
+      highlightColor = const Color(0xFFD0D5DB);
+      starColor = const Color(0xFF9CA4AC);
+    } else { // bronze
+      baseColor = const Color(0xFFCD7F32);
+      highlightColor = const Color(0xFFE8A45C);
+      starColor = const Color(0xFFD48A3A);
+    }
+
+    final opacity = earned ? 1.0 : 0.3;
+    final colors = earned
+        ? [baseColor, baseColor.withOpacity(0.7)]
+        : [Colors.grey, Colors.grey.withOpacity(0.5)];
+
     return Opacity(
       opacity: opacity,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-          painter: _TrophyPainter(type: type),
-        ),
+      child: isPlatinum
+          ? _buildHexagon(size, colors, highlightColor, starColor, earned)
+          : _buildCircle(size, baseColor, highlightColor, starColor, earned, isGold),
+    );
+  }
+
+  Widget _buildHexagon(double size, List<Color> colors, Color highlightColor, Color starColor, bool earned) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _HexagonPainter(colors: colors, highlightColor: highlightColor, earned: earned),
+    );
+  }
+
+  Widget _buildCircle(double size, Color baseColor, Color highlightColor, Color starColor, bool earned, bool isGold) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _CircleTrophyPainter(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        starColor: starColor,
+        earned: earned,
+        isGold: isGold,
       ),
     );
   }
 }
 
-class _TrophyPainter extends CustomPainter {
-  final String type;
+class _HexagonPainter extends CustomPainter {
+  final List<Color> colors;
+  final Color highlightColor;
+  final bool earned;
 
-  _TrophyPainter({required this.type});
-
-  Color get _baseColor {
-    switch (type) {
-      case 'platinum': return const Color(0xFF94A3B8);
-      case 'gold':     return const Color(0xFFFBBF24);
-      case 'silver':   return const Color(0xFF9CA3AF);
-      case 'bronze':   return const Color(0xFFD97706);
-      default:         return Colors.grey;
-    }
-  }
-
-  Color get _lightColor {
-    switch (type) {
-      case 'platinum': return const Color(0xFFCBD5E1);
-      case 'gold':     return const Color(0xFFFDE68A);
-      case 'silver':   return const Color(0xFFD1D5DB);
-      case 'bronze':   return const Color(0xFFFCD34D);
-      default:         return Colors.grey[300]!;
-    }
-  }
-
-  Color get _darkColor {
-    switch (type) {
-      case 'platinum': return const Color(0xFF475569);
-      case 'gold':     return const Color(0xFF92400E);
-      case 'silver':   return const Color(0xFF6B7280);
-      case 'bronze':   return const Color(0xFF78350F);
-      default:         return Colors.grey[700]!;
-    }
-  }
+  _HexagonPainter({required this.colors, required this.highlightColor, required this.earned});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final center = rect.center;
-    final r = size.width / 2 - 1.5;
-    final paint = Paint()..style = PaintingStyle.fill;
-    final double borderW = math.max(1.5, size.width * 0.08);
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final radius = size.width / 2 - 1;
+    final paint = Paint()
+      ..shader = LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight)
+          .createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius))
+      ..style = PaintingStyle.fill;
 
-    // ── 1. 背景圆形/六边形 ──
-    if (type == 'platinum') {
-      _drawPlatinumBg(canvas, rect, r, center, borderW);
-    } else {
-      _drawDefaultBg(canvas, center, r, borderW);
-    }
-
-    // ── 2. 内部标记 ──
-    // 所有类型：在中心画一个奖杯/星形
-    _drawInnerMark(canvas, center, r * 0.5, type);
-  }
-
-  void _drawPlatinumBg(Canvas canvas, Rect rect, double r, Offset center, double borderW) {
-    // 白金：六边形
+    // Hexagon path
     final path = Path();
-    final hexR = r;
     for (int i = 0; i < 6; i++) {
-      final angle = (math.pi / 3) * i - math.pi / 2;
-      final x = center.dx + hexR * math.cos(angle);
-      final y = center.dy + hexR * math.sin(angle);
+      final angle = (i * 60 - 30) * (3.14159 / 180);
+      final x = cx + radius * 0.85 * math.cos(angle);
+      final y = cy + radius * 0.85 * math.sin(angle);
       if (i == 0) path.moveTo(x, y);
       else path.lineTo(x, y);
     }
     path.close();
+    canvas.drawPath(path, paint);
 
-    // 外边框 - 渐变
-    final borderPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [_lightColor, _baseColor, _darkColor, _baseColor, _lightColor],
-      ).createShader(Rect.fromCircle(center: center, radius: r));
-    canvas.drawPath(path, borderPaint..style = PaintingStyle.stroke..strokeWidth = borderW);
+    // Highlight shine
+    final shinePaint = Paint()
+      ..shader = RadialGradient(colors: [
+        Colors.white.withOpacity(0.3),
+        Colors.transparent,
+      ], stops: [0.0, 1.0])
+      .createShader(Rect.fromCircle(center: Offset(cx - radius * 0.3, cy - radius * 0.3), radius: radius));
+    canvas.drawPath(path, shinePaint);
 
-    // 内部 - 深色半透明
-    final innerPaint = Paint()..color = _darkColor.withOpacity(0.3);
-    canvas.drawPath(path, innerPaint..style = PaintingStyle.fill);
+    // Star in center
+    _drawStar(canvas, cx, cy, radius * 0.3);
   }
 
-  void _drawDefaultBg(Canvas canvas, Offset center, double r, double borderW) {
-    // 金/银/铜：圆形外框 + 内部渐变
-    final borderPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [_lightColor, _baseColor, _darkColor],
-        radius: 1.0,
-      ).createShader(Rect.fromCircle(center: center, radius: r));
-    canvas.drawCircle(center, r, borderPaint..style = PaintingStyle.fill);
+  void _drawStar(Canvas canvas, double cx, double cy, double r) {
+    final starPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF4A90D9), Color(0xFF357ABD), Color(0xFF63B3ED)],
+      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r));
 
-    // 高光
-    final highlight = Paint()
-      ..shader = RadialGradient(
-        colors: [Colors.white.withOpacity(0.3), Colors.transparent],
-        radius: 0.6,
-      ).createShader(Rect.fromCircle(center: center, radius: r));
-    canvas.drawCircle(center, r * 0.65, highlight..style = PaintingStyle.fill);
-  }
-
-  void _drawInnerMark(Canvas canvas, Offset center, double size, String type) {
-    if (type == 'platinum') {
-      // 白金：星星
-      _drawStar(canvas, center, size);
-    } else {
-      // 金/银/铜：简约皇冠/奖杯
-      _drawCrown(canvas, center, size);
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final outerAngle = (i * 72 - 90) * (3.14159 / 180);
+      final innerAngle = (i * 72 + 36 - 90) * (3.14159 / 180);
+      final ox = cx + r * math.cos(outerAngle);
+      final oy = cy + r * math.sin(outerAngle);
+      final ix = cx + r * 0.4 * math.cos(innerAngle);
+      final iy = cy + r * 0.4 * math.sin(innerAngle);
+      if (i == 0) path.moveTo(ox, oy);
+      else path.lineTo(ox, oy);
+      path.lineTo(ix, iy);
     }
-  }
-
-  void _drawStar(Canvas canvas, Offset center, double size) {
-    final starPath = Path();
-    const spikes = 5;
-    final outerR = size;
-    final innerR = size * 0.45;
-
-    for (int i = 0; i < spikes * 2; i++) {
-      final angle = (math.pi / spikes) * i - math.pi / 2;
-      final radius = i.isEven ? outerR : innerR;
-      final x = center.dx + radius * math.cos(angle);
-      final y = center.dy + radius * math.sin(angle);
-      if (i == 0) starPath.moveTo(x, y);
-      else starPath.lineTo(x, y);
-    }
-    starPath.close();
-
-    final paint = Paint()
-      ..shader = RadialGradient(
-        colors: [const Color(0xFFE2E8F0), const Color(0xFF94A3B8)],
-      ).createShader(Rect.fromCircle(center: center, radius: size));
-    canvas.drawPath(starPath, paint);
-  }
-
-  void _drawCrown(Canvas canvas, Offset center, double size) {
-    // 简约三尖皇冠
-    final crownPath = Path();
-    final w = size;
-    final h = size * 1.1;
-    final left = center.dx - w;
-    final right = center.dx + w;
-    final top = center.dy - h;
-    final bottom = center.dy + h;
-
-    crownPath.moveTo(left, bottom);
-    crownPath.lineTo(left, top + h * 0.3);
-    crownPath.lineTo(center.dx - w * 0.3, center.dy - h * 0.3);
-    crownPath.lineTo(center.dx, top);
-    crownPath.lineTo(center.dx + w * 0.3, center.dy - h * 0.3);
-    crownPath.lineTo(right, top + h * 0.3);
-    crownPath.lineTo(right, bottom);
-    crownPath.close();
-
-    final paint = Paint()..color = Colors.white.withOpacity(0.85);
-    canvas.drawPath(crownPath, paint);
+    path.close();
+    canvas.drawPath(path, starPaint);
   }
 
   @override
-  bool shouldRepaint(covariant _TrophyPainter oldDelegate) =>
-      oldDelegate.type != type;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _CircleTrophyPainter extends CustomPainter {
+  final Color baseColor;
+  final Color highlightColor;
+  final Color starColor;
+  final bool earned;
+  final bool isGold;
+
+  _CircleTrophyPainter({
+    required this.baseColor,
+    required this.highlightColor,
+    required this.starColor,
+    required this.earned,
+    required this.isGold,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final radius = size.width / 2 - 1;
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: [baseColor, baseColor.withOpacity(0.7), baseColor.withOpacity(0.5)],
+        stops: [0.0, 0.7, 1.0],
+        center: const Alignment(0.3, -0.3),
+      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius))
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(Offset(cx, cy), radius, paint);
+
+    // Highlight gradient
+    final highlightPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [Colors.white.withOpacity(0.35), Colors.transparent],
+        stops: [0.0, 1.0],
+        center: const Alignment(-0.4, -0.4),
+      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius));
+    canvas.drawCircle(Offset(cx, cy), radius, highlightPaint);
+
+    // Inner ring
+    final ringPaint = Paint()
+      ..color = Colors.white.withOpacity(0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(Offset(cx, cy), radius * 0.7, ringPaint);
+
+    // Trophy / crown shape
+    _drawTrophy(canvas, cx, cy, radius * 0.35, isGold);
+  }
+
+  void _drawTrophy(Canvas canvas, double cx, double cy, double r, bool isGold) {
+    if (isGold) {
+      // Crown for gold trophy
+      final crownPaint = Paint()
+        ..color = const Color(0xFFFFD700)
+        ..style = PaintingStyle.fill;
+
+      final path = Path();
+      final topY = cy - r;
+      final bottomY = cy + r * 0.6;
+      path.moveTo(cx - r * 0.8, bottomY);
+      path.lineTo(cx - r * 0.6, topY + r * 0.3);
+      path.lineTo(cx - r * 0.25, topY + r * 0.7);
+      path.lineTo(cx, topY);
+      path.lineTo(cx + r * 0.25, topY + r * 0.7);
+      path.lineTo(cx + r * 0.6, topY + r * 0.3);
+      path.lineTo(cx + r * 0.8, bottomY);
+      path.close();
+      canvas.drawPath(path, crownPaint);
+
+      final outlinePaint = Paint()
+        ..color = const Color(0xFF333333).withOpacity(0.2)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.5;
+      canvas.drawPath(path, outlinePaint);
+    } else {
+      _drawStar(canvas, cx, cy, r);
+    }
+  }
+
+  void _drawStar(Canvas canvas, double cx, double cy, double r) {
+    final starPaint = Paint()..color = Colors.white.withOpacity(0.7);
+
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final outerAngle = (i * 72 - 90) * (3.14159 / 180);
+      final innerAngle = (i * 72 + 36 - 90) * (3.14159 / 180);
+      final ox = cx + r * math.cos(outerAngle);
+      final oy = cy + r * math.sin(outerAngle);
+      final ix = cx + r * 0.4 * math.cos(innerAngle);
+      final iy = cy + r * 0.4 * math.sin(innerAngle);
+      if (i == 0) path.moveTo(ox, oy);
+      else path.lineTo(ox, oy);
+      path.lineTo(ix, iy);
+    }
+    path.close();
+    canvas.drawPath(path, starPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

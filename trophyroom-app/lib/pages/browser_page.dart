@@ -47,7 +47,28 @@ class _BrowserPageState extends State<BrowserPage> {
     super.dispose();
   }
 
+  static const _apiBase = 'http://8.153.97.56';
+  static bool _shouldProxy(String url) {
+    // 需要走代理的域名（被墙/地域限制的）
+    final proxyDomains = [
+      'filejin.ru',
+      'xn--wcv59z.com',
+      'store.steampowered.com',
+      'steamcommunity.com',
+    ];
+    final lower = url.toLowerCase();
+    return proxyDomains.any((d) => lower.contains(d));
+  }
+
+  static String _proxyUrl(String url) {
+    return '$_apiBase/api/proxy/page?url=${Uri.encodeComponent(url)}';
+  }
+
   Future<void> _initWebView() async {
+    final loadUrl = _shouldProxy(widget.initialUrl)
+        ? _proxyUrl(widget.initialUrl)
+        : widget.initialUrl;
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setUserAgent(
@@ -58,10 +79,13 @@ class _BrowserPageState extends State<BrowserPage> {
         NavigationDelegate(
           onNavigationRequest: (request) {
             final url = request.url;
-            // Steam 社区/商店链接 → 跳系统浏览器
-            if (url.contains('steamcommunity.com') ||
-                url.contains('store.steampowered.com')) {
-              _launchExternal(url);
+            // 走代理的资源请求（src/href 会被重写为 /api/proxy/res）放行
+            if (url.contains('$_apiBase/api/proxy/')) {
+              return NavigationDecision.navigate;
+            }
+            // 需要代理的外部链接 → 重定向到代理页
+            if (_shouldProxy(url) && !url.contains('$_apiBase')) {
+              _controller.loadRequest(Uri.parse(_proxyUrl(url)));
               return NavigationDecision.prevent;
             }
             return NavigationDecision.navigate;
@@ -83,7 +107,7 @@ class _BrowserPageState extends State<BrowserPage> {
           },
         ),
       )
-      ..loadRequest(Uri.parse(widget.initialUrl));
+      ..loadRequest(Uri.parse(loadUrl));
   }
 
   Future<void> _checkBookmark() async {

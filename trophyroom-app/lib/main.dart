@@ -4329,7 +4329,12 @@ class _HomePageState extends State<HomePage>
                   items: List.generate(_allSwitchAccounts.length, (i) {
                     final a = _allSwitchAccounts[i];
                     var n = (a['user_name'] ?? '').toString();
-                    if (n.isEmpty || n == '玩家None') n = '账号 ${i+1}';
+                    var r = (a['region'] ?? '').toString();
+                    if (n.isEmpty || n == '玩家None' || n == '玩家') {
+                      n = r == 'HK' ? '港服' : (r == 'JP' ? '日服' : '账号 ${i+1}');
+                    } else {
+                      n += ' (${r == "HK" ? "港服" : (r == "JP" ? "日服" : r)})';
+                    }
                     return DropdownMenuItem(value: i, child: Text(n, style: const TextStyle(fontSize: 13)));
                   }),
                   onChanged: (i) {

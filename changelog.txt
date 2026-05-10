@@ -1,3 +1,7 @@
+v107 新增 Switch 港服数据支持 🔄
+- 新增: 服务端支持小黑盒 HK 端点，每个账号同时查 JP + HK
+- 新增: Switch 账号下拉显示日服/港服标签
+
 v106 修复基础信息字段名 + 全成就封面全宽适配 🔧
 - 修复: 基础信息所有字段与服务端对应（ability1/egg_group1/catch_rate/ev_hp等）
 - 修复: 全成就庆祝弹窗封面改为全宽+AspectRatio(PSN 3:4/Steam 16:9)

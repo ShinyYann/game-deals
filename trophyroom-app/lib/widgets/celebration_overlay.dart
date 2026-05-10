@@ -265,17 +265,22 @@ class _CelebrationCardState extends State<_CelebrationCard>
                 const SizedBox(height: 12),
               ],
 
-              // ── 封面 ──
+              // ── 封面（全宽自适应，封面不再被方形框裁切） ──
               if (widget.coverUrl != null && widget.coverUrl!.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.network(
-                      widget.coverUrl!,
-                      height: 90, width: 90,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const SizedBox(height: 90, width: 90),
+                    child: AspectRatio(
+                      aspectRatio: widget.platform == 'steam' ? 16 / 9 : 3 / 4,
+                      child: Image.network(
+                        widget.coverUrl!,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (ctx, child, progress) =>
+                          progress == null ? child : Container(color: const Color(0xFF2A2A3E)),
+                        errorBuilder: (_, __, ___) => Container(color: const Color(0xFF2A2A3E)),
+                      ),
                     ),
                   ),
                 ),

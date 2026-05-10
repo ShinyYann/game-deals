@@ -366,11 +366,31 @@ class _EnhancedPokemonDetailPageState extends State<EnhancedPokemonDetailPage>
   Widget _buildInfoGrid(Map<String, dynamic> pkm) {
     final height = pkm['height']?.toString() ?? '';
     final weight = pkm['weight']?.toString() ?? '';
-    final abilities = pkm['abilities'] as List? ?? [];
-    final eggGroups = pkm['egg_groups'] as List? ?? [];
-    final captureRate = pkm['capture_rate']?.toString() ?? '';
-    final exp100 = pkm['exp_100']?.toString() ?? '';
-    final evYield = pkm['ev_yield'] as List? ?? [];
+    // 服务端字段名：ability1 / ability2 / ability_hidden
+    final abilities = [
+      pkm['ability1']?.toString() ?? '',
+      if (pkm['ability2']?.toString().isNotEmpty == true) pkm['ability2'].toString(),
+      if (pkm['ability_hidden']?.toString().isNotEmpty == true) '梦特: ${pkm['ability_hidden']}',
+    ]..removeWhere((a) => a.isEmpty);
+    // 服务端字段名：egg_group1 / egg_group2
+    final eggGroups = [
+      pkm['egg_group1']?.toString() ?? '',
+      pkm['egg_group2']?.toString() ?? '',
+    ]..removeWhere((g) => g.isEmpty);
+    // 服务端字段名：catch_rate
+    final captureRate = pkm['catch_rate']?.toString() ?? '';
+    // 服务端字段名：lv100_exp
+    final exp100 = pkm['lv100_exp']?.toString() ?? '';
+    // 服务端字段名：ev_hp / ev_atk / ev_def / ev_spatk / ev_spdef / ev_speed
+    final evParts = <String>[
+      if ((pkm['ev_hp'] ?? 0) as num > 0) 'HP+${pkm['ev_hp']}',
+      if ((pkm['ev_atk'] ?? 0) as num > 0) '攻击+${pkm['ev_atk']}',
+      if ((pkm['ev_def'] ?? 0) as num > 0) '防御+${pkm['ev_def']}',
+      if ((pkm['ev_spatk'] ?? 0) as num > 0) '特攻+${pkm['ev_spatk']}',
+      if ((pkm['ev_spdef'] ?? 0) as num > 0) '特防+${pkm['ev_spdef']}',
+      if ((pkm['ev_speed'] ?? 0) as num > 0) '速度+${pkm['ev_speed']}',
+    ];
+    final evYield = evParts.isNotEmpty ? evParts.join(', ') : '';
 
     final infoItems = <MapEntry<String, String>>[
       MapEntry('身高', height.isNotEmpty ? '${height}m' : '-'),
@@ -379,7 +399,7 @@ class _EnhancedPokemonDetailPageState extends State<EnhancedPokemonDetailPage>
       MapEntry('蛋群', eggGroups.isNotEmpty ? eggGroups.join(', ') : '-'),
       MapEntry('捕获率', captureRate.isNotEmpty ? captureRate : '-'),
       MapEntry('100级经验', exp100.isNotEmpty ? exp100 : '-'),
-      MapEntry('努力值', evYield.isNotEmpty ? evYield.join(', ') : '-'),
+      MapEntry('努力值', evYield.isNotEmpty ? evYield : '-'),
     ];
 
     return Container(

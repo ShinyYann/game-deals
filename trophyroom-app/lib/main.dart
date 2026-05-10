@@ -760,7 +760,7 @@ class _HomePageState extends State<HomePage>
     await _checkNetwork();
   }
 
-  static const _appVersion = 'v101';
+  static const _appVersion = 'v110';
 
   Future<void> _checkChangelog(SharedPreferences prefs, String steam) async {
     final seen = prefs.getString('changelog_seen') ?? '';
@@ -1833,6 +1833,16 @@ class _HomePageState extends State<HomePage>
 
       // ── Steam 成就分布 ──
       if (steamGames.isNotEmpty) ...[
+        // 计算 Steam 成就统计
+        int sAchTot = 0, sAchUnl = 0, sPlay = 0, s100Pct = 0;
+        for (final g in steamGames) {
+          sAchTot += _safeInt(g['achievements_total']);
+          sAchUnl += _safeInt(g['achievements_unlocked']);
+          sPlay += _safeInt(g['playtime_forever']);
+          final aT = _safeInt(g['achievements_total']);
+          final aU = _safeInt(g['achievements_unlocked']);
+          if (aT > 0 && aU >= aT) s100Pct++;
+        }
         Row(mainAxisSize: MainAxisSize.min, children: [
           const PhosphorIcon(PhosphorIconsFill.gameController, color: Color(0xFF66C0F4), size: 14),
           const SizedBox(width: 6),
@@ -1840,26 +1850,26 @@ class _HomePageState extends State<HomePage>
         ]),
         SizedBox(height: 6),
         Row(children: [
-          _miniStat(const PhosphorIcon(PhosphorIconsFill.gameController, color: Color(0xFF66C0F4), size: 14), '游戏', steamGames, const Color(0xFF66C0F4)),
-          if (steamAchTotal > 0) _miniStat(const PhosphorIcon(PhosphorIconsFill.star, color: Color(0xFFFFD700), size: 14), '成就', steamAchUnlocked, const Color(0xFFFFD700)),
-          if (steamAchTotal > 0) _miniStat(const PhosphorIcon(PhosphorIconsFill.checkCircle, color: Color(0xFF66C0F4), size: 14), '全成就', steam100pct, const Color(0xFF66C0F4)),
-          _miniStat(const PhosphorIcon(PhosphorIconsFill.clock, color: Color(0xFF66C0F4), size: 14), '时长', (steamPlaytime / 60).round(), const Color(0xFF66C0F4)),
+          _miniStat(const PhosphorIcon(PhosphorIconsFill.gameController, color: Color(0xFF66C0F4), size: 14), '游戏', steamGames.length, const Color(0xFF66C0F4)),
+          if (sAchTot > 0) _miniStat(const PhosphorIcon(PhosphorIconsFill.star, color: Color(0xFFFFD700), size: 14), '成就', sAchUnl, const Color(0xFFFFD700)),
+          if (sAchTot > 0) _miniStat(const PhosphorIcon(PhosphorIconsFill.checkCircle, color: Color(0xFF66C0F4), size: 14), '全成就', s100Pct, const Color(0xFF66C0F4)),
+          _miniStat(const PhosphorIcon(PhosphorIconsFill.clock, color: Color(0xFF66C0F4), size: 14), '时长', (sPlay / 60).round(), const Color(0xFF66C0F4)),
         ]),
         SizedBox(height: 6),
-        if (steam100pct > 0 && _steamPerfectGames.isNotEmpty) ...[
+        if (s100Pct > 0 && perfectGames.isNotEmpty) ...[
           Row(children: [
             Text('全成就游戏: ', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
             Expanded(
               child: Text(
-                _steamPerfectGames.take(3).map((g) => g['name']?.toString() ?? '').join(' · '),
+                perfectGames.take(3).map((g) => g['name']?.toString() ?? '').join(' · '),
                 style: TextStyle(fontSize: 11, color: Colors.grey[400]),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (_steamPerfectGames.length > 3)
+            if (perfectGames.length > 3)
               GestureDetector(
-                onTap: () => _showAllGamesPopup('全成就', _steamPerfectGames, 'steam'),
-                child: Text(' +${_steamPerfectGames.length - 3}', style: TextStyle(fontSize: 11, color: Color(0xFF66C0F4))),
+                onTap: () => _showAllGamesPopup('全成就', perfectGames, 'steam'),
+                child: Text(' +${perfectGames.length - 3}', style: TextStyle(fontSize: 11, color: Color(0xFF66C0F4))),
               ),
           ]),
         ] else ...[

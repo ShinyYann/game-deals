@@ -232,7 +232,7 @@ class _PokemonShinyPageState extends State<PokemonShinyPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Text('预览', style: TextStyle(color: Colors.grey[600], fontSize: 10)),
+                Text('预览', style: TextStyle(color: Colors.grey[600], fontSize: 10)),
               ],
             ),
           ),

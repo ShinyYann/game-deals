@@ -34,7 +34,7 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  static const String _serverUrl = 'http://8.153.97.56/apk/version.json';
+  static const String _serverUrl = 'http://8.153.97.56/api/version';
   static String _lastError = '';
 
   /// 获取最后一次错误信息（用于调试）

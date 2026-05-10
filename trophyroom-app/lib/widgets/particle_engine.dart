@@ -223,12 +223,10 @@ class _ParticlePainter extends CustomPainter {
 
       if (config.mode == ParticleMode.shimmer) {
         final spark = (math.sin(p.sparkTimer + time) + 1) / 2;
-        final alpha = spark * p.alpha;
-        // 柔和光点，不做斜线星辉（避免突兀的斜光）
-        final dotSize = p.radius * (0.8 + 0.4 * spark);
-        final dotAlpha = alpha * 0.6 + 0.04;
+        // 柔和光点 — 亮度压低，避免亮片感
+        final dotAlpha = spark * p.alpha * 0.12 + 0.02;
         if (dotAlpha > 0.02) {
-          _drawGlowDot(canvas, px, py, dotSize, color.withOpacity(dotAlpha));
+          _drawGlowDot(canvas, px, py, p.radius * 0.6, color.withOpacity(dotAlpha));
         }
       } else {
         final alpha = p.alpha.clamp(0.0, 1.0);

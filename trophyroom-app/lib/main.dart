@@ -479,6 +479,7 @@ class _HomePageState extends State<HomePage>
     } else if (state == AppLifecycleState.resumed) {
       _backgroundMode = false;
       _startHeartbeat();
+      _checkUpdate(); // 每次回到前台都检查更新
     }
   }
 
@@ -510,7 +511,7 @@ class _HomePageState extends State<HomePage>
   bool _filterPlaytime = false;  // Steam 只看有游玩时间的
   bool _guideBookmarksExpanded = false;  // 攻略页收藏夹展开
   bool _filter100pct = false;    // Steam 只看全成就的
-  bool _summaryExpanded = false; // 汇总卡详情展开
+  bool _summaryExpanded = true; // 汇总卡详情默认展开
   Map<String, dynamic>? _steamRecentGames;
   // ── Switch 小黑盒 ──
   List<String> _switchAccountIds = [];
@@ -557,13 +558,17 @@ class _HomePageState extends State<HomePage>
     _checkUpdate();
   }
 
+  bool _updateDialogShown = false;
+
   /// 检查更新
   void _checkUpdate() {
+    if (_updateDialogShown) return;
     Future.delayed(const Duration(seconds: 3), () async {
-      if (!mounted) return;
+      if (!mounted || _updateDialogShown) return;
       final update = await UpdateService.checkUpdate();
       if (!mounted || update == null) return;
       if (!mounted) return;
+      _updateDialogShown = true;
       _showUpdateDialog(update);
     });
   }
@@ -1260,14 +1265,16 @@ class _HomePageState extends State<HomePage>
                 final isMixed = both && tab == 0;
                 final isSwitch = tab == (hasBoth ? 3 : hasSwitch ? (_psnId.isNotEmpty || _steamId.isNotEmpty ? 1 : 0) : 0);
                 if (isSwitch) {
+                  // Switch: 柔和呼吸光点，不做亮片脉冲
                   return const ParticleEngine(config: ParticleConfig(
                     colors: [Color(0xFFE60012), Color(0xFF00A0E9), Color(0xFFFFD700)],
-                    mode: ParticleMode.shimmer, count: 60, maxRadius: 3, tailLength: 3));
+                    mode: ParticleMode.shimmer, count: 35, maxRadius: 2.0, tailLength: 0));
                 }
                 return isMixed
+                  // 混合 Tab：用 float 浮动粒子，无呼吸脉冲
                   ? const ParticleEngine(config: ParticleConfig(
                       colors: [Color(0xFF9B59B6), Color(0xFF3A7BD5), Color(0xFFE8D5FF), Color(0xFF8EC8F2)],
-                      mode: ParticleMode.shimmer, count: 70, maxRadius: 3.5, tailLength: 4))
+                      mode: ParticleMode.float, count: 45, maxRadius: 2.5, tailLength: 2))
                   : isPsn
                     ? const ParticleEngine(config: ParticleConfig(
                         colors: [Color(0xFF9B59B6), Color(0xFF6C3A9E), Color(0xFFD4A5FF)],
@@ -1831,8 +1838,31 @@ class _HomePageState extends State<HomePage>
           const SizedBox(width: 6),
           Text('Steam 成就', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[300])),
         ]),
-        if (perfectGames.isEmpty) ...[
-          const SizedBox(height: 6),
+        SizedBox(height: 6),
+        Row(children: [
+          _miniStat(const PhosphorIcon(PhosphorIconsFill.gameController, color: Color(0xFF66C0F4), size: 14), '游戏', steamGames, const Color(0xFF66C0F4)),
+          if (steamAchTotal > 0) _miniStat(const PhosphorIcon(PhosphorIconsFill.star, color: Color(0xFFFFD700), size: 14), '成就', steamAchUnlocked, const Color(0xFFFFD700)),
+          if (steamAchTotal > 0) _miniStat(const PhosphorIcon(PhosphorIconsFill.checkCircle, color: Color(0xFF66C0F4), size: 14), '全成就', steam100pct, const Color(0xFF66C0F4)),
+          _miniStat(const PhosphorIcon(PhosphorIconsFill.clock, color: Color(0xFF66C0F4), size: 14), '时长', (steamPlaytime / 60).round(), const Color(0xFF66C0F4)),
+        ]),
+        SizedBox(height: 6),
+        if (steam100pct > 0 && _steamPerfectGames.isNotEmpty) ...[
+          Row(children: [
+            Text('全成就游戏: ', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+            Expanded(
+              child: Text(
+                _steamPerfectGames.take(3).map((g) => g['name']?.toString() ?? '').join(' · '),
+                style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (_steamPerfectGames.length > 3)
+              GestureDetector(
+                onTap: () => _showAllGamesPopup('全成就', _steamPerfectGames, 'steam'),
+                child: Text(' +${_steamPerfectGames.length - 3}', style: TextStyle(fontSize: 11, color: Color(0xFF66C0F4))),
+              ),
+          ]),
+        ] else ...[
           Text('暂无全成就游戏', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
         ],
         const SizedBox(height: 6),
@@ -1938,14 +1968,17 @@ class _HomePageState extends State<HomePage>
       },
     ];
 
-    // 按获得时间排序：最早获得的排第一个，最新在最后
+    // 按获得时间排序：时间格式如 "2024-01-15" 或 "2024-01-15T10:30:00"
     allCompleted.sort((a, b) {
-      final da = a['date']?.toString() ?? '';
-      final db = b['date']?.toString() ?? '';
-      if (da.isEmpty && db.isEmpty) return 0;
-      if (da.isEmpty) return 1; // 无日期排到最后
+      final da = (a['date']?.toString() ?? '').trim();
+      final db = (b['date']?.toString() ?? '').trim();
+      // 均无日期 → 按名字排
+      if (da.isEmpty && db.isEmpty) {
+        return (a['display_name']?.toString() ?? '').compareTo(b['display_name']?.toString() ?? '');
+      }
+      if (da.isEmpty) return 1;
       if (db.isEmpty) return -1;
-      return da.compareTo(db); // 获得时间字符串格式可自然排序
+      return da.compareTo(db);
     });
 
     if (allCompleted.isEmpty) {

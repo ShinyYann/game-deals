@@ -147,72 +147,148 @@ class _PokemonShinyPageState extends State<PokemonShinyPage> {
 
   void _showLocationNoteDialog(int ndex, String name, String padded) {
     final noteCtrl = TextEditingController();
+    bool includeName = true;
+    String method = ''; // e.g., 蛋孵化, 野外捕捉
+    String extra = '';  // custom text
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: Row(children: [
-          ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(
-            'https://assets.pokemon.com/assets/cms2/img/pokedex/full/$padded.png',
-            height: 32, width: 32)),
-          const SizedBox(width: 8),
-          Text('$name ✨', style: const TextStyle(color: Colors.white, fontSize: 18)),
-        ]),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('选择或输入获得来源', style: TextStyle(color: Colors.white70, fontSize: 14)),
-            const SizedBox(height: 12),
-            // Predefined options
-            Wrap(spacing: 8, runSpacing: 4, children: [
-              _noteChip('野外捕捉', noteCtrl),
-              _noteChip('活动赠送', noteCtrl),
-              _noteChip('蛋孵化', noteCtrl),
-              _noteChip('交换获得', noteCtrl),
-              _noteChip('连锁捕捉', noteCtrl),
-              _noteChip('太晶团体战', noteCtrl),
-            ]),
-            const SizedBox(height: 12),
-            TextField(
-              controller: noteCtrl,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: '手动输入来源...',
-                hintStyle: TextStyle(color: Colors.grey[600]),
-                filled: true, fillColor: const Color(0xFF0D0D1A),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-              ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          title: Row(children: [
+            ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(
+              'https://assets.pokemon.com/assets/cms2/img/pokedex/full/$padded.png',
+              height: 32, width: 32)),
+            const SizedBox(width: 8),
+            Text('$name ✨', style: const TextStyle(color: Colors.white, fontSize: 18)),
+          ]),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('获得方式', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                const SizedBox(height: 8),
+                // Method chips
+                Wrap(spacing: 8, runSpacing: 4, children: [
+                  _noteChip('蛋孵化', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                  _noteChip('野外捕捉', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                  _noteChip('连锁捕捉', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                  _noteChip('交换获得', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                  _noteChip('活动赠送', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                  _noteChip('太晶团体战', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                  _noteChip('DLC领取', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                  _noteChip('随机遭遇', method, (v) => setDialogState(() => method = v == method ? '' : v)),
+                ]),
+                const SizedBox(height: 12),
+                // Include name toggle
+                Row(children: [
+                  SizedBox(
+                    height: 24, width: 24,
+                    child: Checkbox(
+                      value: includeName,
+                      onChanged: (v) => setDialogState(() => includeName = v ?? true),
+                      fillColor: WidgetStateProperty.all(Colors.amberAccent),
+                      checkColor: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('备注包含宝可梦名字', style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                ]),
+                const SizedBox(height: 8),
+                // Extra note
+                const Text('自定义附言', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: noteCtrl,
+                  maxLines: 2,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: '比如: 跟随我3年了\n或者: 第1560次孵蛋出的',
+                    hintStyle: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    filled: true,
+                    fillColor: const Color(0xFF0D0D1A),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                // Preview
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.amberAccent.withAlpha(15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amberAccent.withAlpha(40)),
+                  ),
+                  child: Text(
+                    _buildShinyNotePreview(name, method, extra, includeName, noteCtrl.text),
+                    style: TextStyle(color: Colors.amberAccent[200], fontSize: 11),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Text('预览', style: TextStyle(color: Colors.grey[600], fontSize: 10)),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消', style: TextStyle(color: Colors.grey))),
+            ElevatedButton(
+              onPressed: () {
+                final finalNote = _buildShinyNote(name, method, extra, includeName, noteCtrl.text);
+                _addPokemon(ndex, name, finalNote);
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade700),
+              child: const Text('确认添加', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消', style: TextStyle(color: Colors.grey))),
-          ElevatedButton(
-            onPressed: () {
-              _addPokemon(ndex, name, noteCtrl.text);
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade700),
-            child: const Text('确认添加', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _noteChip(String label, TextEditingController ctrl) {
+  Widget _noteChip(String label, String selected, void Function(String) onTap) {
+    final isSelected = label == selected;
     return GestureDetector(
-      onTap: () => ctrl.text = label,
+      onTap: () => onTap(label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.amberAccent.withAlpha(30),
+          color: isSelected ? Colors.amberAccent.withAlpha(60) : Colors.amberAccent.withAlpha(20),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.amberAccent.withAlpha(60)),
+          border: Border.all(
+            color: isSelected ? Colors.amberAccent : Colors.amberAccent.withAlpha(40),
+            width: isSelected ? 1.5 : 1,
+          ),
         ),
-        child: Text(label, style: const TextStyle(color: Colors.amberAccent, fontSize: 12)),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.amber : Colors.amberAccent,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
     );
+  }
+
+  String _buildShinyNote(String name, String method, String extra, bool includeName, String custom) {
+    final parts = <String>[];
+    if (includeName) parts.add(name);
+    if (method.isNotEmpty) parts.add(method);
+    if (custom.isNotEmpty) parts.add(custom);
+    return parts.join(' · ');
+  }
+
+  String _buildShinyNotePreview(String name, String method, String extra, bool includeName, String custom) {
+    return _buildShinyNote(name, method, extra, includeName, custom);
   }
 
   void _addPokemon(int ndex, String name, String location) {

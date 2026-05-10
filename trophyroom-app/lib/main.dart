@@ -1283,24 +1283,7 @@ class _HomePageState extends State<HomePage>
                         colors: [Color(0xFF3A7BD5), Color(0xFF1A5276), Color(0xFF8EC8F2)],
                         mode: ParticleMode.float, count: 45, maxRadius: 2.5, tailLength: 0));
               }),
-              // 极光/星云叠加层
-              Builder(builder: (ctx) {
-                final both = _psnId.isNotEmpty && _steamId.isNotEmpty;
-                final tab = _platformTab;
-                final isPsn = both ? (tab == 1) : _psnId.isNotEmpty;
-                final isMixed = both && tab == 0;
-                final isSwitch = tab == (hasBoth ? 3 : hasSwitch ? (_psnId.isNotEmpty || _steamId.isNotEmpty ? 1 : 0) : 0);
-                if (isSwitch) {
-                  return AuroraOverlay.switchPlatform();
-                }
-                if (isMixed) {
-                  return AuroraOverlay.mixed();
-                }
-                if (isPsn) {
-                  return AuroraOverlay.psn();
-                }
-                return AuroraOverlay.steam();
-              }),
+              // 极光/星云叠加层（全局背景已有静态极光，此处不再重复叠加）
               // 浅色渐变遮罩（让背后极光微微透出）
               IgnorePointer(child: Container(decoration: BoxDecoration(gradient: LinearGradient(
                 begin: Alignment.topCenter, end: Alignment.bottomCenter,

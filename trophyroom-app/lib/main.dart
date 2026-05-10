@@ -1271,17 +1271,17 @@ class _HomePageState extends State<HomePage>
                     mode: ParticleMode.shimmer, count: 35, maxRadius: 2.0, tailLength: 0));
                 }
                 return isMixed
-                  // 混合 Tab：用 float 浮动粒子，无呼吸脉冲
+                  // 混合 Tab：纯浮动粒子，无尾巴（尾巴会形成大光带）
                   ? const ParticleEngine(config: ParticleConfig(
                       colors: [Color(0xFF9B59B6), Color(0xFF3A7BD5), Color(0xFFE8D5FF), Color(0xFF8EC8F2)],
-                      mode: ParticleMode.float, count: 45, maxRadius: 2.5, tailLength: 2))
+                      mode: ParticleMode.float, count: 30, maxRadius: 2.0, tailLength: 0))
                   : isPsn
                     ? const ParticleEngine(config: ParticleConfig(
                         colors: [Color(0xFF9B59B6), Color(0xFF6C3A9E), Color(0xFFD4A5FF)],
-                        mode: ParticleMode.rise, count: 55, maxRadius: 3, tailLength: 3))
+                        mode: ParticleMode.rise, count: 35, maxRadius: 2.0, tailLength: 0))
                     : const ParticleEngine(config: ParticleConfig(
                         colors: [Color(0xFF3A7BD5), Color(0xFF1A5276), Color(0xFF8EC8F2)],
-                        mode: ParticleMode.float, count: 60, maxRadius: 3, tailLength: 2));
+                        mode: ParticleMode.float, count: 30, maxRadius: 2.0, tailLength: 0));
               }),
               // 极光/星云叠加层
               Builder(builder: (ctx) {

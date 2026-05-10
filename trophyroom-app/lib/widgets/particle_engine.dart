@@ -95,7 +95,7 @@ class _ParticleEngineState extends State<ParticleEngine>
         x: x, y: y, vx: vx, vy: vy,
         radius: _rng.nextDouble() * (_config.maxRadius - 0.5) + 0.5,
         life: _rng.nextDouble(),
-        alpha: _rng.nextDouble() * 0.5 + 0.3,
+        alpha: _rng.nextDouble() * 0.3 + 0.15,
         colorIdx: _rng.nextInt(_config.colors.length),
         sparkTimer: _rng.nextDouble() * 2 * math.pi,
         tailLength: _rng.nextInt(_config.tailLength + 1).toDouble(),
@@ -224,7 +224,7 @@ class _ParticlePainter extends CustomPainter {
       if (config.mode == ParticleMode.shimmer) {
         final spark = (math.sin(p.sparkTimer + time) + 1) / 2;
         // 柔和光点 — 亮度压低，避免亮片感
-        final dotAlpha = spark * p.alpha * 0.12 + 0.02;
+        final dotAlpha = spark * p.alpha * 0.08 + 0.01;
         if (dotAlpha > 0.02) {
           _drawGlowDot(canvas, px, py, p.radius * 0.6, color.withOpacity(dotAlpha));
         }
@@ -247,10 +247,10 @@ class _ParticlePainter extends CustomPainter {
 
   void _drawGlowDot(Canvas canvas, double x, double y, double r, Color color) {
     final glowPaint = Paint()
-      ..color = color.withOpacity(color.opacity * 0.3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    canvas.drawCircle(Offset(x, y), r * 2.5, glowPaint);
-    final corePaint = Paint()..color = color;
+      ..color = color.withOpacity(color.opacity * 0.15)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+    canvas.drawCircle(Offset(x, y), r * 2.0, glowPaint);
+    final corePaint = Paint()..color = color.withOpacity(color.opacity * 0.6);
     canvas.drawCircle(Offset(x, y), r, corePaint);
   }
 

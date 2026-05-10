@@ -413,16 +413,24 @@ class _EnhancedPokemonDetailPageState extends State<EnhancedPokemonDetailPage>
     final pkm = _pokemonData;
     if (pkm == null) return _emptyTab('加载中...');
 
-    final types = [pkm['type']?.toString() ?? '']
-      ..addAll([
-        if (pkm['type2']?.toString() != null &&
-            pkm['type2'].toString().isNotEmpty)
-          pkm['type2'].toString()
-      ]);
+    // 服务端返回 type: ['电'] 是数组，需要解包
+    List<String> typesList = [];
+    final t1 = pkm['type'];
+    if (t1 is List && t1.isNotEmpty) {
+      typesList.add(t1.first.toString());
+    } else if (t1 != null && t1.toString().isNotEmpty) {
+      typesList.add(t1.toString());
+    }
+    final t2 = pkm['type2'];
+    if (t2 is List && t2.isNotEmpty) {
+      typesList.add(t2.first.toString());
+    } else if (t2 != null && t2.toString().isNotEmpty) {
+      typesList.add(t2.toString());
+    }
 
-    if (types.isEmpty || types.first.isEmpty) return _emptyTab('暂无属性数据');
+    if (typesList.isEmpty) return _emptyTab('暂无属性数据');
 
-    final effectiveness = TypeEffectiveness(types);
+    final effectiveness = TypeEffectiveness(typesList);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),

@@ -13,7 +13,7 @@ SRC="$REPO/trophyroom-app"
 SERVER="root@8.153.97.56"
 DEPLOY_PATH="/var/www/html/apk/TrophyRoom.apk"
 BUILD_DIR="/tmp/trophyroom-build"
-VERSION_CODE=104  # ⚠️ 每次编译前 +1！App 靠 versionCode 比较来弹更新提示
+VERSION_CODE=105  # ⚠️ 每次编译前 +1！App 靠 versionCode 比较来弹更新提示
 
 echo "🏗️  TrophyRoom APK Builder"
 echo "=========================="

@@ -1783,6 +1783,18 @@ class _HomePageState extends State<HomePage>
       totalBronze += (g['bronze'] ?? 0) as int;
     }
 
+    // Steam 成就统计
+    int sAchTot = 0, sAchUnl = 0, sPlay = 0, s100Pct = 0;
+    for (final g in steamGames) {
+      sAchTot += _safeInt(g['achievements_total']);
+      sAchUnl += _safeInt(g['achievements_unlocked']);
+      sPlay += _safeInt(g['playtime_forever']);
+      if (_safeInt(g['achievements_total']) > 0 &&
+          _safeInt(g['achievements_unlocked']) >= _safeInt(g['achievements_total'])) {
+        s100Pct++;
+      }
+    }
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // ── 🏆 已完成游戏合集 ──
       if (platinumGames.isNotEmpty || perfectGames.isNotEmpty) ...[
@@ -1833,16 +1845,6 @@ class _HomePageState extends State<HomePage>
 
       // ── Steam 成就分布 ──
       if (steamGames.isNotEmpty) ...[
-        // 计算 Steam 成就统计
-        int sAchTot = 0, sAchUnl = 0, sPlay = 0, s100Pct = 0;
-        for (final g in steamGames) {
-          sAchTot += _safeInt(g['achievements_total']);
-          sAchUnl += _safeInt(g['achievements_unlocked']);
-          sPlay += _safeInt(g['playtime_forever']);
-          final aT = _safeInt(g['achievements_total']);
-          final aU = _safeInt(g['achievements_unlocked']);
-          if (aT > 0 && aU >= aT) s100Pct++;
-        }
         Row(mainAxisSize: MainAxisSize.min, children: [
           const PhosphorIcon(PhosphorIconsFill.gameController, color: Color(0xFF66C0F4), size: 14),
           const SizedBox(width: 6),

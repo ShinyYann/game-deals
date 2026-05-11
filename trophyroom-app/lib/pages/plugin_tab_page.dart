@@ -1,3 +1,6 @@
+/// ⚠️ 已废弃 — 插件内容已合并至 `toolbox_page.dart`
+/// 此文件保留仅作参考，不再被任何文件导入。
+///
 /// 插件 Tab — 插件列表 + 内嵌 WebView（持久化登录状态）
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';

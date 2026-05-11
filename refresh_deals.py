@@ -20,12 +20,29 @@ def make_cards(deals, top=False):
         raw = d.get("name","?")
         name_cn = d.get("name_cn","")
         name = (name_cn if name_cn and name_cn != raw else raw).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-        cp = d.get("current_price","")
-        di = d.get("discount","")
-        img = d.get("image","")
         
-        m = re.search(r"(\d+)%", di)
-        pct = int(m.group(1)) if m else 0
+        # Normalize server format - handle both old and new
+        # discount: could be int (40) or string ("-40%")
+        di_raw = d.get("discount","")
+        if isinstance(di_raw, int):
+            di = f"-{di_raw}%"
+            pct = di_raw
+        elif isinstance(di_raw, str):
+            di = di_raw
+            m = re.search(r"(\d+)", di)
+            pct = int(m.group(1)) if m else 0
+        else:
+            di = ""
+            pct = 0
+        
+        # price: server uses final_formatted, old data uses current_price
+        cp = str(d.get("current_price") or d.get("final_formatted") or d.get("price") or "")
+        
+        # image: server stores in header_image or image, or construct from appid
+        img = str(d.get("image") or d.get("header_image") or "")
+        if not img and d.get("appid"):
+            img = f"https://steamcdn-a.akamaihd.net/steam/apps/{d['appid']}/header.jpg"
+        
         dc = "disc-high" if pct >= 70 else ("disc-mid" if pct >= 40 else "disc-low")
         
         if top:
@@ -69,7 +86,10 @@ print(f"Steam={len(steam)} PSN={len(psn)} Switch={len(switch)}")
 
 # Top 6
 def ds(d):
-    m = re.search(r"(\d+)%", d.get("discount",""))
+    di = d.get("discount",0)
+    if isinstance(di, int):
+        return di
+    m = re.search(r"(\d+)", str(di))
     return int(m.group(1)) if m else 0
 top = sorted(all_, key=ds, reverse=True)[:6]
 

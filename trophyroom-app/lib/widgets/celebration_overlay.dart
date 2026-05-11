@@ -247,7 +247,7 @@ class _CelebrationCardState extends State<_CelebrationCard>
                       Icon(Icons.auto_awesome, size: 14, color: widget.accentColor),
                       const SizedBox(width: 6),
                       Text(
-                        isPsn ? '第 ${widget.rank! + 1} 个白金' : '第 ${widget.rank! + 1} 个全成就',
+                        isPsn ? '第 ${widget.rank! >= 0 ? widget.rank! + 1 : 1} 个白金' : '第 ${widget.rank! >= 0 ? widget.rank! + 1 : 1} 个全成就',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,

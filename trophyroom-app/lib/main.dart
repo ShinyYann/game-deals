@@ -10,7 +10,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/game_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/psnine_client.dart';
-import 'services/bookmark_service.dart';
 import 'services/steam_client.dart';
 import 'services/switch_client.dart';
 import 'xhh_psn_client.dart';
@@ -19,7 +18,7 @@ import 'services/deals_service.dart';
 import 'models/switch_game.dart';
 import 'pages/browser_page.dart';
 import 'pages/browser_tab_page.dart';
-import 'pages/plugin_tab_page.dart';
+import 'pages/toolbox_page.dart';
 import 'widgets/celebration_overlay.dart';
 import 'pages/info_summary_page.dart';
 import 'pages/pending_approval_page.dart';
@@ -33,7 +32,6 @@ import 'widgets/particle_engine.dart';
 import 'widgets/effect_card.dart';
 import 'widgets/gradient_button.dart';
 import 'widgets/aurora_overlay.dart';
-import 'widgets/tilt_card.dart';
 import 'services/widget_updater.dart';
 import 'services/update_service.dart';
 import 'services/auth_service.dart';
@@ -42,7 +40,7 @@ import 'services/cookie_isolation.dart';
 import 'pages/login_page.dart';
 import 'services/proxy_service.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:just_audio/just_audio.dart' as just_audio;
 
 import 'theme/app_theme.dart';
 import 'theme/app_colors.dart';
@@ -438,7 +436,18 @@ class _HomePageState extends State<HomePage>
   bool _animDone = false;
   Set<String> _activeEffects = {}; // 全成就特效开关
   Map<String, double> _effectIntensity = {}; // 特效强度
+  bool _randomEffect = false; // 随机特效模式
   List<Map<String, dynamic>> _deals = [];
+
+  /// 返回当前生效的特效（非随机模式=所有已开启，随机模式=抽一个）
+  Set<String> _resolvedEffects() {
+    if (_randomEffect && _activeEffects.length <= 1) return _activeEffects;
+    if (!_randomEffect) return _activeEffects;
+    final list = _activeEffects.toList()..sort();
+    final seed = DateTime.now().millisecondsSinceEpoch ~/ 30000; // 每30秒变一次
+    final idx = (seed * 1664525 + 1013904223) & 0x7FFFFFFF;
+    return {list[idx % list.length]};
+  }
   String _dealsStatus = '';
   String _platform = 'all';
   String _newlowFilter = 'all'; // sub-filter within 新史低: all/psn/steam/switch
@@ -509,9 +518,13 @@ class _HomePageState extends State<HomePage>
   }
   Map<String, List<dynamic>> _steamAchievements = {};
   bool _filterPlaytime = false;  // Steam 只看有游玩时间的
-  bool _guideBookmarksExpanded = false;  // 攻略页收藏夹展开
   bool _filter100pct = false;    // Steam 只看全成就的
+  late final ValueNotifier<int> _filterVersion;
   bool _summaryExpanded = true; // 汇总卡详情默认展开
+  
+  // ── 白金殿堂排序 ──
+  Map<String, String> _platinumDates = {}; // game_id → ISO timestamp
+  bool _platinumDatesLoading = false;
   Map<String, dynamic>? _steamRecentGames;
   // ── Switch 小黑盒 ──
   List<String> _switchAccountIds = [];
@@ -549,6 +562,7 @@ class _HomePageState extends State<HomePage>
     _deals = List.from(_offlineGames);
     _dealsStatus = '${_offlineGames.length} 款内置游戏';
     _platformPageCtrl = PageController();
+    _filterVersion = ValueNotifier<int>(0);
     _initPSNWebView();
     // 每隔 5 分钟发一次心跳
     _startPing();
@@ -556,6 +570,7 @@ class _HomePageState extends State<HomePage>
     _checkNetwork();
     _loadAccounts();
     _checkUpdate();
+    _fetchPlatinumDates();
   }
 
   bool _updateDialogShown = false;
@@ -609,7 +624,7 @@ class _HomePageState extends State<HomePage>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: null, // 不确定进度 → 旋转动画
+                    value: null,
                     backgroundColor: Colors.white.withOpacity(0.08),
                     valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF66C0F4)),
                     minHeight: 6,
@@ -621,6 +636,26 @@ class _HomePageState extends State<HomePage>
               ],
               if (!downloading)
                 Text(status, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+              if (!downloading && status.startsWith('打开失败'))
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('复制下载链接', style: TextStyle(fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF66C0F4),
+                        side: const BorderSide(color: Color(0xFF66C0F4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: update.apkUrl));
+                        setDialogState(() => status = '链接已复制，请粘贴到浏览器打开');
+                      },
+                    ),
+                  ),
+                ),
             ]),
             actions: [
               TextButton(
@@ -650,7 +685,7 @@ class _HomePageState extends State<HomePage>
                             final err = UpdateService.getLastError();
                             setDialogState(() {
                               downloading = false;
-                              status = err.isNotEmpty ? '下载失败: $err' : '下载失败，请重试';
+                              status = err.isNotEmpty ? '打开失败: $err' : '打开浏览器失败，请尝试复制链接手动下载';
                             });
                           }
                         });
@@ -760,7 +795,7 @@ class _HomePageState extends State<HomePage>
     await _checkNetwork();
   }
 
-  static const _appVersion = 'v110';
+  static const _appVersion = 'v116';
 
   Future<void> _checkChangelog(SharedPreferences prefs, String steam) async {
     final seen = prefs.getString('changelog_seen') ?? '';
@@ -845,6 +880,7 @@ class _HomePageState extends State<HomePage>
       _switchAccountIds = switchIds;
       _activeEffects = effects;
       _effectIntensity = intensity;
+      _randomEffect = prefs.getBool('platinum_random') ?? false;
       _accountsLoaded = true;
     });
     // 检查更新日志
@@ -938,8 +974,7 @@ class _HomePageState extends State<HomePage>
       ('首页', const PhosphorIcon(PhosphorIconsFill.house, size: 22)),
       ('折扣', const PhosphorIcon(PhosphorIconsFill.tagChevron, size: 22)),
       ('信息', const PhosphorIcon(PhosphorIconsFill.newspaper, size: 22)),
-      ('攻略', const PhosphorIcon(PhosphorIconsFill.sword, size: 22)),
-      ('插件', const PhosphorIcon(PhosphorIconsFill.puzzlePiece, size: 22)),
+      ('🧰 工具箱', const PhosphorIcon(PhosphorIconsFill.toolbox, size: 22)),
       ('浏览', const PhosphorIcon(PhosphorIconsFill.globe, size: 22)),
       ('设置', const PhosphorIcon(PhosphorIconsFill.gearSix, size: 22)),
     ];
@@ -1183,8 +1218,7 @@ class _HomePageState extends State<HomePage>
             _buildHome(),
             _buildDeals(),
             const InfoSummaryPage(),
-            _buildGuide(),
-            const PluginTabPage(),
+            const ToolboxPage(),
             const BrowserTabPage(),
             SettingsPage(
               onSyncCompleted: () {
@@ -1235,7 +1269,7 @@ class _HomePageState extends State<HomePage>
             GradientButton.primary(
               label: '前往设置',
               icon: Icons.settings,
-              onPressed: () => setState(() => _currentTab = 6),
+              onPressed: () => setState(() => _currentTab = 5),
             ),
           ],
         ),
@@ -1341,13 +1375,30 @@ class _HomePageState extends State<HomePage>
 
     // 应用筛选（PSN 白金 = 全成就；Switch 无成就系统需排除）
     if (_filterPlaytime || _filter100pct) {
+      // 当全成就/游玩时间筛选开启时，如果 Steam 数据可能未加载成就信息，触发后台刷新
+      if ((_filter100pct || _filterPlaytime) && _steamData != null && _steamData!.containsKey('games')) {
+        bool needsRefresh = false;
+        for (final g in (_steamData!['games'] as List? ?? [])) {
+          if (g is Map) {
+            final total = _safeInt(g['achievements_total']);
+            if (total == 0 && _filter100pct) { needsRefresh = true; break; }
+            final playtime = _safeInt(g['playtime_forever']);
+            if (playtime == 0 && _filterPlaytime) { needsRefresh = true; break; }
+          }
+        }
+        if (needsRefresh && !_steamLoading) {
+          _fetchSteamData();
+        }
+      }
       merged.removeWhere((m) {
         if (_filter100pct) {
           if (m.source == 'steam') {
             // Steam：达成全成就
             final total = _safeInt(m.data['achievements_total']);
             final unlocked = _safeInt(m.data['achievements_unlocked']);
-            return total == 0 || unlocked < total;
+            // 数据未加载（total==0）时不移除，等后台刷新后重新评估
+            if (total == 0) return false;
+            return unlocked < total;
           } else if (m.source == 'psn') {
             // PSN：有白金 = 等同于全成就
             return (m.data['platinum'] ?? 0) == 0;
@@ -1397,14 +1448,17 @@ class _HomePageState extends State<HomePage>
           child: Row(children: [
             _filterChip('全部', !_filter100pct && !_filterPlaytime, () {
               setState(() { _filter100pct = false; _filterPlaytime = false; });
+              _filterVersion.value++;
             }),
             const SizedBox(width: 6),
             _filterChip('全成就', _filter100pct, () {
               setState(() { _filter100pct = !_filter100pct; _filterPlaytime = false; });
+              _filterVersion.value++;
             }),
             const SizedBox(width: 6),
             _filterChip('有数据', _filterPlaytime, () {
               setState(() { _filterPlaytime = !_filterPlaytime; _filter100pct = false; });
+              _filterVersion.value++;
             }),
             const Spacer(),
             if (_filter100pct || _filterPlaytime)
@@ -1427,11 +1481,12 @@ class _HomePageState extends State<HomePage>
             if (m.source == 'psn') {
               final gameId = m.data['game_id']?.toString() ?? '';
               final isExpanded = _expandedGameId == gameId;
-              return TiltCard(child: _buildExpandableGameCard(m.data, isExpanded: isExpanded));
+              return _buildExpandableGameCard(m.data, isExpanded: isExpanded,
+                      key: ValueKey('inner_$gameId'));
             } else if (m.source == 'switch') {
-              return TiltCard(child: _buildSwitchCompactCard(m.data));
+              return _buildSwitchCompactCard(m.data);
             } else {
-              return TiltCard(child: _buildCompactSteamCard(m.data));
+              return _buildCompactSteamCard(m.data);
             }
           }),
         ],
@@ -1944,6 +1999,29 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  /// 获取白金日期（用于白金殿堂排序）
+  Future<void> _fetchPlatinumDates() async {
+    try {
+      final resp = await http.get(
+        Uri.parse('$_apiBase/api/psn_platinum_dates?uid=$_psnId'),
+      ).timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final raw = json.decode(resp.body);
+        if (raw is Map) {
+          final map = <String, String>{};
+          for (final entry in raw.entries) {
+            map[entry.key.toString()] = entry.value.toString();
+          }
+          if (mounted) {
+            setState(() => _platinumDates = map);
+          }
+        }
+      }
+    } catch (e) {
+      print('[PlatinumDates] fetch error: $e');
+    }
+  }
+
   /// 🏆 白金殿堂 - 显示所有已完成游戏的封面墙
   void _showPlatinumHall() {
     final allCompleted = <Map<String, dynamic>>[
@@ -1952,7 +2030,8 @@ class _HomePageState extends State<HomePage>
         'source': 'psn',
         'display_name': (g['title'] ?? g['name'] ?? '?').toString(),
         'cover': g['cover_url']?.toString() ?? '',
-        'date': g['last_play_date']?.toString() ?? '',  // 最后游玩时间 ≈ 完成时间
+        // 优先使用服务器返回的白金日期，兜底 last_play_date
+        'date': _platinumDates[g['id']?.toString()] ?? g['last_play_date']?.toString() ?? '',
       },
       for (final g in _steamPerfectGames) {
         ...g,
@@ -2498,7 +2577,7 @@ class _HomePageState extends State<HomePage>
                         ),
                       ),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(nickname, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                        Text(nickname, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.white)),
                         if (nickname != psnId)
                           Text(psnId, style: TextStyle(fontSize: 12, color: Colors.grey[400])),
                       ])),
@@ -2537,7 +2616,7 @@ class _HomePageState extends State<HomePage>
                     const PhosphorIcon(PhosphorIconsFill.gameController, color: Colors.white, size: 20),
                     const SizedBox(width: 6),
                     Text(' 我的游戏 (${games.length})',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                   ]),),
               if (!hasData)
                 Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 40), child: Column(children: [
@@ -2548,7 +2627,7 @@ class _HomePageState extends State<HomePage>
                   Text("请检查网络连接，在「设置」页绑定 PSN 账号", style: TextStyle(fontSize: 14, color: Colors.grey[500])),
                   AppSpacing.hLg,
                   TextButton.icon(
-                    onPressed: () => setState(() => _currentTab = 3),
+                    onPressed: () => setState(() => _currentTab = 5),
                     icon: Icon(Icons.settings, size: 18, color: Colors.purple[300]),
                     label: Text("前往设置", style: TextStyle(color: Colors.purple[300]))),
                 ]))),
@@ -2570,7 +2649,7 @@ class _HomePageState extends State<HomePage>
                   final game = Map<String, dynamic>.from(g as Map);
                   final gameId = game['game_id']?.toString() ?? '';
                   final isExpanded = _expandedGameId == gameId;
-                  return _buildExpandableGameCard(game, isExpanded: isExpanded);
+                  return _buildExpandableGameCard(game, isExpanded: isExpanded, key: ValueKey('psn_$gameId'));
                 }),
             ],
           ),
@@ -2587,7 +2666,7 @@ class _HomePageState extends State<HomePage>
           const SizedBox(width: 4),
           Text(value,
               style: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.bold)),
+                  fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
         ]),
         const SizedBox(height: 2),
         Text(label,
@@ -2625,7 +2704,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildExpandableGameCard(Map<String, dynamic> game,
-      {required bool isExpanded}) {
+      {required bool isExpanded, Key? key}) {
     final gameId = (game['game_id']?.toString() ?? game['id']?.toString() ?? '');
     final rawName = game['name']?.toString() ?? '';
     final name = _translateGameName(rawName);
@@ -2710,6 +2789,7 @@ class _HomePageState extends State<HomePage>
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
@@ -2824,29 +2904,38 @@ class _HomePageState extends State<HomePage>
             ),
           ),
 
-          // Expanded content (trophy list)
-          if (isExpanded) ...[
-            const Divider(height: 1, color: Colors.grey),
-            if (_expandedLoading[gameId] == true)
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2),
-                  ),
-                ),
-              )
-            else if (_gameTrophies.containsKey(gameId))
-              ...(_gameTrophies[gameId] as List<dynamic>).map((t) {
-                final trophy = t as Map<String, dynamic>;
-                return _buildTrophyRow(trophy);
-              })
-            else
-              const SizedBox.shrink(),
-          ],
+          // Expanded content (trophy list) with smooth animation
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: isExpanded
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Divider(height: 1, color: Colors.grey),
+                      if (_expandedLoading[gameId] == true)
+                        const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      else if (_gameTrophies.containsKey(gameId))
+                        ...(_gameTrophies[gameId] as List<dynamic>).map((t) {
+                          final trophy = t as Map<String, dynamic>;
+                          return _buildTrophyRow(trophy);
+                        })
+                      else
+                        const SizedBox.shrink(),
+                    ],
+                  )
+                : const SizedBox(width: double.infinity, height: 0),
+          ),
         ],
     );
 
@@ -2854,7 +2943,8 @@ class _HomePageState extends State<HomePage>
 
     if (showPlatinumEffect) {
       return EffectCardWrapper(
-        effects: _activeEffects,
+        key: key,
+        effects: _resolvedEffects(),
         intensity: _effectIntensity,
         child: Card(
           color: AppColors.surface,
@@ -2869,16 +2959,7 @@ class _HomePageState extends State<HomePage>
     }
 
     return Card(
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isExpanded
-              ? Colors.purple[400]!.withOpacity(0.5)
-              : Colors.grey[800]!,
-        ),
-      ),
-      margin: const EdgeInsets.only(bottom: 10),
+      key: key,
       clipBehavior: Clip.antiAlias,
       child: cardChild as Widget,
     );
@@ -3453,6 +3534,8 @@ class _HomePageState extends State<HomePage>
       setState(() {
         _steamData = result;
         _steamLoading = false;
+        // 如果有筛选激活，通知各方重新评估
+        if (_filter100pct || _filterPlaytime) _filterVersion.value++;
       });
       _pushWidgetData();
       // 存本地缓存
@@ -3498,7 +3581,7 @@ class _HomePageState extends State<HomePage>
         Text('去设置页输入你的 Steam ID', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
         AppSpacing.hLg,
         TextButton.icon(
-          onPressed: () => setState(() => _currentTab = 3),
+          onPressed: () => setState(() => _currentTab = 5),
           icon: Icon(Icons.settings, size: 18, color: Colors.blue[300]),
           label: Text("前往设置", style: TextStyle(color: Colors.blue[300]))),
       ]));
@@ -3524,7 +3607,7 @@ class _HomePageState extends State<HomePage>
     final avatar = data['avatar'] ?? '';
     final avatarFrame = (data['avatar_frame'] as Map<String, dynamic>?) ?? {};
     // image_animated 是服务端预转换的动画 WebP（Flutter 原生支持），image_small 是 APNG（Flutter 不支持动画）
-    final avatarFrameUrl = avatarFrame['image_animated']?.toString() ?? avatarFrame['image_small']?.toString() ?? avatarFrame['image']?.toString() ?? '';
+    final avatarFrameUrl = avatarFrame['image_small']?.toString() ?? avatarFrame['image']?.toString() ?? '';
     final animatedAvatar = (data['animated_avatar'] as Map<String, dynamic>?) ?? {};
     final animatedAvatarUrl = animatedAvatar['image']?.toString() ?? '';
     final profileBg = (data['profile_background'] as Map<String, dynamic>?) ?? {};
@@ -3569,14 +3652,17 @@ class _HomePageState extends State<HomePage>
           child: Row(children: [
             _filterChip('全部', !_filter100pct && !_filterPlaytime, () {
               setState(() { _filter100pct = false; _filterPlaytime = false; });
+              _filterVersion.value++;
             }),
             const SizedBox(width: 6),
             _filterChip('全成就', _filter100pct, () {
               setState(() { _filter100pct = !_filter100pct; _filterPlaytime = false; });
+              _filterVersion.value++;
             }),
             const SizedBox(width: 6),
             _filterChip('有数据', _filterPlaytime, () {
               setState(() { _filterPlaytime = !_filterPlaytime; _filter100pct = false; });
+              _filterVersion.value++;
             }),
             const Spacer(),
             if (_filter100pct || _filterPlaytime)
@@ -4132,7 +4218,7 @@ class _HomePageState extends State<HomePage>
     );
 
     return isPerfect
-        ? EffectCardWrapper(effects: _activeEffects, intensity: _effectIntensity, child: card)
+        ? EffectCardWrapper(effects: _resolvedEffects(), intensity: _effectIntensity, child: card)
         : card;
   }
 
@@ -4939,7 +5025,8 @@ class _HomePageState extends State<HomePage>
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                           fontSize: 15,
-                                          fontWeight: FontWeight.w600)),
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white)),
                                   if (nameCn.isNotEmpty && nameCn != name)
                                     Text(name,
                                         maxLines: 1,
@@ -5039,210 +5126,6 @@ class _HomePageState extends State<HomePage>
   }
 
   /// 攻略入口页面
-  Widget _buildGuide() {
-    return ListView(
-      padding: AppSpacing.padLg,
-      children: [
-        // ── ★ 收藏夹（可点击展开/收起） ──
-        FutureBuilder<List<Bookmark>>(
-          future: BookmarkService.load(),
-          builder: (context, snapshot) {
-            final bookmarks = snapshot.data ?? [];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              child: Column(children: [
-                // 标题栏（可点击）
-                InkWell(
-                  onTap: () => setState(() => _guideBookmarksExpanded = !_guideBookmarksExpanded),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E30),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 18),
-                        const SizedBox(width: 6),
-                        Text('⭐ 收藏夹',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[200])),
-                        const Spacer(),
-                        Text('${bookmarks.length} 个收藏',
-                            style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-                        const SizedBox(width: 6),
-                        Icon(_guideBookmarksExpanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                            color: Colors.grey[500], size: 20),
-                      ],
-                    ),
-                  ),
-                ),
-                // 展开内容
-                if (_guideBookmarksExpanded) ...[
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E30),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber.withOpacity(0.15)),
-                    ),
-                    child: bookmarks.isEmpty
-                        ? Text('在奖杯心得点链接 → 浏览器右上角 ⭐ 收藏',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]))
-                        : Column(children: bookmarks.map((bm) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => BrowserPage(
-                                    initialUrl: bm.url,
-                                    initialTitle: bm.title,
-                                  ),
-                                ),
-                              );
-                            },
-                            onLongPress: () {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  backgroundColor: AppColors.surface,
-                                  title: const Text('删除收藏？',
-                                      style: TextStyle(color: Colors.white)),
-                                  content: Text(bm.title,
-                                      style: TextStyle(color: Colors.grey[400])),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('取消'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        BookmarkService.remove(bm.url);
-                                        Navigator.pop(ctx);
-                                        setState(() {});
-                                      },
-                                      child: const Text('删除',
-                                          style: TextStyle(color: Colors.red)),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[850],
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey[800]!),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.bookmark, color: Colors.amber[700], size: 16),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(bm.title,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                                        const SizedBox(height: 2),
-                                        Text(bm.url,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 12),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )).toList()),
-                  ),
-                ],
-              ]),
-            );
-          },
-        ),
-        // ── 攻略卡片：宝可梦殿堂 ──
-        _guideCard(
-          imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
-          title: '宝可梦',
-          subtitle: '图鉴 / 队伍 / 闪符 / 配队 / 闪值排行',
-          color: const Color(0xFFE53935),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PokemonHomePage()),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  /// 攻略卡片
-  Widget _guideCard({
-    String icon = '',
-    String? imageUrl,
-    required String title,
-    required String subtitle,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap ?? () {
-        // 默认占位提示
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$title — 攻略制作中'), duration: const Duration(seconds: 2)),
-        );
-      },
-      child: Container(
-        padding: AppSpacing.padLg,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color.withOpacity(0.2), Colors.grey[900]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
-            imageUrl != null
-                ? Image.network(imageUrl, width: 36, height: 36,
-                    errorBuilder: (_, __, ___) =>
-                        Icon(Icons.videogame_asset, color: Colors.grey[600], size: 30))
-                : Text(icon, style: const TextStyle(fontSize: 32)),
-            AppSpacing.wLg,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  AppSpacing.hXs,
-                  Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// 打开外部链接
   /// 打开外部链接（占位）
   static Future<void> _launchExternal(String url) async {
@@ -5827,11 +5710,19 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _effectsExpanded = false;   // 全成就特效展开
   Set<String> _activeEffects = {}; // 当前启用的特效
   Map<String, double> _effectIntensity = {}; // 特效强度
+  bool _randomEffect = false; // 随机特效模式
+  bool _musicExists = false;
+  bool _musicPlaying = false;
+  bool _musicLoading = false;
+  int _musicSize = 0;
+  String _musicUrl = '';
+  final _musicPlayer = just_audio.AudioPlayer();
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _checkMusic();
   }
 
   Future<void> _loadSettings() async {
@@ -5860,6 +5751,7 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       }
       _effectIntensity = intensity;
+      _randomEffect = prefs.getBool('platinum_random') ?? false;
       _loaded = true;
     });
   }
@@ -5890,6 +5782,56 @@ class _SettingsPageState extends State<SettingsPage> {
     final parts = _effectIntensity.entries.map((e) => '${e.key}:${e.value.toStringAsFixed(2)}').toList();
     await prefs.setString('platinum_intensity', parts.join(','));
     widget.onSyncCompleted?.call();
+  }
+
+  /// 检查服务器上的交响乐
+  Future<void> _checkMusic() async {
+    try {
+      final r = await http.get(Uri.parse('http://8.153.97.56/api/music/status')).timeout(const Duration(seconds: 5));
+      if (r.statusCode == 200) {
+        final d = json.decode(r.body);
+        if (d['exists'] == true) {
+          setState(() {
+            _musicExists = true;
+            _musicSize = d['size'];
+            _musicUrl = 'http://8.153.97.56${d['url']}';
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  /// 触发服务端重新生成
+  Future<void> _generateMusic() async {
+    setState(() => _musicLoading = true);
+    try {
+      final r = await http.get(Uri.parse('http://8.153.97.56/api/music/generate')).timeout(const Duration(seconds: 130));
+      if (r.statusCode == 200) {
+        await _checkMusic();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('生成失败: $e')));
+      }
+    }
+    setState(() => _musicLoading = false);
+  }
+
+  /// 播放/暂停
+  void _toggleMusic() {
+    if (_musicPlaying) {
+      _musicPlayer.pause();
+      setState(() => _musicPlaying = false);
+    } else {
+      _musicPlayer.setUrl(_musicUrl);
+      _musicPlayer.play();
+      setState(() => _musicPlaying = true);
+      _musicPlayer.playerStateStream.listen((state) {
+        if (state.processingState == just_audio.ProcessingState.completed) {
+          setState(() => _musicPlaying = false);
+        }
+      });
+    }
   }
 
   Widget _buildEffectTile(String key, String title, String subtitle) {
@@ -6314,6 +6256,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   void dispose() {
+    _musicPlayer.dispose();
     _psnCtrl.dispose();
     _steamCtrl.dispose();
     _steamKeyCtrl.dispose();
@@ -6588,38 +6531,331 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         if (_effectsExpanded) ...[
           AppSpacing.hSm,
+          // 随机特效开关
+          GestureDetector(
+            onTap: () async {
+              setState(() => _randomEffect = !_randomEffect);
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('platinum_random', _randomEffect);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: _randomEffect ? Colors.amberAccent.withAlpha(30) : Colors.grey[850],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _randomEffect ? Colors.amberAccent.withAlpha(120) : Colors.grey[800]!,
+                  width: 0.5,
+                ),
+              ),
+              child: Row(children: [
+                Text('🎲', style: TextStyle(fontSize: 18)),
+                AppSpacing.wMd,
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('随机特效', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _randomEffect ? Colors.amberAccent : Colors.grey[300])),
+                  Text('每30秒自动换一种特效', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                ])),
+                Switch(
+                  value: _randomEffect,
+                  activeColor: Colors.amberAccent,
+                  onChanged: (v) async {
+                    setState(() => _randomEffect = v);
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('platinum_random', _randomEffect);
+                  },
+                ),
+              ]),
+            ),
+          ),
+          AppSpacing.hSm,
           _buildEffectTile('shimmer', '✨ 星辉闪烁', '金色微光粒子在卡片中漂浮'),
           _buildEffectTile('sweep', '🌊 流光扫描', '对角线光条周期性扫过'),
-          _buildEffectTile('prism', '💎 钻石棱光', '8色追光边框互相追逐'),
-          _buildEffectTile('ember', '🔥 余烬微光', '底部升起橙红色余烬'),
-          _buildEffectTile('pulse', '🎯 白金脉冲', '中心向外扩散白金光环'),
-          _buildEffectTile('particles', '🌈 七彩粒子', '呼吸粒子铺满卡片缓慢运动'),
+          _buildEffectTile('sparks', '🔥 星火燎原', '底部升起火星粒子'),
+          _buildEffectTile('meteor', '💫 流星雨', '拖尾流星斜向划过'),
+          _buildEffectTile('aurora', '🌌 极光波动', '多条极光波纹飘动'),
+          _buildEffectTile('border_chase', '💎 流光边框', '8色追光边框互相追逐'),
+          _buildEffectTile('border_pulse', '⚡ 脉冲边框', '脉冲氖光呼吸边框'),
+          _buildEffectTile('hologram', '🌀 全息幻彩', '360° 虹彩折射渐变'),
+          _buildEffectTile('frost', '🪟 磨砂光晕', '旋转反光高光斑'),
+          _buildEffectTile('lava', '🌋 熔岩涌动', '熔岩色有机物缓慢流动'),
+          _buildEffectTile('stardust', '✨ 星芒闪烁', '随机星辰忽闪忽灭'),
+          _buildEffectTile('scan_pulse', '📡 扫描脉冲', '旋转雷达+脉冲光环'),
         ],
+
+        AppSpacing.hXxl,
+
+        // ── 🎵 奖杯交响乐 ──
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[800]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Text('🎵', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('奖杯交响乐', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[100])),
+                  Text('由你的奖杯数据生成的专属五音交响',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                ]),
+              ),
+              if (_musicExists && !_musicLoading)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    IconButton(
+                      icon: Icon(_musicPlaying ? Icons.stop : Icons.play_arrow,
+                          color: _musicPlaying ? Colors.amber : Colors.grey[300], size: 22),
+                      onPressed: _toggleMusic,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                    if (!_musicPlaying)
+                      GestureDetector(
+                        onTap: _generateMusic,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Icon(Icons.refresh, size: 16, color: Colors.grey[400]),
+                        ),
+                      ),
+                  ]),
+                ),
+              if (_musicLoading)
+                const SizedBox(
+                  width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              if (!_musicExists && !_musicLoading)
+                GestureDetector(
+                  onTap: _generateMusic,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.purple[600]!, Colors.indigo[600]!],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('生成', style: TextStyle(fontSize: 12, color: Colors.white)),
+                  ),
+                ),
+            ]),
+            if (_musicExists && _musicSize > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text('${(_musicSize / 1024).round()}KB · 1分32秒 · 192kbps',
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+              ),
+          ]),
+        ),
 
       ],
     );
   }
 }
 
-class _GameDetailCard extends StatelessWidget {
+class _GameDetailCard extends StatefulWidget {
   final Map<String, dynamic> game;
   const _GameDetailCard({required this.game});
 
   @override
+  State<_GameDetailCard> createState() => _GameDetailCardState();
+}
+
+class _GameDetailCardState extends State<_GameDetailCard> {
+  bool _loadingGuide = false;
+  Map<String, dynamic>? _guideInfo;
+
+  // ── 内置热门游戏评分字典 ──
+  static const Map<String, Map<String, dynamic>> _gameRatings = {
+    '艾尔登法环': {'mc': 96, 'ign': 10.0, 'fami': 39},
+    'ELDEN RING': {'mc': 96, 'ign': 10.0, 'fami': 39},
+    'Elden Ring': {'mc': 96, 'ign': 10.0, 'fami': 39},
+    '塞尔达传说 旷野之息': {'mc': 97, 'ign': 10.0, 'fami': 40},
+    '塞尔达传说 王国之泪': {'mc': 96, 'ign': 10.0, 'fami': 40},
+    '巫师3': {'mc': 92, 'ign': 9.3, 'fami': 39},
+    'The Witcher 3': {'mc': 92, 'ign': 9.3, 'fami': 39},
+    'Red Dead Redemption 2': {'mc': 97, 'ign': 10.0, 'fami': 39},
+    'God of War': {'mc': 94, 'ign': 10.0, 'fami': 39},
+    '战神': {'mc': 94, 'ign': 10.0, 'fami': 39},
+    'God of War Ragnarök': {'mc': 94, 'ign': 10.0, 'fami': 39},
+    'Persona 5': {'mc': 95, 'ign': 9.7, 'fami': 39},
+    '女神异闻录5': {'mc': 95, 'ign': 9.7, 'fami': 39},
+    'Ghost of Tsushima': {'mc': 83, 'ign': 9.0, 'fami': 38},
+    '对马岛之魂': {'mc': 83, 'ign': 9.0, 'fami': 38},
+    'Hades': {'mc': 93, 'ign': 9.0, 'fami': 37},
+    'Hades II': {'mc': 90, 'ign': 9.0, 'fami': 36},
+    'The Last of Us Part I': {'mc': 84, 'ign': 9.0, 'fami': 39},
+    'The Last of Us Part II': {'mc': 93, 'ign': 10.0, 'fami': 40},
+    'FINAL FANTASY VII REMAKE': {'mc': 87, 'ign': 8.0, 'fami': 39},
+    'Resident Evil 4': {'mc': 93, 'ign': 10.0, 'fami': 38},
+    'Resident Evil Village': {'mc': 84, 'ign': 8.0, 'fami': 38},
+    '剑星': {'mc': 81, 'ign': 8.0, 'fami': 35},
+    'Stellar Blade': {'mc': 81, 'ign': 8.0, 'fami': 35},
+    '双影奇境': {'mc': 91, 'ign': 9.0, 'fami': 38},
+    'Baldur\'s Gate 3': {'mc': 96, 'ign': 10.0, 'fami': 39},
+    '黑神话：悟空': {'mc': 81, 'ign': 8.0, 'fami': 37},
+    'Black Myth: Wukong': {'mc': 81, 'ign': 8.0, 'fami': 37},
+    'Cyberpunk 2077': {'mc': 86, 'ign': 9.0, 'fami': 39},
+    '赛博朋克2077': {'mc': 86, 'ign': 9.0, 'fami': 39},
+    'Horizon Forbidden West': {'mc': 88, 'ign': 9.0, 'fami': 38},
+    'Sekiro: Shadows Die Twice': {'mc': 90, 'ign': 9.5, 'fami': 37},
+    '只狼': {'mc': 90, 'ign': 9.5, 'fami': 37},
+    'Dark Souls III': {'mc': 89, 'ign': 9.5, 'fami': 36},
+    'Nioh 2': {'mc': 85, 'ign': 9.0, 'fami': 37},
+    '仁王2': {'mc': 85, 'ign': 9.0, 'fami': 37},
+    'Street Fighter 6': {'mc': 92, 'ign': 9.0, 'fami': 39},
+    'Helldivers 2': {'mc': 83, 'ign': 9.0, 'fami': 34},
+    'Astro Bot': {'mc': 94, 'ign': 9.5, 'fami': 37},
+    'Dragon\'s Dogma 2': {'mc': 86, 'ign': 8.0, 'fami': 37},
+    'Final Fantasy XVI': {'mc': 87, 'ign': 9.0, 'fami': 39},
+    'Spider-Man 2': {'mc': 90, 'ign': 8.0, 'fami': 37},
+    'Like a Dragon: Infinite Wealth': {'mc': 89, 'ign': 9.0, 'fami': 38},
+    '人中之龙8': {'mc': 89, 'ign': 9.0, 'fami': 38},
+    'Tekken 8': {'mc': 90, 'ign': 8.0, 'fami': 38},
+    'Granblue Fantasy: Relink': {'mc': 80, 'ign': 8.0, 'fami': 36},
+    'Returnal': {'mc': 86, 'ign': 8.0, 'fami': 35},
+    'Stars Wars Jedi: Survivor': {'mc': 85, 'ign': 9.0, 'fami': 37},
+    'Lies of P': {'mc': 80, 'ign': 8.0, 'fami': 34},
+    'Hogwarts Legacy': {'mc': 84, 'ign': 9.0, 'fami': 37},
+    'Dead Space': {'mc': 89, 'ign': 9.0, 'fami': 37},
+    'Wo Long: Fallen Dynasty': {'mc': 68, 'ign': 7.0, 'fami': 35},
+    '卧龙：苍天陨落': {'mc': 68, 'ign': 7.0, 'fami': 35},
+    'Persona 5 Royal': {'mc': 95, 'ign': 10.0, 'fami': 39},
+    '女神异闻录5 皇家版': {'mc': 95, 'ign': 10.0, 'fami': 39},
+    'Persona 3 Reload': {'mc': 87, 'ign': 9.0, 'fami': 36},
+    '女神异闻录3 Reload': {'mc': 87, 'ign': 9.0, 'fami': 36},
+    'Final Fantasy VII Rebirth': {'mc': 92, 'ign': 9.0, 'fami': 39},
+    'FINAL FANTASY VII REBIRTH': {'mc': 92, 'ign': 9.0, 'fami': 39},
+    '真・三国无双 起源': {'mc': 79, 'ign': 8.0, 'fami': 36},
+    'Silent Hill 2': {'mc': 86, 'ign': 8.0, 'fami': 35},
+    'Rise of the Ronin': {'mc': 76, 'ign': 7.0, 'fami': 37},
+    '浪人崛起': {'mc': 76, 'ign': 7.0, 'fami': 37},
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchGuideInfo();
+  }
+
+  Future<void> _fetchGuideInfo() async {
+    final name = _game['name']?.toString() ?? '';
+    if (name.isEmpty) return;
+    setState(() => _loadingGuide = true);
+    try {
+      final uri = Uri.parse('http://8.153.97.56/api/guide/game')
+          .replace(queryParameters: {'name': name});
+      final resp = await http.get(uri).timeout(const Duration(seconds: 8));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body) as Map<String, dynamic>;
+        final info = data['info'];
+        if (info is Map<String, dynamic> && info.isNotEmpty) {
+          if (mounted) setState(() => _guideInfo = info);
+        }
+      }
+    } catch (_) {
+      // 静默失败，不影响弹窗
+    }
+    if (mounted) setState(() => _loadingGuide = false);
+  }
+
+  Map<String, dynamic>? get _ratings {
+    final name = _game['name']?.toString() ?? '';
+    final nameCn = _game['name_cn']?.toString() ?? '';
+    for (final key in [nameCn, name]) {
+      if (key.isEmpty) continue;
+      final found = _gameRatings[key];
+      if (found != null) return found;
+      // 去掉常见标点和空格再试
+      final clean = key.replaceAll(RegExp(r'[《》「」『』【】\[\]（）()：:，,。.!！?？""''\s]'), '');
+      final foundClean = _gameRatings[clean];
+      if (foundClean != null) return foundClean;
+    }
+    return null;
+  }
+
+  Map<String, dynamic> get _game => widget.game;
+
+  @override
   Widget build(BuildContext context) {
-    final name = game['name']?.toString() ?? '';
-    final rawNameCn = game['name_cn']?.toString() ?? '';
+    final name = _game['name']?.toString() ?? '';
+    final rawNameCn = _game['name_cn']?.toString() ?? '';
     final nameCn = (rawNameCn.isNotEmpty && rawNameCn != name)
         ? rawNameCn
         : SteamClient.translateGameName(name);
-    final rawDesc = game['description']?.toString() ?? '';
+    final rawDesc = _game['description']?.toString() ?? '';
     final description = rawDesc.isNotEmpty ? rawDesc : '';
-    final imgUrl = game['img']?.toString() ?? '';
-    final plat = game['platform']?.toString() ?? '';
-    final price = game['price']?.toString() ?? '';
-    final original = game['original']?.toString() ?? '';
-    final disc = game['discount']?.toString() ?? '';
-    final rating = game['rating']?.toString() ?? '';
+    final imgUrl = _game['img']?.toString() ?? '';
+    final plat = _game['platform']?.toString() ?? '';
+    final price = _game['price']?.toString() ?? '';
+    final original = _game['original']?.toString() ?? '';
+    final disc = _game['discount']?.toString() ?? '';
+    final rating = _game['rating']?.toString() ?? '';
+
+    // 组装动态数据标签
+    final List<Widget> tagWidgets = [];
+    // psnine 难度
+    if (_loadingGuide) {
+      tagWidgets.add(_buildTag(const SizedBox(
+        width: 14, height: 14,
+        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey),
+      ), Colors.grey[700]!));
+    } else if (_guideInfo != null) {
+      final diff = _guideInfo!['difficulty'];
+      final playTime = _guideInfo!['time_hours'];
+      if (diff != null) {
+        tagWidgets.add(_buildTag(
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            const Text('🔥', style: TextStyle(fontSize: 12)),
+            AppSpacing.wXs,
+            Text('难度 $diff/10', style: const TextStyle(fontSize: 12, color: Colors.white)),
+          ]),
+          Colors.orange[800]!,
+        ));
+      }
+      if (playTime != null) {
+        final hours = playTime is num ? playTime.toInt() : 0;
+        if (hours > 0) {
+          tagWidgets.add(_buildTag(
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              const Text('⏱', style: TextStyle(fontSize: 12)),
+              AppSpacing.wXs,
+              Text('~${hours}h', style: const TextStyle(fontSize: 12, color: Colors.white)),
+            ]),
+            Colors.blue[800]!,
+          ));
+        }
+      }
+    }
+    // 多源评分
+    final ratings = _ratings;
+    if (ratings != null) {
+      if (ratings['mc'] != null && ratings['mc'] > 0) {
+        tagWidgets.add(_buildTag(
+          Text('⭐MC${ratings['mc']}', style: const TextStyle(fontSize: 12, color: Colors.white)),
+          Colors.amber[900]!,
+        ));
+      }
+      if (ratings['ign'] != null && ratings['ign'] > 0) {
+        tagWidgets.add(_buildTag(
+          Text('⭐IGN ${ratings['ign']}', style: const TextStyle(fontSize: 12, color: Colors.white)),
+          Colors.red[800]!,
+        ));
+      }
+      if (ratings['fami'] != null && ratings['fami'] > 0) {
+        tagWidgets.add(_buildTag(
+          Text('⭐Fami ${ratings['fami']}', style: const TextStyle(fontSize: 12, color: Colors.white)),
+          Colors.green[800]!,
+        ));
+      }
+    }
 
     return SingleChildScrollView(
       child: Column(
@@ -6642,12 +6878,12 @@ class _GameDetailCard extends StatelessWidget {
                   // 播放按钮
                   GestureDetector(
                     onTap: () {
-                      final videoUrl = game['video_url']?.toString() ?? '';
+                      final videoUrl = _game['video_url']?.toString() ?? '';
                       if (videoUrl.isNotEmpty) {
                         showVideoPlayer(context, videoUrl,
                             nameCn.isNotEmpty ? nameCn : name);
                       } else {
-                        final url = game['url']?.toString() ?? '';
+                        final url = _game['url']?.toString() ?? '';
                         if (url.isNotEmpty) {
                           _HomePageState._launchExternal(url);
                         }
@@ -6682,6 +6918,15 @@ class _GameDetailCard extends StatelessWidget {
                     child: Text(name,
                         style: TextStyle(fontSize: 13, color: Colors.grey[500])),
                   ),
+                // ── 动态数据标签行 ──
+                if (tagWidgets.isNotEmpty) ...[
+                  AppSpacing.hSm,
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: tagWidgets,
+                  ),
+                ],
                 // 官方介绍
                 if (description.isNotEmpty) ...[
                   AppSpacing.hMd,
@@ -6751,6 +6996,17 @@ class _GameDetailCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTag(Widget child, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: child,
     );
   }
 

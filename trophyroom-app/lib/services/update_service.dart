@@ -83,14 +83,15 @@ class UpdateService {
     void Function(double progress)? onProgress,
   }) async {
     try {
-      // 直接用浏览器打开 APK 下载链接
-      // 系统浏览器下载 → 用户点通知安装，100% 可靠
       final uri = Uri.parse(apkUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        return true;
-      }
-      _lastError = '无法打开浏览器';
+
+      // 不用 canLaunchUrl 判断，直接 launch（canLaunchUrl 在国内设备上经常误报 false）
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
+      return true;
+    } on PlatformException catch (e) {
+      // 某些国产 Android ROM 屏蔽非 HTTPS 下载链接跳转
+      _lastError = e.message ?? '平台错误';
+      print('[UpdateService] platform error: ${e.message}');
       return false;
     } catch (e) {
       _lastError = e.toString();

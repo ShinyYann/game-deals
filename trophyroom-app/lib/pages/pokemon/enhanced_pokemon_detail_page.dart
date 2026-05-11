@@ -117,14 +117,40 @@ class _EnhancedPokemonDetailPageState extends State<EnhancedPokemonDetailPage>
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          // Shiny toggle
-          IconButton(
-            icon: Icon(
-              _isShiny ? Icons.star : Icons.star_border,
-              color: _isShiny ? Colors.amberAccent : Colors.grey,
+          // Shiny toggle — 不用 star 图标（太像收藏），改用 sparkle + 文字
+          GestureDetector(
+            onTap: () => setState(() => _isShiny = !_isShiny),
+            child: Container(
+              margin: const EdgeInsets.only(right: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _isShiny ? Colors.amberAccent.withAlpha(40) : Colors.grey[800],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _isShiny ? Colors.amberAccent : Colors.grey[700]!,
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 16,
+                    color: _isShiny ? Colors.amberAccent : Colors.grey[500],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '闪光',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _isShiny ? Colors.amberAccent : Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            tooltip: '闪光形态',
-            onPressed: () => setState(() => _isShiny = !_isShiny),
           ),
           // Mega toggle
           if (_hasMega)

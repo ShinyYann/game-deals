@@ -22,15 +22,24 @@ def make_cards(deals, top=False):
         name = (name_cn if name_cn and name_cn != raw else raw).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
         
         # Normalize server format - handle both old and new
-        # discount: could be int (40) or string ("-40%")
+        # discount: normalize to consistent format - "史低 -XX%"
         di_raw = d.get("discount","")
         if isinstance(di_raw, int):
-            di = f"-{di_raw}%"
+            # Steam: raw int
             pct = di_raw
+            di = f"史低 -{di_raw}%"
         elif isinstance(di_raw, str):
-            di = di_raw
-            m = re.search(r"(\d+)", di)
+            # PSN/Switch: "史低 -10%" already
+            di = di_raw.strip()
+            m = re.search(r"(\d+)", di.replace("--", "-"))
             pct = int(m.group(1)) if m else 0
+            # Fix double minus or weird values
+            di = re.sub(r"-{2,}", "-", di)
+            if pct > 100:  # bad data - cap display
+                di = f"史低 -100%"
+            # Ensure "史低" prefix
+            if "史低" not in di:
+                di = f"史低 {di}"
         else:
             di = ""
             pct = 0

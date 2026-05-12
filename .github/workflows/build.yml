@@ -1,11 +1,11 @@
-name: Build & Deploy TrophyRoom APK
+name: Build TrophyRoom APK
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'trophyroom-app/**'
-      - '.github/workflows/build.yml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 jobs:
@@ -24,17 +24,24 @@ jobs:
         run: |
           bash .github/workflows/build-trophyroom.sh ${{ github.workspace }} ${{ github.run_number }}
 
-      - name: Upload to Aliyun
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ALIYUN_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 8.153.97.56 >> ~/.ssh/known_hosts
-          scp /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk \
-            root@8.153.97.56:/var/www/html/apk/TrophyRoom.apk
-
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: TrophyRoom-APK
           path: /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload to Aliyun (if SSH key configured)
+        env:
+          ALIYUN_SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
+        run: |
+          if [ -n "$ALIYUN_SSH_KEY" ]; then
+            mkdir -p ~/.ssh
+            echo "$ALIYUN_SSH_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            ssh-keyscan -H 8.153.97.56 >> ~/.ssh/known_hosts 2>/dev/null
+            scp /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk \
+              root@8.153.97.56:/var/www/html/apk/TrophyRoom.apk
+            echo "✅ Uploaded to Aliyun"
+          else
+            echo "⚠️ ALIYUN_SSH_KEY not set, skipping upload"
+          fi

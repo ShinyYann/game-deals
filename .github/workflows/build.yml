@@ -1,0 +1,40 @@
+name: Build & Deploy TrophyRoom APK
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'trophyroom-app/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.27.0'
+
+      - name: Build APK
+        run: |
+          bash .github/workflows/build-trophyroom.sh ${{ github.workspace }} ${{ github.run_number }}
+
+      - name: Upload to Aliyun
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ALIYUN_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 8.153.97.56 >> ~/.ssh/known_hosts
+          scp /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk \
+            root@8.153.97.56:/var/www/html/apk/TrophyRoom.apk
+
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrophyRoom-APK
+          path: /tmp/trophyroom/build/app/outputs/flutter-apk/app-release.apk

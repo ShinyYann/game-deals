@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'browser_page.dart';
 import 'pokemon/pokemon_home_page.dart';
+import 'pokopia/pokopia_home_page.dart';
 
 /// 插件条目
 class _PluginEntry {
@@ -279,6 +280,22 @@ class _ToolboxPageState extends State<ToolboxPage> {
             HapticFeedback.lightImpact();
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PokemonHomePage()),
+            );
+          },
+        ),
+        const SizedBox(height: 14),
+
+        // ── Pokopia 宝可梦绘 ──
+        _toolCard(
+          imageUrl: 'https://www.pocoapokemon.jp/assets/img/favicon/android-icon-192x192.png',
+          title: 'Pokopia 宝可梦绘',
+          subtitle: '活动 · 情报 · 305 只宝可梦 · 栖息地 · 攻略 · 角色 · 城镇',
+          color: const Color(0xFF7C4DFF),
+          icon: Icons.auto_awesome,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PokopiaHomePage()),
             );
           },
         ),
